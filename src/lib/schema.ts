@@ -21,23 +21,23 @@ export const QuestionSchema = z
     isMultiple: z.boolean(),
     correct: z.union([z.number().int(), z.array(z.number().int()).min(1)]),
     explanation: z.string().min(1),
-    reference: z.string().url(),
+    reference: z.url(),
     relatedMaterials: z
-      .array(z.object({ label: z.string(), url: z.string().url() }))
+      .array(z.object({ label: z.string(), url: z.url() }))
       .default([]),
   })
   .superRefine((q, ctx) => {
     const indices = Array.isArray(q.correct) ? q.correct : [q.correct];
     for (const i of indices) {
       if (i < 0 || i >= q.options.length) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: `correct index ${i} out of range` });
+        ctx.addIssue({ code: 'custom', message: `correct index ${i} out of range` });
       }
     }
     if (q.isMultiple && !Array.isArray(q.correct)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'isMultiple=true requires correct to be an array' });
+      ctx.addIssue({ code: 'custom', message: 'isMultiple=true requires correct to be an array' });
     }
     if (!q.isMultiple && Array.isArray(q.correct)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'isMultiple=false requires correct to be a number' });
+      ctx.addIssue({ code: 'custom', message: 'isMultiple=false requires correct to be a number' });
     }
   });
 
