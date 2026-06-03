@@ -72,7 +72,7 @@
     "isMultiple": false,
     "correct": 0,
     "explanation": "ヒューマン・イン・ザ・ループは、AIの出力を最終決定の前に人間が確認・承認・修正できるようにする仕組みで、誤りやバイアス、リスクを抑え、責任あるAI運用を支えます(選択肢1)。人間を完全に置き換える(2)のはむしろ逆で、学習速度の向上(3)や利用料金をゼロにする(4)はヒューマン・イン・ザ・ループの目的ではありません。",
-    "reference": "https://cloud.google.com/discover/what-is-human-in-the-loop",
+    "reference": "https://cloud.google.com/discover/human-in-the-loop",
     "relatedMaterials": []
   },
   {
@@ -91,7 +91,7 @@
     "isMultiple": true,
     "correct": [0, 1],
     "explanation": "公平性の確保には、学習データやモデル出力の偏りを評価して是正に努めること(選択肢1)と、特定の属性の人々に不利益が生じていないかを継続的に監視すること(選択肢2)が重要です。バイアスは現実に起こり得るため『存在しないので評価不要』(3)は誤りであり、公平性を無視して速度のみを優先する(4)も責任あるAIの考え方に反します。",
-    "reference": "https://cloud.google.com/discover/what-is-bias-in-ai",
+    "reference": "https://cloud.google.com/responsible-ai",
     "relatedMaterials": []
   },
   {
@@ -110,7 +110,7 @@
     "isMultiple": false,
     "correct": 0,
     "explanation": "生成AIで成果を出すには、価値の高いユースケースを明確にし、小規模なパイロットで効果とコストを検証(ROIの確認)したうえで、責任あるAIの方針や従業員の教育・変革管理(チェンジマネジメント)とともに段階的に拡大するアプローチが有効です(選択肢1)。検証なしの一斉適用(2)、コストや成果を測定しない運用(3)、教育を伴わないツール配布のみ(4)は、定着や費用対効果の面でリスクが高く適切ではありません。",
-    "reference": "https://cloud.google.com/transform/responsible-ai-practices-googles-approach",
+    "reference": "https://cloud.google.com/transform/google-cloud-enterprise-ready-generative-ai",
     "relatedMaterials": []
   }
 ]

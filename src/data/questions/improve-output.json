@@ -91,7 +91,7 @@
     "isMultiple": false,
     "correct": 0,
     "explanation": "文体や専門用語への一貫した適応はモデルそのものを調整するファインチューニングが向き、頻繁に変わる事実情報の反映は検索で都度最新データを与えるRAG/グラウンディングが向くため、両者を組み合わせるのが適切です(選択肢1)。事実が変わるたびに再学習(2)はコストと運用の面で非現実的で、温度を0にする(3)やプロンプトを長くする(4)だけでは最新の事実情報を取り込むことはできません。",
-    "reference": "https://cloud.google.com/discover/what-is-fine-tuning",
+    "reference": "https://cloud.google.com/use-cases/fine-tuning-ai-models",
     "relatedMaterials": []
   },
   {
