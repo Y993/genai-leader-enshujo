@@ -1,0 +1,154 @@
+[
+  {
+    "id": "imp-001",
+    "category": "improve-output",
+    "subTopic": "プロンプトエンジニアリング",
+    "difficulty": "easy",
+    "tags": ["prompt-engineering", "few-shot"],
+    "question": "プロンプトの中に、入力と望ましい出力の『例』をいくつか含めてモデルにパターンを示す手法を何と呼びますか？",
+    "options": [
+      "Few-shot(少数例)プロンプティング",
+      "ファインチューニング",
+      "データ拡張",
+      "量子化"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Few-shot(少数例)プロンプティングは、プロンプト内に入力と望ましい出力の例を数件含めることで、モデルに期待するパターンや形式を示す手法です(選択肢1)。ファインチューニング(2)はモデルを追加データで再学習する別の手法、データ拡張(3)は学習データを水増しする前処理、量子化(4)はモデルを軽量化する技術であり、いずれもプロンプト内に例を示す手法ではありません。",
+    "reference": "https://cloud.google.com/discover/what-is-prompt-engineering",
+    "relatedMaterials": []
+  },
+  {
+    "id": "imp-002",
+    "category": "improve-output",
+    "subTopic": "Chain-of-Thought",
+    "difficulty": "medium",
+    "tags": ["chain-of-thought", "reasoning"],
+    "question": "複雑な推論や計算を伴う問題で、モデルに『途中の考え方を順を追って示してから答える』よう促すことで精度向上を狙う手法はどれですか？",
+    "options": [
+      "温度(temperature)を0に固定するだけの設定",
+      "Chain-of-Thought(思考の連鎖)プロンプティング",
+      "出力トークン数の上限を1にする",
+      "モデルの重みを暗号化する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Chain-of-Thought(思考の連鎖)プロンプティングは、最終的な答えだけでなく途中の推論ステップを順に示すようモデルに促す手法で、多段階の推論や計算を要する問題で精度が向上しやすくなります(選択肢2)。温度を0にする(1)は出力の一貫性を高める設定にすぎず推論手順の明示とは異なり、出力上限を1にする(3)はむしろ説明を妨げ、重みの暗号化(4)はセキュリティの話で出力品質の改善手法ではありません。",
+    "reference": "https://cloud.google.com/discover/what-is-prompt-engineering",
+    "relatedMaterials": []
+  },
+  {
+    "id": "imp-003",
+    "category": "improve-output",
+    "subTopic": "システム指示",
+    "difficulty": "medium",
+    "tags": ["system-instruction", "prompt-engineering"],
+    "question": "モデルに対し、応答全体を通じて守ってほしい役割・口調・制約(例:『常に丁寧な日本語で、専門用語を避けて答える』)をあらかじめ与える仕組みを何と呼びますか？",
+    "options": [
+      "システム指示(system instruction)",
+      "チェックポイント",
+      "バッチサイズ",
+      "ロードバランサ"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "システム指示(system instruction)は、モデルが応答全体で従うべき役割・口調・形式・制約をあらかじめ設定する仕組みで、出力の一貫性や安全性を高めます(選択肢1)。チェックポイント(2)は学習途中のモデル保存状態、バッチサイズ(3)は学習時の設定値、ロードバランサ(4)は負荷分散の仕組みであり、いずれもモデルの振る舞いの方針を与える仕組みではありません。",
+    "reference": "https://cloud.google.com/discover/what-is-prompt-engineering",
+    "relatedMaterials": []
+  },
+  {
+    "id": "imp-004",
+    "category": "improve-output",
+    "subTopic": "RAG",
+    "difficulty": "medium",
+    "tags": ["rag", "grounding", "hallucination"],
+    "question": "社内の最新ドキュメントなど、モデルが学習していない独自情報に基づいて正確に回答させ、ハルシネーションを減らしたい場合に最も適した手法はどれですか？",
+    "options": [
+      "温度(temperature)を最大にする",
+      "RAG(検索拡張生成)で外部の関連情報を検索し、その内容を根拠に回答させる",
+      "出力をすべて大文字に変換する",
+      "プロンプトをできるだけ短くする"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "RAG(検索拡張生成)は、まず外部のデータソースから質問に関連する情報を検索し、その内容をプロンプトに与えてモデルに回答させる手法で、学習していない最新・独自データに基づく正確な回答を可能にしハルシネーションを減らします(選択肢2)。温度を最大にする(1)はむしろ出力をランダムにし、大文字変換(3)や短文化(4)は事実根拠の付与とは無関係です。",
+    "reference": "https://cloud.google.com/use-cases/retrieval-augmented-generation",
+    "relatedMaterials": []
+  },
+  {
+    "id": "imp-005",
+    "category": "improve-output",
+    "subTopic": "ファインチューニングとプロンプト設計",
+    "difficulty": "hard",
+    "tags": ["fine-tuning", "prompt-design"],
+    "question": "特定業界の専門的な文体や用語に一貫して従わせたい一方、参照すべき事実情報は頻繁に更新される、という要件があります。技術選択として最も適切なものはどれですか？",
+    "options": [
+      "文体・用語への適応はファインチューニング、最新の事実反映はRAG/グラウンディングで対応する",
+      "すべてをファインチューニングだけで解決し、事実が変わるたびにモデルを再学習する",
+      "温度を0にすれば文体も最新情報もすべて自動的に解決する",
+      "プロンプトを長くするほど事実は必ず最新化されるので、それだけで足りる"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "文体や専門用語への一貫した適応はモデルそのものを調整するファインチューニングが向き、頻繁に変わる事実情報の反映は検索で都度最新データを与えるRAG/グラウンディングが向くため、両者を組み合わせるのが適切です(選択肢1)。事実が変わるたびに再学習(2)はコストと運用の面で非現実的で、温度を0にする(3)やプロンプトを長くする(4)だけでは最新の事実情報を取り込むことはできません。",
+    "reference": "https://cloud.google.com/discover/what-is-fine-tuning",
+    "relatedMaterials": []
+  },
+  {
+    "id": "imp-006",
+    "category": "improve-output",
+    "subTopic": "サンプリングパラメータ",
+    "difficulty": "medium",
+    "tags": ["temperature", "sampling"],
+    "question": "生成AIの出力をより決定的(同じ入力に対し安定して同じような結果)にしたい場合、温度(temperature)パラメータはどう調整するのが適切ですか？",
+    "options": [
+      "温度を高くするほど出力は決定的になる",
+      "温度を低く(0に近く)するほど出力は決定的になる",
+      "温度は出力のランダム性とは無関係である",
+      "温度を変えると必ず出力が長くなる"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "温度(temperature)はトークン選択のランダム性を制御し、低く(0に近く)するほど確率の高いトークンが選ばれやすくなり出力は決定的・安定的になります。逆に高くするほど多様で創造的だが不安定になります(選択肢2が正しい)。したがって高いほど決定的(1)は誤り、温度はランダム性と密接に関係し(3は誤り)、温度は出力の長さを直接決めるものではありません(4は誤り)。",
+    "reference": "https://cloud.google.com/discover/what-is-prompt-engineering",
+    "relatedMaterials": []
+  },
+  {
+    "id": "imp-007",
+    "category": "improve-output",
+    "subTopic": "サンプリングパラメータ",
+    "difficulty": "hard",
+    "tags": ["top-k", "top-p", "sampling"],
+    "question": "トークン選択を制御するサンプリングパラメータの説明として正しいものを2つ選んでください。",
+    "options": [
+      "top-kは、確率が高い上位k個のトークンに候補を絞り込む",
+      "top-pは、累積確率がpに達するまでの最小のトークン集合に候補を絞り込む",
+      "top-kは、出力の文字数の上限を文字単位で指定するものである",
+      "top-pは、APIの料金単価を割引率pで下げる設定である"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "top-kは候補を確率上位k個のトークンに絞る手法(選択肢1)、top-p(核サンプリング)は累積確率がpに達するまでの最小のトークン集合に絞る手法(選択肢2)で、いずれもトークン選択時の候補範囲を制御します。top-kが文字数の上限(3)、top-pが料金の割引率(4)という説明はいずれも誤りです。",
+    "reference": "https://cloud.google.com/discover/what-is-prompt-engineering",
+    "relatedMaterials": []
+  },
+  {
+    "id": "imp-008",
+    "category": "improve-output",
+    "subTopic": "出力の評価・検証",
+    "difficulty": "easy",
+    "tags": ["evaluation", "validation", "human-in-the-loop"],
+    "question": "生成AIを業務で使う際、出力の品質や正確性を継続的に保つための取り組みとして最も適切なものはどれですか？",
+    "options": [
+      "出力は常に正しい前提で、検証はいっさい行わない",
+      "プロンプトを一度決めたら二度と見直さない",
+      "評価指標や人によるレビューで出力の正確性・適切性を継続的に検証・改善する",
+      "ハルシネーションは起こらないので対策は不要である"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "生成AIの出力は誤りや偏りを含み得るため、評価指標や人によるレビュー(ヒューマン・イン・ザ・ループ)を通じて正確性・適切性を継続的に検証し、プロンプトや構成を改善していくことが重要です(選択肢3)。出力を無検証で正しいとみなす(1)、プロンプトを見直さない(2)、ハルシネーション対策を不要とする(4)はいずれも誤りで、品質維持の取り組みに反します。",
+    "reference": "https://cloud.google.com/discover/what-are-ai-hallucinations",
+    "relatedMaterials": []
+  }
+]

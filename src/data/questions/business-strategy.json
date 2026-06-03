@@ -1,0 +1,116 @@
+[
+  {
+    "id": "biz-001",
+    "category": "business-strategy",
+    "subTopic": "責任あるAI",
+    "difficulty": "easy",
+    "tags": ["responsible-ai", "principles"],
+    "question": "Googleの『責任あるAI(Responsible AI)』の考え方を最もよく表しているものはどれですか？",
+    "options": [
+      "公平性・安全性・説明可能性・プライバシーなどを重視し、AIを責任をもって開発・運用する取り組み",
+      "可能な限り多くのデータを、同意の有無に関係なく収集することを優先する方針",
+      "AIの判断には一切人間を関与させず、完全に自動化することを目指す方針",
+      "モデルの精度だけを最優先し、他の影響は考慮しない方針"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Googleの責任あるAIは、公平性(バイアスの抑制)、安全性、説明可能性(解釈性)、プライバシー、セキュリティなどの観点を重視し、AIを責任をもって開発・運用する取り組みです(選択肢1)。同意を無視したデータ収集(2)、人間を関与させない完全自動化(3)、精度のみを優先し他の影響を無視する(4)は、いずれも責任あるAIの原則に反します。",
+    "reference": "https://cloud.google.com/responsible-ai",
+    "relatedMaterials": []
+  },
+  {
+    "id": "biz-002",
+    "category": "business-strategy",
+    "subTopic": "SAIF",
+    "difficulty": "medium",
+    "tags": ["saif", "security"],
+    "question": "Googleの『Secure AI Framework(SAIF)』を最もよく説明しているものはどれですか？",
+    "options": [
+      "AIモデルの精度を競うためのベンチマーク用データセット",
+      "AIシステムを安全に構築・運用するためのセキュリティのベストプラクティスを示すフレームワーク",
+      "AIの生成画像に課金するための料金体系",
+      "GPUの在庫を管理するためのツール"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "SAIF(Secure AI Framework)は、AIシステムを安全に構築・運用するためのセキュリティのベストプラクティスを体系化したGoogleのフレームワークで、プロンプトインジェクションやデータポイズニング、モデルの窃取といったAI特有のリスクへの対策指針を提供します(選択肢2)。ベンチマーク用データセット(1)、画像生成の料金体系(3)、GPU在庫管理ツール(4)はいずれもSAIFの説明ではありません。",
+    "reference": "https://saif.google/",
+    "relatedMaterials": []
+  },
+  {
+    "id": "biz-003",
+    "category": "business-strategy",
+    "subTopic": "データガバナンス",
+    "difficulty": "medium",
+    "tags": ["data-governance", "privacy"],
+    "question": "企業がGoogle CloudのVertex AIで自社データを使って生成AIを利用する際の、データの取り扱いに関する原則として正しいものはどれですか？",
+    "options": [
+      "入力したデータや生成結果は、既定でGoogleの基盤モデルの学習に自由に利用される",
+      "顧客のデータや入出力は、既定では顧客の許可なくGoogleの基盤モデルの学習に使われず、顧客が管理・所有権を保持する",
+      "アップロードした時点でデータの所有権は自動的にGoogleへ移転する",
+      "データの保存場所(リージョン)は一切指定できない"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Google Cloudでは、顧客のプロンプトや応答などのデータは既定では顧客の許可なくGoogleの基盤モデルの学習・チューニングに使われず、顧客が自社データの管理と所有権を保持します(選択肢1の主張は誤りで、選択肢2が正しい)。所有権が自動的にGoogleへ移転する(3)ことはなく、データの保存リージョンも対応するAPIで指定でき(4は誤り)、データレジデンシーを管理できます。",
+    "reference": "https://cloud.google.com/security/ai",
+    "relatedMaterials": []
+  },
+  {
+    "id": "biz-004",
+    "category": "business-strategy",
+    "subTopic": "人間による監督",
+    "difficulty": "medium",
+    "tags": ["human-in-the-loop", "oversight"],
+    "question": "重要な意思決定に生成AIを用いる業務で、『ヒューマン・イン・ザ・ループ(human-in-the-loop)』を取り入れる主な目的はどれですか？",
+    "options": [
+      "AIの出力を最終決定前に人間が確認・承認し、誤りやリスクを抑えて責任ある運用を行うため",
+      "人間を完全に置き換え、確認作業をなくして処理を高速化するため",
+      "モデルの学習速度を上げるため",
+      "クラウドの利用料金を必ずゼロにするため"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "ヒューマン・イン・ザ・ループは、AIの出力を最終決定の前に人間が確認・承認・修正できるようにする仕組みで、誤りやバイアス、リスクを抑え、責任あるAI運用を支えます(選択肢1)。人間を完全に置き換える(2)のはむしろ逆で、学習速度の向上(3)や利用料金をゼロにする(4)はヒューマン・イン・ザ・ループの目的ではありません。",
+    "reference": "https://cloud.google.com/discover/what-is-human-in-the-loop",
+    "relatedMaterials": []
+  },
+  {
+    "id": "biz-005",
+    "category": "business-strategy",
+    "subTopic": "バイアスと公平性",
+    "difficulty": "medium",
+    "tags": ["bias", "fairness", "responsible-ai"],
+    "question": "生成AIの導入にあたり、公平性(fairness)の観点で企業が取るべき対応として適切なものを2つ選んでください。",
+    "options": [
+      "学習データやモデルの出力に偏り(バイアス)がないかを評価し、是正に努める",
+      "特定の属性の人々に不利益が生じていないかを継続的に監視する",
+      "バイアスは技術的に存在しないので、評価も監視も不要とする",
+      "公平性よりも常に出力速度だけを優先し、影響評価は行わない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "公平性の確保には、学習データやモデル出力の偏りを評価して是正に努めること(選択肢1)と、特定の属性の人々に不利益が生じていないかを継続的に監視すること(選択肢2)が重要です。バイアスは現実に起こり得るため『存在しないので評価不要』(3)は誤りであり、公平性を無視して速度のみを優先する(4)も責任あるAIの考え方に反します。",
+    "reference": "https://cloud.google.com/discover/what-is-bias-in-ai",
+    "relatedMaterials": []
+  },
+  {
+    "id": "biz-006",
+    "category": "business-strategy",
+    "subTopic": "コスト管理と導入推進",
+    "difficulty": "hard",
+    "tags": ["cost-management", "adoption", "change-management"],
+    "question": "企業が生成AIを全社的に導入・定着させて成果を出すための進め方として、最も適切なものはどれですか？",
+    "options": [
+      "明確なユースケースを定め、小さく試して効果と費用を検証し、責任あるAIの方針や従業員教育とともに段階的に展開する",
+      "効果検証やコスト管理は行わず、いきなり全業務へ一斉に適用する",
+      "費用は気にせず、利用量や成果を測定せずに使い続ける",
+      "従業員への説明や教育は不要で、ツールだけ配布すれば自然に定着する"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "生成AIで成果を出すには、価値の高いユースケースを明確にし、小規模なパイロットで効果とコストを検証(ROIの確認)したうえで、責任あるAIの方針や従業員の教育・変革管理(チェンジマネジメント)とともに段階的に拡大するアプローチが有効です(選択肢1)。検証なしの一斉適用(2)、コストや成果を測定しない運用(3)、教育を伴わないツール配布のみ(4)は、定着や費用対効果の面でリスクが高く適切ではありません。",
+    "reference": "https://cloud.google.com/transform/responsible-ai-practices-googles-approach",
+    "relatedMaterials": []
+  }
+]
