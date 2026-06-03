@@ -1,0 +1,230 @@
+[
+  {
+    "id": "fund-001",
+    "category": "fundamentals",
+    "subTopic": "LLMの基礎",
+    "difficulty": "easy",
+    "tags": ["llm", "foundation-model"],
+    "question": "大規模言語モデル(LLM)を最もよく説明しているものはどれですか？",
+    "options": [
+      "膨大なテキストデータで事前学習され、次に来る語を予測することで文章を生成するモデル",
+      "画像を分類することだけに特化したモデル",
+      "構造化データの集計を行う表計算エンジン",
+      "物理現象を数値計算するシミュレータ"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "LLMは膨大なテキストで事前学習し、文脈から次の語を確率的に予測して文章を生成する基盤モデルです。画像分類専用(選択肢2)、集計エンジン(3)、物理シミュレータ(4)はいずれも生成AIのLLMの説明ではありません。",
+    "reference": "https://cloud.google.com/ai/llms",
+    "relatedMaterials": []
+  },
+  {
+    "id": "fund-002",
+    "category": "fundamentals",
+    "subTopic": "ハルシネーション",
+    "difficulty": "medium",
+    "tags": ["hallucination", "limitation"],
+    "question": "生成AIにおける『ハルシネーション』の説明として正しいものを2つ選んでください。",
+    "options": [
+      "事実に基づかないもっともらしい誤情報をモデルが生成すること",
+      "学習データに存在しない内容を、あたかも正しいかのように出力すること",
+      "モデルの推論速度が低下する現象",
+      "GPUのメモリが不足してジョブが失敗すること"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "ハルシネーションは、モデルが事実と異なる情報をもっともらしく生成する現象を指します(選択肢1・2)。推論速度の低下(3)やメモリ不足(4)はインフラ上の問題であり、ハルシネーションとは無関係です。",
+    "reference": "https://cloud.google.com/discover/what-are-ai-hallucinations",
+    "relatedMaterials": []
+  },
+  {
+    "id": "fund-003",
+    "category": "fundamentals",
+    "subTopic": "生成AIと従来MLの違い",
+    "difficulty": "easy",
+    "tags": ["generative-ai", "traditional-ml"],
+    "question": "生成AIが、従来の予測・分類型の機械学習(ML)と最も異なる点はどれですか？",
+    "options": [
+      "テキストや画像などの新しいコンテンツそのものを生成できる",
+      "ラベル付きデータをまったく必要としない唯一の手法である",
+      "推論時にGPUを使わないため計算コストがかからない",
+      "予測や分類のタスクには一切利用できない"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "従来のMLは主に既存データから分類や将来予測を行うのに対し、生成AIはテキスト・画像・音声などの新しいコンテンツを生成できる点が本質的な違いです(選択肢1)。生成AIもデータからの学習を必要とし(2は誤り)、大規模モデルの推論はGPU/TPUなどの計算資源を要し(3は誤り)、生成AIの基盤となる基盤モデルは分類や要約など多様なタスクにも応用できます(4は誤り)。",
+    "reference": "https://cloud.google.com/use-cases/generative-ai",
+    "relatedMaterials": []
+  },
+  {
+    "id": "fund-004",
+    "category": "fundamentals",
+    "subTopic": "基盤モデル",
+    "difficulty": "medium",
+    "tags": ["foundation-model"],
+    "question": "基盤モデル(foundation model)の特徴として最も適切なものはどれですか？",
+    "options": [
+      "1つのタスク専用に少量データだけで学習させた小規模モデル",
+      "大量かつ広範なデータで事前学習され、多様な下流タスクに適応できる汎用的なモデル",
+      "学習をいっさい行わずルールベースで動作する仕組み",
+      "ユーザーごとに個別にゼロから学習し直す必要があるモデル"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "基盤モデルは大量かつ広範なデータで事前学習され、プロンプトやファインチューニングによって翻訳・要約・質問応答など多様なタスクに適応できる汎用モデルです(選択肢2)。単一タスク専用の小規模モデル(1)や、学習しないルールベース(3)、ユーザーごとにゼロから再学習する(4)という説明は基盤モデルの特徴に反します。",
+    "reference": "https://cloud.google.com/discover/what-are-foundation-models",
+    "relatedMaterials": []
+  },
+  {
+    "id": "fund-005",
+    "category": "fundamentals",
+    "subTopic": "トークンと埋め込み",
+    "difficulty": "easy",
+    "tags": ["token"],
+    "question": "生成AIにおける『トークン』の説明として最も適切なものはどれですか？",
+    "options": [
+      "ユーザーを認証するためのセキュリティ用の文字列",
+      "モデルの学習に使うGPUの台数を表す単位",
+      "モデルがテキストを処理する際の単位で、単語・部分語・文字などに分割したもの",
+      "1回のAPI呼び出しにかかる料金の通貨単位"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "生成AIモデルはプロンプト中のテキストなどをトークンと呼ぶ単位に分割して処理します。トークンは文字・単語・部分語(サブワード)などになり得ます(選択肢3)。認証用の文字列(1)はアクセストークンであり別概念です。GPU台数(2)や通貨(4)はトークンの意味ではありません(料金はトークン数に基づいて計算されますが、トークン自体は通貨単位ではありません)。",
+    "reference": "https://cloud.google.com/discover/what-is-gpt",
+    "relatedMaterials": []
+  },
+  {
+    "id": "fund-006",
+    "category": "fundamentals",
+    "subTopic": "トークンと埋め込み",
+    "difficulty": "medium",
+    "tags": ["embedding"],
+    "question": "テキストや画像などのデータを、意味的な近さを数値ベクトルとして表現したものを何と呼びますか？",
+    "options": [
+      "エンベディング(埋め込み)",
+      "ハイパーパラメータ",
+      "プロンプトテンプレート",
+      "チェックポイント"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "エンベディング(埋め込み)は、テキスト・画像・音声などのデータを浮動小数点数の配列(ベクトル)として表現したもので、意味が近いデータほどベクトル空間上で近くに配置されます(選択肢1)。ハイパーパラメータ(2)は学習設定値、プロンプトテンプレート(3)は入力文の雛形、チェックポイント(4)は学習途中のモデル保存状態であり、いずれもデータの意味をベクトル化したものではありません。",
+    "reference": "https://cloud.google.com/discover/what-is-a-vector-database",
+    "relatedMaterials": []
+  },
+  {
+    "id": "fund-007",
+    "category": "fundamentals",
+    "subTopic": "マルチモーダル",
+    "difficulty": "easy",
+    "tags": ["multimodal"],
+    "question": "『マルチモーダル』な生成AIモデルを最もよく表しているものはどれですか？",
+    "options": [
+      "テキストだけしか入力できないモデル",
+      "複数のサーバーに分散して配置されたモデル",
+      "複数の言語に翻訳することだけに特化したモデル",
+      "テキスト・画像・音声・動画など複数種類のデータを扱えるモデル"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "マルチモーダルとは、テキスト・画像・音声・動画など複数のモダリティ(データ種類)を入力・出力として扱える能力を指します(選択肢4)。テキスト専用(1)は単一モダリティです。複数サーバーへの分散配置(2)はインフラの話であり、翻訳専用(3)はタスクの限定であって、いずれもマルチモーダルの定義ではありません。",
+    "reference": "https://cloud.google.com/use-cases/multimodal-ai",
+    "relatedMaterials": []
+  },
+  {
+    "id": "fund-008",
+    "category": "fundamentals",
+    "subTopic": "プロンプトの基礎",
+    "difficulty": "medium",
+    "tags": ["prompt", "prompt-engineering"],
+    "question": "生成AIにおける『プロンプト』の説明として最も適切なものはどれですか？",
+    "options": [
+      "モデルに望む出力を得るために与える入力(指示や質問など)",
+      "モデルの重みを保存したファイル",
+      "学習に使うデータセット全体のこと",
+      "モデルが出力を生成する速度を測る指標"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "プロンプトは、生成AIモデルに対して望む応答を引き出すために与える入力(指示・質問・文脈・例など)です(選択肢1)。プロンプトを工夫して出力品質を高める作業がプロンプトエンジニアリングです。モデルの重みファイル(2)、学習データセット(3)、生成速度の指標(4)はいずれもプロンプトの定義ではありません。",
+    "reference": "https://cloud.google.com/discover/what-is-prompt-engineering",
+    "relatedMaterials": []
+  },
+  {
+    "id": "fund-009",
+    "category": "fundamentals",
+    "subTopic": "学習と推論",
+    "difficulty": "medium",
+    "tags": ["training", "inference"],
+    "question": "機械学習における『推論(inference)』を最もよく説明しているものはどれですか？",
+    "options": [
+      "大量のデータからモデルのパラメータを最適化していく学習の工程",
+      "学習済みモデルを使って、新しい未知の入力に対して予測や生成を行うこと",
+      "学習用データにラベルを付与する前処理の作業",
+      "モデルの精度を高めるためにデータを収集する活動"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "推論(inference)は、学習を終えたモデルを使って新しい未知のデータに対し予測や生成を行う実行フェーズです(選択肢2)。選択肢1はパラメータを最適化する学習(training)の説明であり、推論とは別の工程です。ラベル付け(3)やデータ収集(4)は学習の準備段階に関する作業で、推論ではありません。",
+    "reference": "https://cloud.google.com/discover/what-is-ai-inference",
+    "relatedMaterials": []
+  },
+  {
+    "id": "fund-010",
+    "category": "fundamentals",
+    "subTopic": "生成AIの限界",
+    "difficulty": "medium",
+    "tags": ["limitation", "hallucination"],
+    "question": "生成AI(LLM)の限界・留意点として正しいものを2つ選んでください。",
+    "options": [
+      "事実と異なる情報をもっともらしく生成すること(ハルシネーション)がある",
+      "学習データに含まれる偏り(バイアス)が出力に反映されることがある",
+      "出力は常に最新の事実に基づいており、誤りは原理的に起こり得ない",
+      "一度学習すれば、学習後に起きた出来事も自動的に常に把握している"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "LLMは事実に反する内容をもっともらしく生成するハルシネーション(選択肢1)を起こし得るほか、学習データのバイアスが出力に反映される(2)という限界があります。出力が常に正しい(3)、学習後の最新情報を自動的に把握している(4)というのは誤りで、モデルの知識は基本的に学習時点のデータに依存します(最新情報を補うにはグラウンディング等が必要です)。",
+    "reference": "https://cloud.google.com/discover/what-are-ai-hallucinations",
+    "relatedMaterials": []
+  },
+  {
+    "id": "fund-011",
+    "category": "fundamentals",
+    "subTopic": "基盤モデル",
+    "difficulty": "hard",
+    "tags": ["foundation-model", "training"],
+    "question": "基盤モデルが、特定タスク専用に設計された従来型の予測モデルと比べて『汎用的に多様なタスクへ適応できる』のは、主にどのような特性によるものですか？",
+    "options": [
+      "タスクごとに毎回ゼロから教師あり学習をやり直しているため",
+      "推論時にインターネット上の最新情報を常に自動取得しているため",
+      "広範かつ大規模なデータで自己教師あり学習により事前学習され、プロンプトや少量の追加学習で多様なタスクに転用できるため",
+      "人手で作成したルールを大量に登録することで動作しているため"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "基盤モデルは広範な大規模データに対し自己教師あり学習で事前学習され、その汎用的な表現を土台に、プロンプトやファインチューニングといった少量の適応だけで翻訳・要約・質問応答など多様なタスクに転用できます(選択肢3)。タスクごとにゼロから学習し直す(1)のは従来型の単一目的モデルの発想です。推論時に常に最新情報を取得する(2)わけではなく(それを補うのがグラウンディング)、ルールを人手登録する(4)のはルールベースの仕組みで基盤モデルではありません。",
+    "reference": "https://cloud.google.com/discover/what-are-foundation-models",
+    "relatedMaterials": []
+  },
+  {
+    "id": "fund-012",
+    "category": "fundamentals",
+    "subTopic": "トークンと埋め込み",
+    "difficulty": "hard",
+    "tags": ["embedding", "semantic-search"],
+    "question": "セマンティック検索(意味的な検索)でエンベディング(埋め込み)が有用なのは、主にどのような性質によるものですか？",
+    "options": [
+      "意味的に近いデータほどベクトル空間上で距離が近くなり、キーワードの一致だけに頼らず意味の類似度で比較できるから",
+      "ベクトルが必ず2次元で、人が目で見て一致を判断できるから",
+      "テキストを圧縮して保存することだけが目的で、意味は保持しないから",
+      "文字列が完全一致したときだけ類似と判定できるから"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "エンベディングはデータを高次元の数値ベクトルとして表現し、意味が近いものほどベクトル空間上で近くに配置されます。そのためキーワードの完全一致に頼らず、意味の類似度に基づいて関連データを見つけられます(選択肢1)。埋め込みは一般に高次元であり2次元に限られず(2は誤り)、単なる圧縮ではなく意味(セマンティクス)を保持し(3は誤り)、完全一致のみで判定するもの(4)はキーワード検索の発想であって意味検索の利点を説明していません。",
+    "reference": "https://cloud.google.com/discover/what-is-a-vector-database",
+    "relatedMaterials": []
+  }
+]
