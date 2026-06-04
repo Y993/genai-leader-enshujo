@@ -5,33 +5,54 @@ const { questions } = Astro.props;
 const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
 ---
 <section class="quiz" data-quiz>
+  <header class="quiz-head">
+    <div class="quiz-progress" role="presentation">
+      <span class="quiz-progress__bar" data-progress-bar></span>
+    </div>
+    <div class="quiz-head__meta">
+      <span class="quiz-counter">
+        <strong data-counter>1</strong><span class="quiz-counter__sep">/</span><span data-total>{questions.length}</span>
+      </span>
+      <span class="quiz-badge" data-multi-badge hidden>複数選択</span>
+    </div>
+  </header>
+
   {questions.map((q, i) => (
     <article class="quiz-item card" data-question-id={q.id}
              data-correct={JSON.stringify(Array.isArray(q.correct) ? q.correct : [q.correct])}
              data-multiple={String(q.isMultiple)} hidden={i !== 0}>
-      <p class="quiz-counter">{i + 1} / {questions.length}{q.isMultiple ? '（複数選択）' : ''}</p>
       <p class="quiz-question">{q.question}</p>
       <ul class="quiz-options">
         {q.options.map((opt, idx) => (
           <li>
             <button type="button" class="quiz-option" data-index={idx}>
-              <span class="quiz-option__letter">{letters[idx]}</span>
-              <span>{opt}</span>
+              <span class="quiz-option__letter" aria-hidden="true">{letters[idx]}</span>
+              <span class="quiz-option__text">{opt}</span>
             </button>
           </li>
         ))}
       </ul>
-      <div class="quiz-explanation">
+      <div class="quiz-explanation" aria-live="polite">
         <p>{q.explanation}</p>
         <p><a href={q.reference} target="_blank" rel="noopener noreferrer">出典を確認する</a></p>
       </div>
-      <div class="quiz-actions">
-        <button type="button" class="btn btn-primary quiz-check">答え合わせ</button>
-        <button type="button" class="btn btn-secondary quiz-next" hidden>次の問題</button>
-      </div>
+      {q.isMultiple && (
+        <div class="quiz-actions">
+          <button type="button" class="btn btn-primary quiz-check" disabled>答え合わせ</button>
+          <span class="quiz-hint">複数選んで「答え合わせ」を押してください</span>
+        </div>
+      )}
+      <nav class="quiz-nav" aria-label="問題の移動">
+        <button type="button" class="btn btn-secondary quiz-prev" disabled>
+          <span aria-hidden="true">←</span>&nbsp;前の問題
+        </button>
+        <button type="button" class="btn btn-primary quiz-next" disabled>
+          次の問題&nbsp;<span aria-hidden="true">→</span>
+        </button>
+      </nav>
     </article>
   ))}
-  <div class="quiz-result card" data-result hidden></div>
+  <div class="quiz-result card" data-result aria-live="polite" hidden></div>
 </section>
 
 <script>
@@ -39,77 +60,129 @@ const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
   import { loadProgress, saveProgress } from '../lib/storage';
   import { recordAnswer } from '../lib/progress';
 
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   document.querySelectorAll('[data-quiz]').forEach((root) => {
     const items = Array.from(root.querySelectorAll('.quiz-item')) as HTMLElement[];
     const result = root.querySelector('[data-result]') as HTMLElement;
+    const progressBar = root.querySelector('[data-progress-bar]') as HTMLElement;
+    const counterEl = root.querySelector('[data-counter]') as HTMLElement;
+    const totalEl = root.querySelector('[data-total]') as HTMLElement;
+    const multiBadge = root.querySelector('[data-multi-badge]') as HTMLElement;
+
     let progress = loadProgress();
-    // order = the indices to play through this pass (all items first pass; only wrong ones on retry).
+    // order = the item indices to play this pass (all first pass; only wrong ones on retry).
     let order: number[] = items.map((_, i) => i);
     let pos = 0;
     let correctCount = 0;
     let wrongIds: string[] = [];
 
-    // Per-item setup returns a reset() for the retry flow.
-    const resets = items.map((item) => {
-      const selected = new Set<number>();
+    // Per-item answer state, kept so revisited questions restore their result.
+    const state = items.map(() => ({ answered: false, selected: new Set<number>() }));
+
+    const resets = items.map((item, itemIndex) => {
+      const st = state[itemIndex];
       const multiple = item.dataset.multiple === 'true';
       const correct: number[] = JSON.parse(item.dataset.correct || '[]');
       const qid = item.dataset.questionId as string;
       const optionButtons = Array.from(item.querySelectorAll('.quiz-option')) as HTMLButtonElement[];
-      const checkBtn = item.querySelector('.quiz-check') as HTMLButtonElement;
+      const checkBtn = item.querySelector('.quiz-check') as HTMLButtonElement | null;
+      const prevBtn = item.querySelector('.quiz-prev') as HTMLButtonElement;
       const nextBtn = item.querySelector('.quiz-next') as HTMLButtonElement;
       const explanation = item.querySelector('.quiz-explanation') as HTMLElement;
-      let answered = false;
 
-      optionButtons.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          if (answered) return;
-          const idx = Number(btn.dataset.index);
-          if (!multiple) { selected.clear(); optionButtons.forEach((b) => b.classList.remove('is-selected')); }
-          if (selected.has(idx)) { selected.delete(idx); btn.classList.remove('is-selected'); }
-          else { selected.add(idx); btn.classList.add('is-selected'); }
-        });
-      });
-
-      checkBtn.addEventListener('click', () => {
-        if (answered || selected.size === 0) return;
-        answered = true;
-        const ok = isCorrect({ correct } as any, Array.from(selected));
+      // Reveal correctness, lock the question, and record progress.
+      function commit() {
+        if (st.answered || st.selected.size === 0) return;
+        st.answered = true;
+        const ok = isCorrect({ correct } as any, Array.from(st.selected));
         optionButtons.forEach((b) => {
           const i = Number(b.dataset.index);
           b.classList.remove('is-selected');
           if (correct.includes(i)) b.classList.add('is-correct');
-          else if (selected.has(i)) b.classList.add('is-wrong');
+          else if (st.selected.has(i)) b.classList.add('is-wrong');
+          b.disabled = true;
         });
         explanation.setAttribute('data-visible', '');
-        checkBtn.hidden = true;
-        nextBtn.hidden = false;
+        if (checkBtn) checkBtn.hidden = true;
         if (ok) correctCount++; else wrongIds.push(qid);
         progress = recordAnswer(progress, qid, ok);
         saveProgress(progress);
+        updateNav();
+      }
+
+      optionButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          if (st.answered) return;
+          const idx = Number(btn.dataset.index);
+          if (!multiple) {
+            // Single-answer: pick this option and grade immediately.
+            st.selected.clear();
+            optionButtons.forEach((b) => b.classList.remove('is-selected'));
+            st.selected.add(idx);
+            btn.classList.add('is-selected');
+            commit();
+          } else {
+            // Multi-answer: toggle, then wait for the check button.
+            if (st.selected.has(idx)) { st.selected.delete(idx); btn.classList.remove('is-selected'); }
+            else { st.selected.add(idx); btn.classList.add('is-selected'); }
+            if (checkBtn) checkBtn.disabled = st.selected.size === 0;
+          }
+        });
       });
 
+      if (checkBtn) checkBtn.addEventListener('click', commit);
+      prevBtn.addEventListener('click', () => { if (pos > 0) goTo(pos - 1); });
       nextBtn.addEventListener('click', () => {
-        item.hidden = true;
-        pos++;
-        if (pos < order.length) items[order[pos]].hidden = false;
+        if (!st.answered) return;
+        if (pos < order.length - 1) goTo(pos + 1);
         else showResult();
       });
 
       function reset() {
-        answered = false;
-        selected.clear();
-        optionButtons.forEach((b) => b.classList.remove('is-selected', 'is-correct', 'is-wrong'));
+        st.answered = false;
+        st.selected.clear();
+        optionButtons.forEach((b) => {
+          b.classList.remove('is-selected', 'is-correct', 'is-wrong');
+          b.disabled = false;
+        });
         explanation.removeAttribute('data-visible');
-        checkBtn.hidden = false;
-        nextBtn.hidden = true;
+        if (checkBtn) { checkBtn.hidden = false; checkBtn.disabled = true; }
       }
       return reset;
     });
 
+    function currentItem(): HTMLElement { return items[order[pos]]; }
+
+    // Sync the shared header + the current card's nav buttons to `pos`.
+    function updateNav() {
+      const item = currentItem();
+      const st = state[order[pos]];
+      const prevBtn = item.querySelector('.quiz-prev') as HTMLButtonElement;
+      const nextBtn = item.querySelector('.quiz-next') as HTMLButtonElement;
+      const last = pos === order.length - 1;
+      prevBtn.disabled = pos === 0;
+      nextBtn.disabled = !st.answered;
+      nextBtn.innerHTML = last ? '結果を見る' : '次の問題&nbsp;<span aria-hidden="true">→</span>';
+      counterEl.textContent = String(pos + 1);
+      totalEl.textContent = String(order.length);
+      progressBar.style.width = `${((pos + 1) / order.length) * 100}%`;
+      multiBadge.hidden = item.dataset.multiple !== 'true';
+    }
+
+    function goTo(newPos: number) {
+      currentItem().hidden = true;
+      pos = newPos;
+      currentItem().hidden = false;
+      updateNav();
+      root.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'start' });
+    }
+
     function showResult() {
+      currentItem().hidden = true;
       const total = order.length;
       const rate = total ? Math.round((correctCount / total) * 100) : 0;
+      progressBar.style.width = '100%';
       result.hidden = false;
       result.innerHTML =
         `<p class="quiz-result__score">${correctCount} / ${total}</p>` +
@@ -117,6 +190,7 @@ const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
         (wrongIds.length
           ? `<button type="button" class="btn btn-primary" data-retry-wrong>誤答だけ再挑戦（${wrongIds.length}問）</button>`
           : `<p class="quiz-result__label">全問正解です！おめでとうございます。</p>`);
+      if (!prefersReduced) result.scrollIntoView({ behavior: 'smooth', block: 'start' });
       const retry = result.querySelector('[data-retry-wrong]');
       if (retry) {
         retry.addEventListener('click', () => {
@@ -127,15 +201,14 @@ const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
           pos = 0;
           correctCount = 0;
           wrongIds = [];
-          items.forEach((it, idx) => {
-            it.hidden = true;
-            if (order.includes(idx)) resets[idx]();
-          });
+          items.forEach((it, idx) => { it.hidden = true; if (order.includes(idx)) resets[idx](); });
           result.hidden = true;
           result.innerHTML = '';
-          if (order.length) items[order[0]].hidden = false;
+          if (order.length) { currentItem().hidden = false; updateNav(); }
         });
       }
     }
+
+    updateNav();
   });
 </script>

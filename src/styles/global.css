@@ -547,6 +547,14 @@ p:last-child {
   margin-block-end: var(--space-4);
 }
 
+/* .cat-desc — category intro paragraph shown on the top-page cards */
+.cat-desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: var(--leading-normal);
+  margin-block-end: var(--space-4);
+}
+
 /*
  * .cat-progress — progress bar wrapper.
  * Inner structure: <div class="cat-progress"><div class="cat-progress__bar" style="--pct:60%"></div></div>
@@ -581,13 +589,109 @@ p:last-child {
    the component can reference them without any style changes.
    ============================================================ */
 
+/* .quiz-page-head — compact title row at the top of a category quiz page */
+.quiz-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  flex-wrap: wrap;
+  margin-block: var(--space-4) var(--space-3);
+}
+
+.quiz-page-title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--color-grey-900);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 480px) {
+  .quiz-page-title { font-size: var(--text-xl); }
+}
+
+/* .quiz-page-foot — "back to top" link beneath the quiz */
+.quiz-page-foot {
+  margin-block-start: var(--space-8);
+}
+
 /*
  * .quiz — outer wrapper for a single quiz session.
  * Rendered as a <section> or <div>.
  */
 .quiz {
-  margin-block: var(--space-8);
+  margin-block: var(--space-4);
 }
+
+/* .quiz-head — progress header shared across all questions in a session */
+.quiz-head {
+  margin-block-end: var(--space-3);
+}
+
+/* .quiz-progress — track for the azure progress fill */
+.quiz-progress {
+  height: 6px;
+  background-color: var(--color-grey-100);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.quiz-progress__bar {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--color-azure-500), var(--color-azure-300));
+  border-radius: var(--radius-pill);
+  transition: width var(--transition-slow);
+}
+
+/* .quiz-head__meta — counter + multi-select badge row beneath the bar */
+.quiz-head__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-block-start: var(--space-3);
+}
+
+/* .quiz-counter — "X / Y" position label */
+.quiz-counter {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.quiz-counter strong {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--color-navy-700);
+}
+
+.quiz-counter__sep {
+  color: var(--color-grey-300);
+}
+
+/* .quiz-badge — "複数選択" pill, shown only on multi-answer questions */
+.quiz-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-azure-100);
+  color: var(--color-navy-700);
+  white-space: nowrap;
+}
+
+.quiz-badge[hidden] { display: none; }
 
 /*
  * .quiz-item — one question block (question + options + explanation).
@@ -600,26 +704,16 @@ p:last-child {
   background-color: var(--bg-surface);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-xl);
-  padding: var(--space-6) var(--space-6) var(--space-8);
+  padding: var(--space-3) var(--space-4) var(--space-4);
   box-shadow: var(--shadow-sm);
-  margin-block-end: var(--space-6);
+  margin-block-end: var(--space-5);
+  scroll-margin-top: 72px;
 }
 
-/* .quiz-progress-bar — thin azure line showing progress at top of quiz-item */
-.quiz-progress-bar {
-  height: 3px;
-  background: linear-gradient(90deg, var(--color-azure-500), var(--color-azure-300));
-  border-radius: var(--radius-pill);
-  margin-block-end: var(--space-6);
-}
-
-/* .quiz-counter — "問 X / Y" label */
-.quiz-counter {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  font-weight: var(--weight-medium);
-  letter-spacing: 0.04em;
-  margin-block-end: var(--space-4);
+@media (min-width: 480px) {
+  .quiz-item {
+    padding: var(--space-6) var(--space-6) var(--space-8);
+  }
 }
 
 /*
@@ -627,12 +721,22 @@ p:last-child {
  * Typically a <p> or <h2>.
  */
 .quiz-question {
-  font-size: var(--text-xl);
+  font-size: var(--text-base);
   font-weight: var(--weight-bold);
   line-height: var(--leading-snug);
   color: var(--color-grey-900);
-  margin-block-end: var(--space-6);
-  letter-spacing: -0.01em;
+  margin-block-end: var(--space-3);
+  letter-spacing: 0.01em;
+  overflow-wrap: break-word;
+  line-break: strict;
+  text-wrap: pretty;
+}
+
+@media (min-width: 480px) {
+  .quiz-question {
+    font-size: var(--text-lg);
+    line-height: var(--leading-snug);
+  }
 }
 
 /*
@@ -642,8 +746,8 @@ p:last-child {
 .quiz-options {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  margin-block-end: var(--space-6);
+  gap: var(--space-2);
+  margin-block-end: var(--space-4);
 }
 
 /*
@@ -654,31 +758,44 @@ p:last-child {
 .quiz-option {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-3);
+  gap: var(--space-2);
   width: 100%;
+  min-height: 44px;
   text-align: left;
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-2) var(--space-4);
   background-color: var(--bg-surface);
   border: var(--border-width-2) solid var(--color-border);
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
   font-size: var(--text-base);
   font-weight: var(--weight-normal);
-  line-height: var(--leading-relaxed);
+  line-height: var(--leading-snug);
   color: var(--color-text);
   cursor: pointer;
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
     color var(--transition-fast),
-    box-shadow var(--transition-fast);
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
   white-space: normal;
+  overflow-wrap: break-word;
+  line-break: strict;
+}
+
+@media (min-width: 480px) {
+  .quiz-option { padding: var(--space-3) var(--space-5); }
 }
 
 .quiz-option:hover:not(:disabled) {
   border-color: var(--color-azure-400);
   background-color: var(--color-azure-100);
   color: var(--color-navy-700);
+  box-shadow: var(--shadow-sm);
+}
+
+.quiz-option:not(:disabled):active {
+  transform: translateY(1px);
 }
 
 /* .quiz-option__letter — "A" / "B" / "C" prefix badge */
@@ -686,17 +803,24 @@ p:last-child {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
   border-radius: var(--radius-sm);
   background-color: var(--color-grey-100);
   color: var(--color-grey-600);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   font-weight: var(--weight-bold);
   transition:
     background-color var(--transition-fast),
     color var(--transition-fast);
+}
+
+/* .quiz-option__text — the answer label; fills remaining width, wraps cleanly */
+.quiz-option__text {
+  flex: 1;
+  min-width: 0;
+  padding-block-start: 1px;
 }
 
 /* --- Quiz option states --- */
@@ -778,27 +902,53 @@ p:last-child {
   margin-block-end: var(--space-2);
 }
 
-/* .quiz-actions — row holding .quiz-check and .quiz-next buttons */
+/* .quiz-actions — multi-select only: "答え合わせ" button + hint */
 .quiz-actions {
   display: flex;
-  gap: var(--space-3);
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
   flex-wrap: wrap;
+  margin-block-end: var(--space-3);
+}
+
+/* .quiz-hint — small helper text beside the check button */
+.quiz-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
 }
 
 /*
- * .quiz-check — "答え合わせ" / "確認" button.
+ * .quiz-check — "答え合わせ" button (multi-select).
  * Compose with .btn and .btn-primary.
  */
 .quiz-check {
-  /* inherits .btn .btn-primary — add any quiz-specific overrides here */
+  /* inherits .btn .btn-primary */
+  padding-block: var(--space-2);
 }
 
 /*
- * .quiz-next — "次の問題" button.
- * Compose with .btn and .btn-secondary.
+ * .quiz-nav — previous / next navigation row at the foot of each card.
+ * .quiz-prev composes .btn .btn-secondary; .quiz-next composes .btn .btn-primary.
  */
-.quiz-next {
-  /* inherits .btn .btn-secondary — add any quiz-specific overrides here */
+.quiz-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-block-start: var(--space-2);
+  padding-block-start: var(--space-3);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.quiz-nav .btn {
+  flex: 0 1 auto;
+  padding-block: var(--space-2);
+}
+
+@media (max-width: 380px) {
+  .quiz-nav .btn {
+    padding-inline: var(--space-4);
+    font-size: var(--text-sm);
+  }
 }
 
 /*
@@ -825,6 +975,27 @@ p:last-child {
   font-size: var(--text-lg);
   color: var(--color-text-muted);
   margin-block-end: var(--space-8);
+}
+
+/* .quiz-about — SEO intro text moved below the quiz to keep the quiz above the fold */
+.quiz-about {
+  margin-block: var(--space-8);
+  padding-block-start: var(--space-6);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.quiz-about__title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--color-grey-900);
+  margin-block-end: var(--space-3);
+}
+
+.quiz-about p {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: var(--leading-relaxed);
+  max-width: 65ch;
 }
 
 /* ============================================================
