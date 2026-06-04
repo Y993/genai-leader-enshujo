@@ -1,43 +1,45 @@
-# Astro Starter Kit: Minimal
+# GenAI Leader 演習場
 
-```sh
-npm create astro@latest -- --template minimal
+Google Cloud **Generative AI Leader** 認定のための、日本語・無料の練習問題集（非公式の学習サイト）。
+
+🔗 **https://y993.github.io/genai-leader-enshujo/**
+
+公式4分野（生成AIの基礎／Google Cloud の生成AI製品／生成AI出力を改善する手法／成功する生成AIソリューションのビジネス戦略）の練習問題を、**即時フィードバック**（その場で正誤＋日本語解説）で解けます。進捗はブラウザの localStorage に保存されます。
+
+> 本サイトは Google / Google Cloud とは無関係の非公式サイトです。
+
+## 技術構成
+
+- [Astro](https://astro.build/) による静的サイト生成（**Node.js ≥ 22.12 が必要**）
+- 問題は JSON データ（`src/data/questions/`）で管理し、ビルド時に [Zod](https://zod.dev/) で検証
+- 採点・進捗ロジックは TypeScript の純関数 ＋ [Vitest](https://vitest.dev/) でテスト
+- GitHub Pages へ GitHub Actions で自動デプロイ
+
+## ローカル開発
+
+```bash
+npm install
+npm run dev        # 開発サーバ（http://localhost:4321/genai-leader-enshujo/）
+npm test           # ユニットテスト（Vitest）
+npm run build      # 本番ビルド（dist/ を生成。ビルド時に全問をZod検証）
+npm run preview    # ビルド結果をローカル配信
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+ベースパスは `/genai-leader-enshujo`。内部リンクは `src/lib/url.ts` の `withBase()` を使うこと。
 
-## 🚀 Project Structure
+## 問題の追加・編集
 
-Inside of your Astro project, you'll see the following folders and files:
+1. `src/data/questions/<category>.json` を編集
+   - `<category>` = `fundamentals` / `google-cloud-offerings` / `improve-output` / `business-strategy`
+2. スキーマは `src/lib/schema.ts`。`id` は `<prefix>-NNN`（`fund` / `gco` / `imp` / `biz`）
+3. `reference` は**実在する公式ドキュメントURL**、`explanation` は「なぜ正解か／なぜ他が誤りか」まで記述
+4. `npm test` と `npm run build` が通ることを確認（ビルド時に Zod がデータを検証し、不正なら停止）
+5. `main` に push すると GitHub Actions が自動でビルド＆公開
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+## デプロイ
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+`.github/workflows/deploy.yml`（`withastro/action`、**`node-version: 22` 指定**）。`main` への push で自動デプロイされます。
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+## ライセンス / 注意
 
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+学習目的の個人運営サイトです。問題文・解説はオリジナル作成で、公式試験問題の転載ではありません。
