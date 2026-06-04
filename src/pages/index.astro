@@ -5,18 +5,22 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { CATEGORIES } from '../data/categories';
+import { ALL_QUESTIONS } from '../data/questions';
 import { withBase } from '../lib/url';
+
+const total = ALL_QUESTIONS.length;
+const questionCount = (slug: string) => ALL_QUESTIONS.filter((q) => q.category === slug).length;
 
 const title = 'Generative AI Leader 無料問題集・模擬試験（日本語）';
 const description =
-  'Google Cloud Generative AI Leader 認定試験の無料・日本語練習問題集。全40問をカテゴリ別に解き、即時フィードバックで効率よく合格力を高めましょう。';
+  `Google Cloud Generative AI Leader 認定試験の無料・日本語練習問題集。全${total}問をカテゴリ別に解き、即時フィードバックで効率よく合格力を高めましょう。`;
 ---
 <BaseLayout title={title} description={description} path="/">
   <div class="page-hero">
     <h1 class="page-title">GenAI Leader<br />無料 練習問題集</h1>
     <p class="page-description">
       Google Cloud Generative AI Leader 認定試験対策の日本語練習問題集。
-      全4カテゴリ・計40問を、その場で正誤確認しながら学習できます。
+      全4カテゴリ・計{total}問を、その場で正誤確認しながら学習できます。
       解説と出典リンク付き。完全無料・登録不要。
     </p>
   </div>
@@ -31,7 +35,7 @@ const description =
           <a href={withBase(`/categories/${cat.slug}/`)} style="text-decoration:none;display:block;">
             <div class="card card--hover">
               <p class="cat-title">{cat.titleJa}</p>
-              <p class="cat-meta">全{cat.targetCount}問・出題比率{cat.weightPercent}%</p>
+              <p class="cat-meta">全{questionCount(cat.slug)}問・出題比率{cat.weightPercent}%</p>
               <p class="cat-desc">{cat.intro}</p>
               <div class="cat-progress">
                 <div class="cat-progress__bar" data-bar-slug={cat.slug} style="--pct: 0%"></div>
