@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Quiz from '../../components/Quiz.astro';
+import RelatedMaterials from '../../components/RelatedMaterials.astro';
+import { CATEGORIES, getCategory } from '../../data/categories';
+import { ALL_QUESTIONS } from '../../data/questions';
+import { filterByCategory } from '../../lib/quiz';
+
+export function getStaticPaths() {
+  return CATEGORIES.map((c) => ({ params: { slug: c.slug } }));
+}
+const { slug } = Astro.params;
+const category = getCategory(slug!)!;
+const questions = filterByCategory(ALL_QUESTIONS, category.slug);
+const title = `${category.titleJa}の問題集`;
+const description = `${category.titleJa}（Generative AI Leader）の無料・日本語の練習問題${questions.length}問。即時に正誤と解説を確認できます。`;
+---
+<BaseLayout title={title} description={description} path={`/categories/${category.slug}/`}>
+  <div class="page-hero">
+    <p class="badge">出題比率 約{category.weightPercent}%</p>
+    <h1 class="page-title">{title}</h1>
+    <p class="page-description">{category.intro}</p>
+  </div>
+  <Quiz questions={questions} />
+  <RelatedMaterials />
+  <p style="margin-top:2rem"><a href={import.meta.env.BASE_URL}>← トップにもどる</a></p>
+</BaseLayout>
+
+<script type="application/ld+json" set:html={JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'Quiz',
+  'name': title,
+  'about': { '@type': 'Thing', 'name': 'Google Cloud Generative AI Leader' },
+  'hasPart': questions.map((q) => ({
+    '@type': 'Question',
+    'eduQuestionType': 'Multiple choice',
+    'text': q.question,
+    'acceptedAnswer': { '@type': 'Answer', 'text': (Array.isArray(q.correct) ? q.correct : [q.correct]).map((i) => q.options[i]).join(' / ') },
+  })),
+})} />

@@ -1,17 +1,69 @@
 ---
 /**
  * src/pages/index.astro
- * NOTE: This is a MINIMAL placeholder used to verify the build.
- * The real top page (category list, etc.) is built in a later task.
+ * Top page: hero + category grid with progress bars.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
----
+import { CATEGORIES } from '../data/categories';
+import { withBase } from '../lib/url';
 
-<BaseLayout
-  title="ホーム"
-  description="Google Cloud 生成AI リーダー認定資格の無料練習問題サイト。カテゴリ別に学習できます。"
-  path="/"
->
-  <h1 style="margin-block: 2rem 1rem; font-size: 2rem; color: #0a1628;">GenAI Leader 演習場</h1>
-  <p style="color: #6e7a8f;">このサイトは工事中です。カテゴリページが近日公開予定です。</p>
+const title = 'Generative AI Leader 無料問題集・模擬試験（日本語）';
+const description =
+  'Google Cloud Generative AI Leader 認定試験の無料・日本語練習問題集。全40問をカテゴリ別に解き、即時フィードバックで効率よく合格力を高めましょう。';
+---
+<BaseLayout title={title} description={description} path="/">
+  <div class="page-hero">
+    <h1 class="page-title">GenAI Leader<br />無料 練習問題集</h1>
+    <p class="page-description">
+      Google Cloud Generative AI Leader 認定試験対策の日本語練習問題集。
+      全4カテゴリ・計40問を、その場で正誤確認しながら学習できます。
+      解説と出典リンク付き。完全無料・登録不要。
+    </p>
+  </div>
+
+  <section aria-labelledby="category-heading">
+    <h2 id="category-heading" style="font-size:var(--text-xl);font-weight:var(--weight-bold);margin-block:var(--space-8) var(--space-4);color:var(--color-grey-900);">
+      カテゴリから学習を始める
+    </h2>
+    <ul class="category-list">
+      {CATEGORIES.map((cat) => (
+        <li>
+          <a href={withBase(`/categories/${cat.slug}/`)} style="text-decoration:none;display:block;">
+            <div class="card card--hover">
+              <p class="cat-title">{cat.titleJa}</p>
+              <p class="cat-meta">全{cat.targetCount}問・出題比率{cat.weightPercent}%</p>
+              <div class="cat-progress">
+                <div class="cat-progress__bar" data-bar-slug={cat.slug} style="--pct: 0%"></div>
+              </div>
+              <p class="cat-meta" data-category-progress={cat.slug} style="margin-block-start:var(--space-2);margin-block-end:0;">未着手</p>
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
 </BaseLayout>
+
+<script>
+  import { loadProgress } from '../lib/storage';
+  import { categoryStats } from '../lib/progress';
+  import { ALL_QUESTIONS } from '../data/questions';
+
+  const p = loadProgress();
+
+  document.querySelectorAll('[data-category-progress]').forEach((el) => {
+    const slug = (el as HTMLElement).dataset.categoryProgress!;
+    const ids = ALL_QUESTIONS.filter((q) => q.category === slug).map((q) => q.id);
+    const s = categoryStats(p, ids);
+    (el as HTMLElement).textContent =
+      s.answered > 0
+        ? `進捗 ${s.answered}/${s.total}・正答率 ${Math.round(s.rate * 100)}%`
+        : '未着手';
+    // Update the progress bar
+    const bar = document.querySelector(`[data-bar-slug="${slug}"]`) as HTMLElement | null;
+    if (bar && s.total > 0) {
+      const pct = Math.round((s.answered / s.total) * 100);
+      bar.style.setProperty('--pct', `${pct}%`);
+    }
+  });
+</script>
