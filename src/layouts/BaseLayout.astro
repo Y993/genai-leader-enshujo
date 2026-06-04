@@ -1,0 +1,100 @@
+---
+/**
+ * BaseLayout.astro — SEO/OGP shell for every page.
+ *
+ * Props:
+ *   title       — page-specific title (prepended before " | {siteName}")
+ *   description — page meta description
+ *   path        — canonical path, e.g. '/categories/fundamentals/'
+ *
+ * Slot: <slot /> receives all page content, wrapped in .container inside <main>.
+ */
+import { withBase } from '../lib/url';
+import '../styles/global.css';
+
+export interface Props {
+  title: string;
+  description: string;
+  path: string;
+}
+
+const { title, description, path } = Astro.props;
+
+const siteName = 'GenAI Leader 演習場';
+const canonical = new URL(withBase(path), Astro.site).toString();
+const ogImage = new URL(withBase('/og-default.png'), Astro.site).toString();
+const fullTitle = `${title} | ${siteName}`;
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+
+    <!-- Canonical -->
+    <link rel="canonical" href={canonical} />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+    <link rel="icon" type="image/x-icon" href={withBase('/favicon.ico')} />
+
+    <!-- Open Graph -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:title"       content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url"         content={canonical} />
+    <meta property="og:image"       content={ogImage} />
+    <meta property="og:site_name"   content={siteName} />
+    <meta property="og:locale"      content="ja_JP" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image"       content={ogImage} />
+  </head>
+
+  <body>
+    <!-- ===== SITE HEADER ===== -->
+    <header class="site-header" role="banner">
+      <div class="site-header__inner">
+        <a href={withBase('/')} class="site-logo">
+          GenAI Leader <span>演習場</span>
+        </a>
+        <p class="site-tagline">Google Cloud 認定資格 学習サイト</p>
+        <nav class="site-nav" aria-label="サイトナビゲーション">
+          <a href={withBase('/categories/')}>カテゴリ</a>
+          <a href={withBase('/about/')}>運営者情報</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main id="main-content" tabindex="-1">
+      <div class="container">
+        <slot />
+      </div>
+    </main>
+
+    <!-- ===== SITE FOOTER ===== -->
+    <footer class="site-footer" role="contentinfo">
+      <div class="site-footer__inner">
+        <nav class="footer-nav" aria-label="フッターナビゲーション">
+          <a href={withBase('/about/')}>運営者情報</a>
+          <a href={withBase('/privacy/')}>プライバシーポリシー</a>
+          <a href={withBase('/disclosure/')}>広告に関する表記</a>
+          <a href={withBase('/contact/')}>お問い合わせ</a>
+        </nav>
+        <p class="footer-disclaimer">
+          このサイトは Google / Google Cloud とは無関係の非公式の学習サイトです。
+        </p>
+        <p class="footer-copyright">
+          &copy; {new Date().getFullYear()} {siteName}. All rights reserved.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

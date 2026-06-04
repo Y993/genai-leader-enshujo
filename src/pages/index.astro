@@ -1,17 +1,17 @@
 ---
-
+/**
+ * src/pages/index.astro
+ * NOTE: This is a MINIMAL placeholder used to verify the build.
+ * The real top page (category list, etc.) is built in a later task.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout
+  title="ホーム"
+  description="Google Cloud 生成AI リーダー認定資格の無料練習問題サイト。カテゴリ別に学習できます。"
+  path="/"
+>
+  <h1 style="margin-block: 2rem 1rem; font-size: 2rem; color: #0a1628;">GenAI Leader 演習場</h1>
+  <p style="color: #6e7a8f;">このサイトは工事中です。カテゴリページが近日公開予定です。</p>
+</BaseLayout>

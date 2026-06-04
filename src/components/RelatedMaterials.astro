@@ -1,0 +1,16 @@
+---
+// src/components/RelatedMaterials.astro
+// フェーズ0: スロットのみ。materials が空なら何も描画しない。
+export interface Props { materials?: { label: string; url: string }[] }
+const { materials = [] } = Astro.props;
+---
+{materials.length > 0 && (
+  <aside class="related-materials" aria-label="関連教材">
+    <h2>関連教材</h2>
+    <ul>
+      {materials.map((m) => (
+        <li><a href={m.url} target="_blank" rel="sponsored noopener noreferrer">{m.label}</a></li>
+      ))}
+    </ul>
+  </aside>
+)}

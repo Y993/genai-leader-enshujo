@@ -1,0 +1,1000 @@
+/*
+ * global.css — GenAI Leader 演習場 Design System
+ * Aesthetic: "Precision Blue" — institutional trust meets modern digital clarity.
+ * A focused, editorial study tool. Navy + Azure + clean geometric structure.
+ * Mobile-first. Accessible (WCAG AA). Reduced-motion aware.
+ *
+ * TABLE OF CONTENTS
+ * 1. Design Tokens (CSS Custom Properties)
+ * 2. Reset & Base
+ * 3. Typography Scale
+ * 4. Layout — .container
+ * 5. Site Header
+ * 6. Site Footer
+ * 7. Buttons — .btn, .btn-primary, .btn-secondary
+ * 8. Cards — .card
+ * 9. Category List — .category-list, .cat-title, .cat-meta, .cat-progress
+ * 10. Quiz Classes — .quiz, .quiz-item, .quiz-question, .quiz-options,
+ *      .quiz-option (+ .is-selected, .is-correct, .is-wrong),
+ *      .quiz-explanation, .quiz-check, .quiz-next, .quiz-result
+ * 11. Related Materials — .related-materials
+ * 12. Utility & Focus Styles
+ * 13. Animations
+ */
+
+/* ============================================================
+   1. DESIGN TOKENS
+   ============================================================ */
+
+:root {
+  /* --- Palette --- */
+  /* Primary: deep navy — conveys trust, authority */
+  --color-navy-900: #0a1628;
+  --color-navy-800: #0f2142;
+  --color-navy-700: #14305e;
+  --color-navy-600: #1a3d7a;
+
+  /* Accent: electric azure — precision, clarity, cloud */
+  --color-azure-500: #1a6cf4;
+  --color-azure-400: #4589f7;
+  --color-azure-300: #7aabfa;
+  --color-azure-100: #deeafd;
+
+  /* Neutral greys — clean, no warmth bias */
+  --color-grey-50:  #f8f9fb;
+  --color-grey-100: #eef0f4;
+  --color-grey-200: #dde1e8;
+  --color-grey-300: #c2c8d4;
+  --color-grey-400: #9ba4b4;
+  --color-grey-500: #6e7a8f;
+  --color-grey-600: #4e5869;
+  --color-grey-700: #333d4e;
+  --color-grey-800: #1e2535;
+  --color-grey-900: #0d1117;
+
+  /* Semantic: quiz feedback */
+  --color-correct-bg:   #e8f5e9;
+  --color-correct-border: #2e7d32;
+  --color-correct-text:   #1b5e20;
+  --color-wrong-bg:     #fdecea;
+  --color-wrong-border: #c62828;
+  --color-wrong-text:   #b71c1c;
+  --color-selected-bg:  #e8f0fe;
+  --color-selected-border: #1a6cf4;
+  --color-selected-text:   #1a3d7a;
+
+  /* White */
+  --color-white: #ffffff;
+
+  /* --- Semantic Aliases --- */
+  --bg-page:       var(--color-grey-50);
+  --bg-surface:    var(--color-white);
+  --bg-header:     var(--color-navy-900);
+  --bg-footer:     var(--color-navy-800);
+  --color-text:        var(--color-grey-800);
+  --color-text-muted:  var(--color-grey-500);
+  --color-text-inverse: var(--color-white);
+  --color-accent:   var(--color-azure-500);
+  --color-accent-hover: var(--color-azure-400);
+  --color-border:   var(--color-grey-200);
+  --color-border-strong: var(--color-grey-300);
+
+  /* --- Typography --- */
+  /* System stack, Japanese-optimised: prefers Noto Sans CJK / Hiragino */
+  --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP",
+               "BIZ UDPGothic", "Yu Gothic UI", "Meiryo UI", "MS PGothic",
+               -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Cascadia Code", "Fira Code", "Source Code Pro",
+               "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  /* Type scale (1.250 Major Third) */
+  --text-xs:   0.64rem;   /* 10.24px */
+  --text-sm:   0.8rem;    /* 12.8px  */
+  --text-base: 1rem;      /* 16px    */
+  --text-lg:   1.25rem;   /* 20px    */
+  --text-xl:   1.563rem;  /* 25px    */
+  --text-2xl:  1.953rem;  /* 31.25px */
+  --text-3xl:  2.441rem;  /* 39px    */
+  --text-4xl:  3.052rem;  /* 48.8px  */
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --leading-tight:  1.25;
+  --leading-snug:   1.4;
+  --leading-normal: 1.6;
+  --leading-relaxed: 1.75;  /* Japanese body text */
+  --leading-loose:  2.0;
+
+  /* --- Spacing Scale (4px base) --- */
+  --space-1:  0.25rem;   /* 4px  */
+  --space-2:  0.5rem;    /* 8px  */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-5:  1.25rem;   /* 20px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-20: 5rem;      /* 80px */
+  --space-24: 6rem;      /* 96px */
+
+  /* --- Borders & Radius --- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 9999px;
+  --border-width: 1px;
+  --border-width-2: 2px;
+
+  /* --- Shadows --- */
+  --shadow-xs:  0 1px 2px rgba(10, 22, 40, 0.06);
+  --shadow-sm:  0 2px 6px rgba(10, 22, 40, 0.08);
+  --shadow-md:  0 4px 16px rgba(10, 22, 40, 0.10);
+  --shadow-lg:  0 8px 32px rgba(10, 22, 40, 0.12);
+  --shadow-focus: 0 0 0 3px rgba(26, 108, 244, 0.30);
+
+  /* --- Layout --- */
+  --container-max: 840px;
+  --container-wide: 1120px;
+  --container-px: var(--space-4);
+
+  /* --- Transitions --- */
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 350ms ease;
+}
+
+/* ============================================================
+   2. RESET & BASE
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text);
+  background-color: var(--bg-page);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img, svg, video {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+ul, ol {
+  list-style: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
+  color: var(--color-grey-900);
+}
+
+p {
+  margin-block-end: var(--space-4);
+}
+
+p:last-child {
+  margin-block-end: 0;
+}
+
+/* ============================================================
+   3. TYPOGRAPHY SCALE (utility classes)
+   ============================================================ */
+
+/* .text-{size} — apply type scale anywhere */
+.text-xs    { font-size: var(--text-xs); }
+.text-sm    { font-size: var(--text-sm); }
+.text-base  { font-size: var(--text-base); }
+.text-lg    { font-size: var(--text-lg); }
+.text-xl    { font-size: var(--text-xl); }
+.text-2xl   { font-size: var(--text-2xl); }
+.text-3xl   { font-size: var(--text-3xl); }
+.text-muted { color: var(--color-text-muted); }
+
+/* ============================================================
+   4. LAYOUT — .container
+   ============================================================ */
+
+/* .container — max-width centred wrapper with responsive horizontal padding */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-px);
+}
+
+/* .container--wide — for full-bleed sections like category grids */
+.container--wide {
+  max-width: var(--container-wide);
+}
+
+/* ============================================================
+   5. SITE HEADER
+   ============================================================ */
+
+/* .site-header — fixed dark top bar */
+.site-header {
+  background-color: var(--bg-header);
+  border-bottom: 1px solid var(--color-navy-700);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(10, 22, 40, 0.3);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  height: 56px;
+  max-width: var(--container-wide);
+  margin-inline: auto;
+  padding-inline: var(--container-px);
+}
+
+/* .site-logo — site name / brand link in header */
+.site-logo {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--color-white) !important;
+  text-decoration: none;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.site-logo:hover {
+  opacity: 0.85;
+  color: var(--color-white) !important;
+}
+
+/* Blue accent stripe on the brand mark */
+.site-logo span {
+  color: var(--color-azure-400);
+}
+
+/* .site-tagline — optional short descriptor beside logo (hidden on small screens) */
+.site-tagline {
+  font-size: var(--text-xs);
+  color: var(--color-grey-400);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: none;
+}
+
+@media (min-width: 480px) {
+  .site-tagline { display: block; }
+}
+
+/* .site-nav — optional header navigation links */
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.site-nav a {
+  font-size: var(--text-sm);
+  color: var(--color-grey-300);
+  text-decoration: none;
+  font-weight: var(--weight-medium);
+  transition: color var(--transition-fast);
+}
+
+.site-nav a:hover {
+  color: var(--color-white);
+}
+
+/* ============================================================
+   6. SITE FOOTER
+   ============================================================ */
+
+/* .site-footer — dark footer with nav links and disclaimer */
+.site-footer {
+  background-color: var(--bg-footer);
+  color: var(--color-grey-300);
+  margin-top: auto;
+  padding-block: var(--space-10) var(--space-8);
+  border-top: 1px solid var(--color-navy-600);
+}
+
+.site-footer__inner {
+  max-width: var(--container-wide);
+  margin-inline: auto;
+  padding-inline: var(--container-px);
+}
+
+/* .footer-nav — horizontal list of footer links */
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin-block-end: var(--space-6);
+}
+
+.footer-nav a {
+  font-size: var(--text-sm);
+  color: var(--color-grey-400);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.footer-nav a:hover {
+  color: var(--color-azure-300);
+}
+
+/* .footer-disclaimer — non-affiliation notice */
+.footer-disclaimer {
+  font-size: var(--text-sm);
+  color: var(--color-grey-500);
+  line-height: var(--leading-normal);
+  margin-block-end: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid var(--color-navy-600);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* .footer-copyright — small copyright text */
+.footer-copyright {
+  font-size: var(--text-xs);
+  color: var(--color-grey-600);
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   7. BUTTONS
+   ============================================================ */
+
+/*
+ * .btn — base button style. Always pair with .btn-primary or .btn-secondary.
+ * Also used standalone for quiz option buttons (.quiz-option).
+ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  line-height: 1.25;
+  border-radius: var(--radius-md);
+  border: var(--border-width-2) solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* .btn-primary — primary call-to-action: solid azure */
+.btn-primary {
+  background-color: var(--color-azure-500);
+  color: var(--color-white);
+  border-color: var(--color-azure-500);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-azure-400);
+  border-color: var(--color-azure-400);
+  color: var(--color-white);
+  box-shadow: var(--shadow-md);
+}
+
+/* .btn-secondary — secondary action: outlined */
+.btn-secondary {
+  background-color: transparent;
+  color: var(--color-azure-500);
+  border-color: var(--color-azure-500);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-azure-100);
+  color: var(--color-navy-700);
+}
+
+/* ============================================================
+   8. CARDS — .card
+   ============================================================ */
+
+/*
+ * .card — generic surface card. Compose child content inside.
+ * Use .card--hover on interactive cards (categories, etc.).
+ */
+.card {
+  background-color: var(--bg-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-xs);
+}
+
+/* .card--hover — adds lift animation for clickable cards */
+.card--hover {
+  cursor: pointer;
+  transition:
+    box-shadow var(--transition-base),
+    transform var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.card--hover:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  border-color: var(--color-azure-300);
+}
+
+/* .card-title — heading inside a card */
+.card-title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--color-grey-900);
+  margin-block-end: var(--space-2);
+}
+
+/* .card-body — text content inside a card */
+.card-body {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: var(--leading-relaxed);
+}
+
+/* ============================================================
+   9. CATEGORY LIST
+   ============================================================ */
+
+/*
+ * .category-list — grid of category cards on the top page.
+ * Each child is a .card.card--hover with .cat-title/.cat-meta/.cat-progress inside.
+ */
+.category-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  margin-block: var(--space-8);
+}
+
+@media (min-width: 600px) {
+  .category-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .category-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* .cat-title — category card heading */
+.cat-title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-grey-900);
+  margin-block-end: var(--space-2);
+  line-height: var(--leading-tight);
+}
+
+/* .cat-meta — sub-metadata line (e.g., "12問") */
+.cat-meta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-block-end: var(--space-4);
+}
+
+/*
+ * .cat-progress — progress bar wrapper.
+ * Inner structure: <div class="cat-progress"><div class="cat-progress__bar" style="--pct:60%"></div></div>
+ */
+.cat-progress {
+  height: 6px;
+  background-color: var(--color-grey-100);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  margin-block-start: var(--space-4);
+}
+
+.cat-progress__bar {
+  height: 100%;
+  width: var(--pct, 0%);
+  background-color: var(--color-azure-500);
+  border-radius: var(--radius-pill);
+  transition: width var(--transition-slow);
+}
+
+/* .cat-icon — optional icon/emoji prefix on category card */
+.cat-icon {
+  font-size: var(--text-2xl);
+  margin-block-end: var(--space-3);
+  line-height: 1;
+}
+
+/* ============================================================
+   10. QUIZ CLASSES
+   These classes define the look. The Quiz component markup is
+   built in a later task; these CSS rules MUST exist now so
+   the component can reference them without any style changes.
+   ============================================================ */
+
+/*
+ * .quiz — outer wrapper for a single quiz session.
+ * Rendered as a <section> or <div>.
+ */
+.quiz {
+  margin-block: var(--space-8);
+}
+
+/*
+ * .quiz-item — one question block (question + options + explanation).
+ * Typically a <div> or <article>.
+ */
+.quiz-item {
+  background-color: var(--bg-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6) var(--space-6) var(--space-8);
+  box-shadow: var(--shadow-sm);
+  margin-block-end: var(--space-6);
+}
+
+/* .quiz-progress-bar — thin azure line showing progress at top of quiz-item */
+.quiz-progress-bar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-azure-500), var(--color-azure-300));
+  border-radius: var(--radius-pill);
+  margin-block-end: var(--space-6);
+}
+
+/* .quiz-counter — "問 X / Y" label */
+.quiz-counter {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.04em;
+  margin-block-end: var(--space-4);
+}
+
+/*
+ * .quiz-question — the question text.
+ * Typically a <p> or <h2>.
+ */
+.quiz-question {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-snug);
+  color: var(--color-grey-900);
+  margin-block-end: var(--space-6);
+  letter-spacing: -0.01em;
+}
+
+/*
+ * .quiz-options — the list of answer options.
+ * Typically a <ul> or <div>.
+ */
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-block-end: var(--space-6);
+}
+
+/*
+ * .quiz-option — a single answer option button.
+ * Use as <button class="btn quiz-option"> for full button semantics.
+ * State classes: .is-selected, .is-correct, .is-wrong
+ */
+.quiz-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  padding: var(--space-4) var(--space-5);
+  background-color: var(--bg-surface);
+  border: var(--border-width-2) solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-normal);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  white-space: normal;
+}
+
+.quiz-option:hover:not(:disabled) {
+  border-color: var(--color-azure-400);
+  background-color: var(--color-azure-100);
+  color: var(--color-navy-700);
+}
+
+/* .quiz-option__letter — "A" / "B" / "C" prefix badge */
+.quiz-option__letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-grey-100);
+  color: var(--color-grey-600);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+/* --- Quiz option states --- */
+
+/* .quiz-option.is-selected — user has clicked this option (pre-check) */
+.quiz-option.is-selected {
+  border-color: var(--color-selected-border);
+  background-color: var(--color-selected-bg);
+  color: var(--color-selected-text);
+  font-weight: var(--weight-medium);
+}
+
+.quiz-option.is-selected .quiz-option__letter {
+  background-color: var(--color-azure-500);
+  color: var(--color-white);
+}
+
+/* .quiz-option.is-correct — revealed as the correct answer */
+.quiz-option.is-correct {
+  border-color: var(--color-correct-border);
+  background-color: var(--color-correct-bg);
+  color: var(--color-correct-text);
+  font-weight: var(--weight-medium);
+}
+
+.quiz-option.is-correct .quiz-option__letter {
+  background-color: var(--color-correct-border);
+  color: var(--color-white);
+}
+
+/* .quiz-option.is-wrong — user's selection that was incorrect */
+.quiz-option.is-wrong {
+  border-color: var(--color-wrong-border);
+  background-color: var(--color-wrong-bg);
+  color: var(--color-wrong-text);
+  font-weight: var(--weight-medium);
+}
+
+.quiz-option.is-wrong .quiz-option__letter {
+  background-color: var(--color-wrong-border);
+  color: var(--color-white);
+}
+
+/* Disabled state once answer is revealed */
+.quiz-option:disabled {
+  cursor: default;
+}
+
+.quiz-option:disabled:not(.is-correct):not(.is-wrong):not(.is-selected) {
+  opacity: 0.6;
+}
+
+/*
+ * .quiz-explanation — post-answer explanation panel.
+ * Shown below options after checking. Hidden by default (JS adds class/attr).
+ */
+.quiz-explanation {
+  display: none;
+  padding: var(--space-4) var(--space-5);
+  background-color: var(--color-grey-50);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  color: var(--color-grey-700);
+  margin-block-end: var(--space-6);
+}
+
+.quiz-explanation[data-visible] {
+  display: block;
+  animation: fadeSlideDown 200ms ease both;
+}
+
+.quiz-explanation strong {
+  display: block;
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+  color: var(--color-grey-900);
+  margin-block-end: var(--space-2);
+}
+
+/* .quiz-actions — row holding .quiz-check and .quiz-next buttons */
+.quiz-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/*
+ * .quiz-check — "答え合わせ" / "確認" button.
+ * Compose with .btn and .btn-primary.
+ */
+.quiz-check {
+  /* inherits .btn .btn-primary — add any quiz-specific overrides here */
+}
+
+/*
+ * .quiz-next — "次の問題" button.
+ * Compose with .btn and .btn-secondary.
+ */
+.quiz-next {
+  /* inherits .btn .btn-secondary — add any quiz-specific overrides here */
+}
+
+/*
+ * .quiz-result — end-of-quiz score summary panel.
+ */
+.quiz-result {
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+  background-color: var(--bg-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.quiz-result__score {
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-azure-500);
+  line-height: 1;
+  margin-block-end: var(--space-2);
+}
+
+.quiz-result__label {
+  font-size: var(--text-lg);
+  color: var(--color-text-muted);
+  margin-block-end: var(--space-8);
+}
+
+/* ============================================================
+   11. RELATED MATERIALS — .related-materials
+   ============================================================ */
+
+/*
+ * .related-materials — affiliate/sponsored links aside.
+ * Rendered only when materials.length > 0 (see RelatedMaterials.astro).
+ */
+.related-materials {
+  margin-block: var(--space-10);
+  padding: var(--space-6);
+  background-color: var(--bg-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.related-materials h2 {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--color-grey-900);
+  margin-block-end: var(--space-4);
+  padding-block-end: var(--space-3);
+  border-bottom: var(--border-width-2) solid var(--color-azure-100);
+}
+
+.related-materials ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.related-materials li a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  color: var(--color-azure-500);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.related-materials li a::before {
+  content: "→";
+  font-size: var(--text-sm);
+  color: var(--color-azure-300);
+}
+
+.related-materials li a:hover {
+  color: var(--color-navy-700);
+}
+
+/* ============================================================
+   12. UTILITY & FOCUS STYLES
+   ============================================================ */
+
+/*
+ * :focus-visible — keyboard-only focus ring.
+ * Applied globally; uses the azure accent for brand consistency.
+ */
+:focus-visible {
+  outline: 3px solid var(--color-azure-400);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Override for buttons which have their own radius */
+.btn:focus-visible,
+.quiz-option:focus-visible {
+  outline: 3px solid var(--color-azure-400);
+  outline-offset: 3px;
+}
+
+/* .sr-only — visually hidden but accessible to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* .badge — small pill tag (e.g., category label, difficulty) */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-azure-100);
+  color: var(--color-navy-700);
+}
+
+/* .page-title — main <h1> on a content page */
+.page-title {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-grey-900);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.025em;
+  margin-block-end: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .page-title { font-size: var(--text-4xl); }
+}
+
+/* .page-description — lead paragraph beneath .page-title */
+.page-description {
+  font-size: var(--text-lg);
+  color: var(--color-text-muted);
+  line-height: var(--leading-relaxed);
+  max-width: 60ch;
+  margin-block-end: var(--space-8);
+}
+
+/* .divider — horizontal rule */
+.divider {
+  border: none;
+  border-top: var(--border-width) solid var(--color-border);
+  margin-block: var(--space-8);
+}
+
+/* .page-hero — top banner area below header on main pages */
+.page-hero {
+  background: linear-gradient(160deg, var(--color-navy-900) 0%, var(--color-navy-700) 100%);
+  color: var(--color-white);
+  padding-block: var(--space-12) var(--space-10);
+}
+
+.page-hero .container {
+  max-width: var(--container-wide);
+}
+
+.page-hero .page-title {
+  color: var(--color-white);
+}
+
+.page-hero .page-description {
+  color: var(--color-grey-300);
+}
+
+/* ============================================================
+   13. ANIMATIONS
+   ============================================================ */
+
+@keyframes fadeSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* .animate-fade-in — simple fade-in on mount */
+.animate-fade-in {
+  animation: fadeIn var(--transition-slow) ease both;
+}
