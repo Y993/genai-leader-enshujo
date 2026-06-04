@@ -1,0 +1,136 @@
+---
+import type { Question } from '../lib/schema';
+export interface Props { questions: Question[] }
+const { questions } = Astro.props;
+const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+---
+<section class="quiz" data-quiz>
+  {questions.map((q, i) => (
+    <article class="quiz-item card" data-question-id={q.id}
+             data-correct={JSON.stringify(Array.isArray(q.correct) ? q.correct : [q.correct])}
+             data-multiple={String(q.isMultiple)} hidden={i !== 0}>
+      <p class="quiz-counter">{i + 1} / {questions.length}{q.isMultiple ? '（複数選択）' : ''}</p>
+      <p class="quiz-question">{q.question}</p>
+      <ul class="quiz-options">
+        {q.options.map((opt, idx) => (
+          <li>
+            <button type="button" class="quiz-option" data-index={idx}>
+              <span class="quiz-option__letter">{letters[idx]}</span>
+              <span>{opt}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <div class="quiz-explanation">
+        <p>{q.explanation}</p>
+        <p><a href={q.reference} target="_blank" rel="noopener noreferrer">出典を確認する</a></p>
+      </div>
+      <div class="quiz-actions">
+        <button type="button" class="btn btn-primary quiz-check">答え合わせ</button>
+        <button type="button" class="btn btn-secondary quiz-next" hidden>次の問題</button>
+      </div>
+    </article>
+  ))}
+  <div class="quiz-result card" data-result hidden></div>
+</section>
+
+<script>
+  import { isCorrect } from '../lib/quiz';
+  import { loadProgress, saveProgress } from '../lib/storage';
+  import { recordAnswer } from '../lib/progress';
+
+  document.querySelectorAll('[data-quiz]').forEach((root) => {
+    const items = Array.from(root.querySelectorAll('.quiz-item')) as HTMLElement[];
+    let current = 0;
+    let progress = loadProgress();
+    let correctCount = 0;
+    let wrongIds: string[] = [];
+
+    // Per-item setup returns a reset() for the retry flow.
+    const resets = items.map((item) => {
+      const selected = new Set<number>();
+      const multiple = item.dataset.multiple === 'true';
+      const correct: number[] = JSON.parse(item.dataset.correct || '[]');
+      const qid = item.dataset.questionId as string;
+      const optionButtons = Array.from(item.querySelectorAll('.quiz-option')) as HTMLButtonElement[];
+      const checkBtn = item.querySelector('.quiz-check') as HTMLButtonElement;
+      const nextBtn = item.querySelector('.quiz-next') as HTMLButtonElement;
+      const explanation = item.querySelector('.quiz-explanation') as HTMLElement;
+      let answered = false;
+
+      optionButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          if (answered) return;
+          const idx = Number(btn.dataset.index);
+          if (!multiple) { selected.clear(); optionButtons.forEach((b) => b.classList.remove('is-selected')); }
+          if (selected.has(idx)) { selected.delete(idx); btn.classList.remove('is-selected'); }
+          else { selected.add(idx); btn.classList.add('is-selected'); }
+        });
+      });
+
+      checkBtn.addEventListener('click', () => {
+        if (answered || selected.size === 0) return;
+        answered = true;
+        const ok = isCorrect({ correct } as any, Array.from(selected));
+        optionButtons.forEach((b) => {
+          const i = Number(b.dataset.index);
+          b.classList.remove('is-selected');
+          if (correct.includes(i)) b.classList.add('is-correct');
+          else if (selected.has(i)) b.classList.add('is-wrong');
+        });
+        explanation.setAttribute('data-visible', '');
+        checkBtn.hidden = true;
+        nextBtn.hidden = false;
+        if (ok) correctCount++; else wrongIds.push(qid);
+        progress = recordAnswer(progress, qid, ok);
+        saveProgress(progress);
+      });
+
+      nextBtn.addEventListener('click', () => {
+        item.hidden = true;
+        current++;
+        if (current < items.length && !items[current].hidden) { /* already visible */ }
+        if (current < items.length) items[current].hidden = false;
+        else showResult();
+      });
+
+      function reset() {
+        answered = false;
+        selected.clear();
+        optionButtons.forEach((b) => b.classList.remove('is-selected', 'is-correct', 'is-wrong'));
+        explanation.removeAttribute('data-visible');
+        checkBtn.hidden = false;
+        nextBtn.hidden = true;
+      }
+      return reset;
+    });
+
+    function showResult() {
+      const result = root.querySelector('[data-result]') as HTMLElement;
+      const rate = items.length ? Math.round((correctCount / items.length) * 100) : 0;
+      result.hidden = false;
+      result.innerHTML =
+        `<p class="quiz-result__score">${correctCount} / ${items.length}</p>` +
+        `<p class="quiz-result__label">正答率 ${rate}%</p>` +
+        (wrongIds.length
+          ? `<button type="button" class="btn btn-primary" data-retry-wrong>誤答だけ再挑戦</button>`
+          : `<p class="quiz-result__label">全問正解です！おめでとうございます。</p>`);
+      const retry = result.querySelector('[data-retry-wrong]');
+      if (retry) {
+        retry.addEventListener('click', () => {
+          const retryIds = [...wrongIds];
+          correctCount = 0;
+          wrongIds = [];
+          items.forEach((it, idx) => {
+            const shouldRetry = retryIds.includes(it.dataset.questionId as string);
+            it.hidden = !shouldRetry;
+            if (shouldRetry) resets[idx]();
+          });
+          current = items.findIndex((it) => !it.hidden);
+          result.hidden = true;
+          result.innerHTML = '';
+        });
+      }
+    }
+  });
+</script>

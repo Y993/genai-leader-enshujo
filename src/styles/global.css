@@ -592,7 +592,10 @@ p:last-child {
 /*
  * .quiz-item — one question block (question + options + explanation).
  * Typically a <div> or <article>.
+ * Guard: ensure the HTML `hidden` attribute is not overridden by display rules.
  */
+.quiz-item[hidden] { display: none !important; }
+
 .quiz-item {
   background-color: var(--bg-surface);
   border: var(--border-width) solid var(--color-border);
