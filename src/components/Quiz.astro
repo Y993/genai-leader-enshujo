@@ -41,8 +41,11 @@ const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
 
   document.querySelectorAll('[data-quiz]').forEach((root) => {
     const items = Array.from(root.querySelectorAll('.quiz-item')) as HTMLElement[];
-    let current = 0;
+    const result = root.querySelector('[data-result]') as HTMLElement;
     let progress = loadProgress();
+    // order = the indices to play through this pass (all items first pass; only wrong ones on retry).
+    let order: number[] = items.map((_, i) => i);
+    let pos = 0;
     let correctCount = 0;
     let wrongIds: string[] = [];
 
@@ -88,9 +91,8 @@ const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
 
       nextBtn.addEventListener('click', () => {
         item.hidden = true;
-        current++;
-        if (current < items.length && !items[current].hidden) { /* already visible */ }
-        if (current < items.length) items[current].hidden = false;
+        pos++;
+        if (pos < order.length) items[order[pos]].hidden = false;
         else showResult();
       });
 
@@ -106,29 +108,32 @@ const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
     });
 
     function showResult() {
-      const result = root.querySelector('[data-result]') as HTMLElement;
-      const rate = items.length ? Math.round((correctCount / items.length) * 100) : 0;
+      const total = order.length;
+      const rate = total ? Math.round((correctCount / total) * 100) : 0;
       result.hidden = false;
       result.innerHTML =
-        `<p class="quiz-result__score">${correctCount} / ${items.length}</p>` +
+        `<p class="quiz-result__score">${correctCount} / ${total}</p>` +
         `<p class="quiz-result__label">正答率 ${rate}%</p>` +
         (wrongIds.length
-          ? `<button type="button" class="btn btn-primary" data-retry-wrong>誤答だけ再挑戦</button>`
+          ? `<button type="button" class="btn btn-primary" data-retry-wrong>誤答だけ再挑戦（${wrongIds.length}問）</button>`
           : `<p class="quiz-result__label">全問正解です！おめでとうございます。</p>`);
       const retry = result.querySelector('[data-retry-wrong]');
       if (retry) {
         retry.addEventListener('click', () => {
           const retryIds = [...wrongIds];
+          order = retryIds
+            .map((id) => items.findIndex((it) => it.dataset.questionId === id))
+            .filter((i) => i >= 0);
+          pos = 0;
           correctCount = 0;
           wrongIds = [];
           items.forEach((it, idx) => {
-            const shouldRetry = retryIds.includes(it.dataset.questionId as string);
-            it.hidden = !shouldRetry;
-            if (shouldRetry) resets[idx]();
+            it.hidden = true;
+            if (order.includes(idx)) resets[idx]();
           });
-          current = items.findIndex((it) => !it.hidden);
           result.hidden = true;
           result.innerHTML = '';
+          if (order.length) items[order[0]].hidden = false;
         });
       }
     }
