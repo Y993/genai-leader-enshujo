@@ -112,5 +112,119 @@
     "explanation": "生成AIで成果を出すには、価値の高いユースケースを明確にし、小規模なパイロットで効果とコストを検証(ROIの確認)したうえで、責任あるAIの方針や従業員の教育・変革管理(チェンジマネジメント)とともに段階的に拡大するアプローチが有効です(選択肢1)。検証なしの一斉適用(2)、コストや成果を測定しない運用(3)、教育を伴わないツール配布のみ(4)は、定着や費用対効果の面でリスクが高く適切ではありません。",
     "reference": "https://cloud.google.com/transform/google-cloud-enterprise-ready-generative-ai",
     "relatedMaterials": []
+  },
+  {
+    "id": "biz-007",
+    "category": "business-strategy",
+    "subTopic": "ROI・ビジネスケース策定",
+    "difficulty": "easy",
+    "tags": ["roi", "business-case", "value"],
+    "question": "経営層に生成AI導入を提案するためのビジネスケースを作成するとき、最初に明確にすべきこととして最も適切なものはどれですか？",
+    "options": [
+      "解決したい具体的なビジネス課題と、期待される成果(投資対効果・KPI)を明確にする",
+      "とりあえず利用できる最新モデルをすべて契約してから用途を考える",
+      "投資対効果は測らず、競合が使っているという理由だけで導入する",
+      "コストや効果の指標は決めず、現場の好みだけでツールを選ぶ"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "ビジネスケースの出発点は、解決したい具体的なビジネス課題を特定し、期待される成果(投資対効果=ROIや効果測定のためのKPI)を明確にすることです(選択肢1)。用途を決めずに最新モデルを全て契約する(2)、ROIを測らず競合追随のみで導入する(3)、コストや効果の指標を決めず現場の好みだけで選ぶ(4)は、価値の検証や予算正当化ができず、責任あるビジネス戦略とは言えません。",
+    "reference": "https://cloud.google.com/transform/how-businesses-achieve-strong-roi-with-google-cloud-ai",
+    "relatedMaterials": []
+  },
+  {
+    "id": "biz-008",
+    "category": "business-strategy",
+    "subTopic": "PoCからプロダクション化",
+    "difficulty": "medium",
+    "tags": ["poc", "production", "mlops"],
+    "question": "生成AIのPoC(概念実証)は成功したものの、本番(プロダクション)へ移行できずに頓挫する『プロトタイプとプロダクションの溝(gap)』を埋めるために重視すべきこととして、最も適切なものはどれですか？",
+    "options": [
+      "セキュリティ・スケーラビリティ・監視(モニタリング)・評価など、本番運用に必要な要件を整備する",
+      "PoCのデモが動いた時点で完成とみなし、そのままユーザーに公開する",
+      "本番では品質評価やモニタリングを一切行わない",
+      "拡張性は考えず、利用者が増えても同じ小規模構成のまま運用し続ける"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "PoCから本番への移行(プロトタイプとプロダクションの溝)を埋めるには、セキュリティ、スケーラビリティ(拡張性)、監視・運用(モニタリング)、出力の品質評価といった本番運用の要件を整備することが重要です(選択肢1)。デモが動いた時点で公開して完成とみなす(2)、品質評価やモニタリングを行わない(3)、利用増を見据えず小規模構成のまま運用する(4)は、信頼性・安全性・性能の面で本番運用に耐えず適切ではありません。",
+    "reference": "https://cloud.google.com/blog/topics/developers-practitioners/production-ready-ai-with-google-cloud-learning-path",
+    "relatedMaterials": []
+  },
+  {
+    "id": "biz-009",
+    "category": "business-strategy",
+    "subTopic": "規制・コンプライアンス",
+    "difficulty": "medium",
+    "tags": ["compliance", "regulation", "certification"],
+    "question": "規制の厳しい業界(金融・医療など)で生成AIを導入する企業が、クラウド事業者を評価する際に確認すべき点として最も適切なものはどれですか？",
+    "options": [
+      "ISO/IEC 27001やSOC、HIPAA、GDPR対応などの第三者認証・コンプライアンス対応状況",
+      "モデルが生成する画像の解像度の高さだけ",
+      "サービスのロゴデザインの新しさ",
+      "本社オフィスの所在地が有名な都市かどうか"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "規制の厳しい業界では、クラウド事業者がISO/IEC 27001やSOC、HIPAA、GDPRといった第三者認証や規制対応(コンプライアンス・オファリング)を満たしているかを確認することが、法令順守とリスク管理の観点で重要です(選択肢1)。生成画像の解像度(2)、ロゴデザインの新しさ(3)、本社の所在都市の知名度(4)は、規制対応や監査適合性とは無関係で、コンプライアンス評価の基準にはなりません。",
+    "reference": "https://cloud.google.com/security/compliance/offerings",
+    "relatedMaterials": []
+  },
+  {
+    "id": "biz-010",
+    "category": "business-strategy",
+    "subTopic": "ベンダーロックインと相互運用性",
+    "difficulty": "medium",
+    "tags": ["vendor-lock-in", "interoperability", "multicloud"],
+    "question": "生成AI基盤の選定で『ベンダーロックイン(特定事業者への過度な依存)』のリスクを抑えるために有効な考え方を2つ選んでください。",
+    "options": [
+      "オープンな標準やオープンソース技術(コンテナ・Kubernetes等)を活用し、移植性を高める",
+      "マルチクラウドや相互運用性を考慮し、必要に応じて他基盤へ移行できる選択肢を残す",
+      "意図的に独自仕様だけに依存し、他基盤への移行を一切できなくする",
+      "将来の移行可能性は考えず、契約後は他社サービスの検討を禁止する"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "ベンダーロックインを抑えるには、オープンな標準やオープンソース技術(コンテナ、Kubernetes等)を使って移植性を高めること(選択肢1)と、マルチクラウドや相互運用性を考慮して他基盤へ移行できる選択肢を残すこと(選択肢2)が有効です。独自仕様だけに意図的に依存して移行不能にする(3)、将来の移行可能性を考えず他社検討を禁止する(4)は、むしろロックインを強め、交渉力や柔軟性を損なうため逆効果です。",
+    "reference": "https://cloud.google.com/learn/what-is-multicloud",
+    "relatedMaterials": []
+  },
+  {
+    "id": "biz-011",
+    "category": "business-strategy",
+    "subTopic": "人材・スキル育成",
+    "difficulty": "easy",
+    "tags": ["talent", "skills", "training"],
+    "question": "全社的に生成AIを活用していくうえで、人材・スキル育成の観点から企業が取るべき対応として最も適切なものはどれですか？",
+    "options": [
+      "役割やレベルに応じた学習パスやトレーニングを用意し、従業員のAIスキル向上を継続的に支援する",
+      "従業員教育は不要で、ツールを配るだけで十分とする",
+      "AIに詳しい一部の人だけが使えればよく、他の従業員の育成は行わない",
+      "スキル育成は時間の無駄なので、外部から人を雇うこと以外は検討しない"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "生成AIを全社で活用するには、役割やレベルに応じた学習パスやトレーニングを整備し、従業員のAIスキルを継続的に高める(リスキリング・アップスキリング)取り組みが重要です(選択肢1)。ツールを配るだけ(2)、一部の人だけが使えればよいとして他を育成しない(3)、育成を無駄とみなし外部採用のみに頼る(4)は、組織全体への定着や持続的な活用を妨げ、適切ではありません。",
+    "reference": "https://cloud.google.com/learn/training/machinelearning-ai",
+    "relatedMaterials": []
+  },
+  {
+    "id": "biz-012",
+    "category": "business-strategy",
+    "subTopic": "Googleの責任あるAI原則",
+    "difficulty": "hard",
+    "tags": ["responsible-ai", "ai-principles", "governance"],
+    "question": "GoogleのAI原則(AI Principles)が掲げる責任あるAIへの考え方として、最も適切に説明しているものはどれですか？",
+    "options": [
+      "大胆なイノベーションを追求しつつ、責任ある開発・運用と社会との協調的な取り組みを重視する",
+      "イノベーションのためなら、安全性やプライバシーへの配慮は不要とする",
+      "AIは社内だけで完結させ、研究者・政府・市民社会との協力は避けるべきとする",
+      "リスクの監視やテストは行わず、開発後はモデルを放置してよいとする"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "GoogleのAI原則は、(1)大胆なイノベーション、(2)責任ある開発・運用、(3)協調的な進歩、を柱とし、人間による監督・安全性・プライバシー保護などを伴いながらAIを社会と協調して進めることを重視します(選択肢1)。安全性やプライバシーへの配慮を不要とする(2)、研究者・政府・市民社会との協力を避ける(3)、リスク監視やテストをせず開発後に放置する(4)は、いずれもGoogleの責任あるAIの考え方に反します。",
+    "reference": "https://ai.google/responsibility/principles/",
+    "relatedMaterials": []
   }
 ]

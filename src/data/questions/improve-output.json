@@ -150,5 +150,157 @@
     "explanation": "生成AIの出力は誤りや偏りを含み得るため、評価指標や人によるレビュー(ヒューマン・イン・ザ・ループ)を通じて正確性・適切性を継続的に検証し、プロンプトや構成を改善していくことが重要です(選択肢3)。出力を無検証で正しいとみなす(1)、プロンプトを見直さない(2)、ハルシネーション対策を不要とする(4)はいずれも誤りで、品質維持の取り組みに反します。",
     "reference": "https://cloud.google.com/discover/what-are-ai-hallucinations",
     "relatedMaterials": []
+  },
+  {
+    "id": "imp-009",
+    "category": "improve-output",
+    "subTopic": "Zero-shotプロンプティング",
+    "difficulty": "easy",
+    "tags": ["zero-shot", "prompting"],
+    "question": "例を一切示さず、タスクの指示だけを与えてモデルに回答させるプロンプト手法を何と呼びますか？",
+    "options": [
+      "Zero-shot(ゼロショット)プロンプティング",
+      "Few-shot(少数例)プロンプティング",
+      "RLHF(人間のフィードバックによる強化学習)",
+      "ベクトル量子化"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Zero-shot(ゼロショット)プロンプティングは、入力と出力の例を一切与えず、タスクの指示や質問だけでモデルに回答させる手法です(選択肢1)。Few-shot(2)は逆に例をいくつか示す手法、RLHF(3)は人間のフィードバックを用いてモデルを学習・調整する手法、ベクトル量子化(4)はデータを離散表現に圧縮する技術であり、いずれも『例を示さず指示だけで答えさせる』手法ではありません。",
+    "reference": "https://cloud.google.com/vertex-ai/generative-ai/docs/learn/prompts/introduction-prompt-design",
+    "relatedMaterials": []
+  },
+  {
+    "id": "imp-010",
+    "category": "improve-output",
+    "subTopic": "プロンプトテンプレート設計",
+    "difficulty": "medium",
+    "tags": ["prompt-template", "prompt-design"],
+    "question": "同じ形式の問い合わせを多数処理するため、固定の指示文に可変部分(プレースホルダ)を組み込んだ『プロンプトテンプレート』を用意する主な利点はどれですか？",
+    "options": [
+      "モデルの学習済み重みそのものを書き換えられる",
+      "毎回ゼロからプロンプトを書く必要がなくなり、出力形式や品質を一貫させやすくなる",
+      "推論時のトークン課金が必ず無料になる",
+      "テンプレート化すると温度パラメータが自動的に最適値へ固定される"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "プロンプトテンプレートは、指示・制約・出力形式などの固定部分に可変のプレースホルダ(入力データなど)を差し込む再利用可能な雛形で、毎回プロンプトを書き直す手間を省き、複数の問い合わせ間で出力の形式や品質を一貫させやすくします(選択肢2)。テンプレート化はあくまでプロンプト文の構造化であり、モデルの重みを書き換えるものではなく(1)、トークン課金が無料になるわけでも(3)、温度が自動最適化されるわけでもありません(4)。",
+    "reference": "https://cloud.google.com/vertex-ai/generative-ai/docs/learn/prompts/prompt-design-strategies",
+    "relatedMaterials": []
+  },
+  {
+    "id": "imp-011",
+    "category": "improve-output",
+    "subTopic": "グラウンディング",
+    "difficulty": "medium",
+    "tags": ["grounding", "rag", "factuality"],
+    "question": "Google検索や自社データなど検証可能な情報源にモデルの回答を結び付け、事実に基づく出力(出典付き)を得る仕組みは『グラウンディング』と呼ばれます。RAGとの関係として最も適切な説明はどれですか？",
+    "options": [
+      "グラウンディングはモデルの温度を上げてランダム性を高める設定の別名である",
+      "グラウンディングは回答を検証可能な情報源に結び付ける広い考え方で、RAG(検索拡張生成)はそれを実現する代表的な手法の一つである",
+      "グラウンディングとRAGは正反対の概念で、両者を同時に使うことはできない",
+      "グラウンディングはモデルを再学習することを指し、検索とは無関係である"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "グラウンディングは、モデルの回答を検証可能な情報源(Google検索結果や自社データなど)に結び付けて事実性を高め出典を示す広い概念で、RAG(検索拡張生成)はその実現手段の代表例の一つです(選択肢2)。グラウンディングは温度設定とは無関係であり(1)、RAGはグラウンディングを実現する手法なので正反対でも排他でもなく(3)、モデルの再学習を指すものでもありません(4)。",
+    "reference": "https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "imp-012",
+    "category": "improve-output",
+    "subTopic": "function calling(ツール使用)",
+    "difficulty": "medium",
+    "tags": ["function-calling", "tool-use"],
+    "question": "Geminiなどのモデルに、為替レート取得や社内システムへの問い合わせといった外部ツール/APIを呼び出させたい場合に用いる仕組みはどれですか？",
+    "options": [
+      "function calling(関数呼び出し/ツール使用)",
+      "温度(temperature)を1.0に固定すること",
+      "出力の文字数上限を増やすこと",
+      "プロンプトをすべて英語にすること"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "function calling(関数呼び出し/ツール使用)は、ツールの仕様(関数宣言)をモデルに渡しておき、モデルが必要と判断したときに呼び出すべき関数名と引数を構造化データとして出力する仕組みで、外部API・システムと連携してリアルタイム情報の取得や操作を行えます(選択肢1)。温度の固定(2)や出力上限の調整(3)はサンプリング/長さの設定にすぎず外部ツール連携の仕組みではなく、プロンプトを英語にすること(4)もツール呼び出しを実現するものではありません。",
+    "reference": "https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/function-calling",
+    "relatedMaterials": []
+  },
+  {
+    "id": "imp-013",
+    "category": "improve-output",
+    "subTopic": "ハルシネーション抑制の実務",
+    "difficulty": "hard",
+    "tags": ["hallucination", "grounding", "citations"],
+    "question": "顧客向けチャットで、最新の事実に基づき、回答の根拠(出典)も提示してハルシネーションを抑えたいという要件があります。実務上の対応として最も適切なものはどれですか？",
+    "options": [
+      "温度を最大化し、モデルの創造性に任せて自由に回答させる",
+      "Google検索や自社データへのグラウンディングを行い、回答に出典を付与したうえで内容を検証する運用を組む",
+      "プロンプトに『絶対に間違えるな』と一文加えるだけで完全に防止できる",
+      "出力をすべて箇条書きにすれば事実誤りは構造的に発生しなくなる"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "ハルシネーション抑制の実務では、回答を検証可能な情報源に結び付けるグラウンディング(Google検索や自社データ)を行い、出典を提示したうえで内容を検証・監視する運用を組むのが効果的です(選択肢2)。温度の最大化(1)はむしろ出力を不安定にして誤りを増やし、指示文の一文(3)だけでハルシネーションを完全に防ぐことはできず、箇条書き化(4)は体裁の問題で事実誤りの有無とは無関係です。",
+    "reference": "https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/ground-gemini",
+    "relatedMaterials": []
+  },
+  {
+    "id": "imp-014",
+    "category": "improve-output",
+    "subTopic": "蒸留(distillation)",
+    "difficulty": "easy",
+    "tags": ["distillation", "model-optimization"],
+    "question": "大きく高性能な『教師モデル』の振る舞いを、より小さく軽量な『生徒モデル』に学習させて模倣させる手法を何と呼びますか？",
+    "options": [
+      "蒸留(distillation)",
+      "グラウンディング",
+      "Few-shotプロンプティング",
+      "トークナイゼーション"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "蒸留(distillation)は、大きく高性能な教師モデルの出力や振る舞いを、より小さく軽量な生徒モデルに学習させて模倣させる手法で、性能を保ちつつ推論コストやレイテンシを抑えやすくなります(選択肢1)。グラウンディング(2)は回答を情報源に結び付ける手法、Few-shot(3)はプロンプトに例を示す手法、トークナイゼーション(4)は入力をトークンに分割する前処理であり、いずれも教師から生徒へ知識を移す手法ではありません。",
+    "reference": "https://cloud.google.com/vertex-ai/docs/training/genai-training-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "imp-015",
+    "category": "improve-output",
+    "subTopic": "評価指標(自動評価・人手評価)",
+    "difficulty": "medium",
+    "tags": ["evaluation", "metrics", "human-evaluation"],
+    "question": "生成AIの出力品質を評価する方法に関する説明として正しいものを2つ選んでください。",
+    "options": [
+      "計算ベースの自動評価は、参照解答との一致度などを指標で機械的に算出し、大量の出力を効率よく比較できる",
+      "モデルベース評価(LLM-as-a-judge)は、別のモデルを審査役として用い出力の良し悪しを判定させる手法である",
+      "人手評価は一切不要であり、自動指標さえあれば品質は完全に保証される",
+      "評価は本番リリース前に一度だけ行えば十分で、運用開始後は再評価しなくてよい"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "計算ベースの自動評価は参照解答との一致度などを指標で機械的に算出でき大量比較に向き(選択肢1)、モデルベース評価(LLM-as-a-judge)は別のモデルを審査役として出力を判定させる手法です(選択肢2)。一方、自動指標だけで品質が完全保証されるわけではなく、ニュアンスや適切性の判断には人手評価が重要なので『人手評価は不要』(3)は誤り、品質は運用中に劣化し得るため継続的な再評価が必要であり『一度きりで十分』(4)も誤りです。",
+    "reference": "https://cloud.google.com/vertex-ai/generative-ai/docs/models/evaluation-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "imp-016",
+    "category": "improve-output",
+    "subTopic": "コンテキスト注入の作法",
+    "difficulty": "hard",
+    "tags": ["context", "prompt-design", "grounding"],
+    "question": "長い参考文書をプロンプトに含め、その内容だけに基づいて回答させたい場合の作法として最も適切なものはどれですか？",
+    "options": [
+      "参考文書を指示・質問と区別せず一続きの文章として混ぜ、どこが資料かは示さない",
+      "参考文書を明確な区切り(見出しや区切り記号)で指示部分と分離し、『以下の資料のみに基づいて答え、書かれていなければ不明と述べよ』と明示する",
+      "参考文書はプロンプトに入れず、口頭で要約した印象だけを書く",
+      "温度を最大にすれば、文書外の知識を使わず資料だけに基づいて答えるようになる"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "コンテキスト(参考文書)を注入する際は、見出しや区切り記号で資料部分を指示・質問と明確に分離し、『提供した資料のみに基づいて答え、記載がなければ不明と述べる』と範囲と振る舞いを明示するのが適切で、資料外の推測やハルシネーションを抑えられます(選択肢2)。資料と指示を混ぜて区別を示さない(1)とモデルがどれを根拠にすべきか判断しづらく、文書を入れず印象だけ書く(3)では根拠が与えられず、温度の最大化(4)は出力範囲を資料に限定する仕組みではありません。",
+    "reference": "https://cloud.google.com/vertex-ai/generative-ai/docs/learn/prompts/introduction-prompt-design",
+    "relatedMaterials": []
   }
 ]

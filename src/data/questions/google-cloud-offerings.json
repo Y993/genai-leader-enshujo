@@ -264,5 +264,271 @@
     "explanation": "Vertex AIの生成AI利用は、選択したモデルや、入力・出力のトークン量(あるいは画像枚数・文字数など)といった利用量に応じた従量課金が一般的です(選択肢1)。呼び出すたびに利用量が積み上がるため『以後ずっと無料』(2)にはならず、課金は出力の正しさ(3)ではなく利用量に基づき、利用量に左右されない固定額(4)でもありません。",
     "reference": "https://cloud.google.com/vertex-ai/generative-ai/docs/learn/overview",
     "relatedMaterials": []
+  },
+  {
+    "id": "gco-015",
+    "category": "google-cloud-offerings",
+    "subTopic": "Document AI",
+    "difficulty": "easy",
+    "tags": ["document-ai", "unstructured-data"],
+    "question": "請求書や契約書などのPDF・スキャン画像から、項目や表などの構造化データを抽出する用途に最も適したGoogle Cloudのサービスはどれですか？",
+    "options": [
+      "Document AI",
+      "Cloud Spanner",
+      "Cloud CDN",
+      "Cloud Scheduler"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Document AIは、非構造化のドキュメント(PDFやスキャン画像など)からテキスト・項目・表などを抽出し、構造化データに変換する文書処理プラットフォームです(選択肢1)。Cloud Spanner(2)はリレーショナルデータベース、Cloud CDN(3)はコンテンツ配信、Cloud Scheduler(4)はジョブのスケジューラであり、いずれも文書からのデータ抽出を目的とするサービスではありません。",
+    "reference": "https://cloud.google.com/document-ai/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "gco-016",
+    "category": "google-cloud-offerings",
+    "subTopic": "Speech-to-Text",
+    "difficulty": "easy",
+    "tags": ["speech-to-text", "audio", "ai-api"],
+    "question": "コールセンターの通話音声を自動でテキストに書き起こしたい場合、最も適したGoogle CloudのAPIはどれですか？",
+    "options": [
+      "Speech-to-Text",
+      "Cloud Storage",
+      "Cloud DNS",
+      "Persistent Disk"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Speech-to-Textは、音声データを機械学習で自動的にテキストへ書き起こす(音声認識)Google CloudのAPIで、通話やメモの文字起こしに適しています(選択肢1)。Cloud Storage(2)はオブジェクトストレージ、Cloud DNS(3)は名前解決、Persistent Disk(4)はブロックストレージであり、いずれも音声認識を行うものではありません。",
+    "reference": "https://cloud.google.com/speech-to-text",
+    "relatedMaterials": []
+  },
+  {
+    "id": "gco-017",
+    "category": "google-cloud-offerings",
+    "subTopic": "Cloud Translation",
+    "difficulty": "easy",
+    "tags": ["translation", "ai-api", "language"],
+    "question": "アプリケーションに組み込んで、ユーザーが入力した文章を多言語へ自動翻訳する機能を提供するGoogle CloudのAPIはどれですか？",
+    "options": [
+      "Cloud Translation",
+      "Cloud Armor",
+      "Cloud NAT",
+      "Cloud Interconnect"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Cloud Translationは、ニューラル機械翻訳モデルを用いてテキストを多言語間で自動翻訳するGoogle CloudのAPIで、アプリへ組み込んで利用できます(選択肢1)。Cloud Armor(2)はWAF/DDoS防御、Cloud NAT(3)はネットワークアドレス変換、Cloud Interconnect(4)は専用線接続であり、いずれも翻訳サービスではありません。",
+    "reference": "https://cloud.google.com/translate/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "gco-018",
+    "category": "google-cloud-offerings",
+    "subTopic": "Gemini API",
+    "difficulty": "easy",
+    "tags": ["gemini-api", "google-ai-studio", "developer"],
+    "question": "個人開発者がGoogle AI Studio(ai.google.dev)からAPIキーを取得し、最小限の設定で素早くGeminiモデルをアプリに組み込みたい場合に利用するものはどれですか？",
+    "options": [
+      "Google AI 向けの Gemini API(ai.google.dev)",
+      "Cloud Billing API",
+      "Cloud Logging API",
+      "Cloud DNS API"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Google AI向けのGemini API(ai.google.dev / Google AI Studio経由)は、APIキーを取得するだけで素早くGeminiモデルを呼び出せる、個人開発やプロトタイピングに適した入り口です(選択肢1)。Cloud Billing API(2)は課金管理、Cloud Logging API(3)はログ管理、Cloud DNS API(4)は名前解決のためのAPIであり、いずれも生成AIモデルを呼び出すものではありません。",
+    "reference": "https://ai.google.dev/gemini-api/docs",
+    "relatedMaterials": []
+  },
+  {
+    "id": "gco-019",
+    "category": "google-cloud-offerings",
+    "subTopic": "Dialogflow",
+    "difficulty": "medium",
+    "tags": ["dialogflow", "conversational-ai", "chatbot"],
+    "question": "自然言語理解を用いて、Webサイトやアプリ、IVR(自動音声応答)に会話型のインターフェース(チャットボットや音声ボット)を設計・統合したい場合、最も適したGoogle Cloudの製品はどれですか？",
+    "options": [
+      "Dialogflow",
+      "Cloud Functions",
+      "Cloud Run",
+      "BigQuery"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Dialogflowは、自然言語理解(NLU)を用いて会話型ユーザーインターフェースを設計し、アプリ・Webサイト・IVRなどに統合できる会話型AIプラットフォームです(選択肢1)。Cloud Functions(2)とCloud Run(3)はコードを実行するための汎用的なサーバーレス基盤であり会話設計そのものを提供せず、BigQuery(4)はデータ分析基盤であり、いずれも会話型インターフェースの構築を目的とした製品ではありません。",
+    "reference": "https://cloud.google.com/dialogflow/docs",
+    "relatedMaterials": []
+  },
+  {
+    "id": "gco-020",
+    "category": "google-cloud-offerings",
+    "subTopic": "Contact Center AI",
+    "difficulty": "medium",
+    "tags": ["ccai", "contact-center", "customer-experience"],
+    "question": "コンタクトセンター全体を、AIによる仮想エージェントやオペレーター支援を含むクラウドネイティブな基盤として提供する、Google CloudのCCaaSソリューションはどれですか？",
+    "options": [
+      "Contact Center AI(CCAI)Platform",
+      "Cloud Monitoring",
+      "Cloud Build",
+      "Secret Manager"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Contact Center AI(CCAI)Platformは、音声・デジタルチャネルの問い合わせを処理し、AIによる仮想エージェントやオペレーター支援(Agent Assist)などを統合的に提供する、クラウドネイティブなContact Center as a Service(CCaaS)ソリューションです(選択肢1)。Cloud Monitoring(2)は監視、Cloud Build(3)はCI/CD、Secret Manager(4)は機密情報管理であり、いずれもコンタクトセンター基盤ではありません。",
+    "reference": "https://cloud.google.com/solutions/contact-center-ai-platform",
+    "relatedMaterials": []
+  },
+  {
+    "id": "gco-021",
+    "category": "google-cloud-offerings",
+    "subTopic": "Vertex AI Vector Search",
+    "difficulty": "medium",
+    "tags": ["vector-search", "embeddings", "rag"],
+    "question": "数十億規模のベクトル(エンベディング)に対して、意味的に類似するデータを高速に検索し、RAGやレコメンドの基盤として使いたい場合に最も適したものはどれですか？",
+    "options": [
+      "Vertex AI Vector Search",
+      "Cloud SQL",
+      "Cloud Tasks",
+      "Cloud Pub/Sub"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Vertex AI Vector Searchは、GoogleのScaNN技術に基づき大規模なベクトル(エンベディング)から意味的に類似するものを高速に検索できるサービスで、RAGやレコメンドの基盤として使われます(選択肢1)。Cloud SQL(2)はリレーショナルデータベース、Cloud Tasks(3)は非同期タスクキュー、Cloud Pub/Sub(4)はメッセージング基盤であり、いずれもベクトル類似検索に特化したサービスではありません。",
+    "reference": "https://cloud.google.com/vertex-ai/docs/vector-search/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "gco-022",
+    "category": "google-cloud-offerings",
+    "subTopic": "Gemini in BigQuery",
+    "difficulty": "medium",
+    "tags": ["bigquery", "gemini", "sql"],
+    "question": "データアナリストが、BigQueryに蓄積したテキストデータに対して、データを外部に移動させずSQLからGeminiモデルを呼び出して要約や分類を行いたい場合、最も適したものはどれですか？",
+    "options": [
+      "BigQueryの生成AI関数(AI.GENERATE / ML.GENERATE_TEXT など)",
+      "Cloud Storageの署名付きURL",
+      "VPC Service Controlsの境界設定",
+      "Cloud Schedulerの定期実行ジョブ"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "BigQueryの生成AI関数(AI.GENERATEやML.GENERATE_TEXTなど)は、SQLからGeminiモデルを呼び出してテキストの要約・分類・生成などを実行でき、データをBigQuery内に保ったまま分析に組み込めます(選択肢1)。Cloud Storageの署名付きURL(2)はファイル共有、VPC Service Controls(3)はデータ流出防止の境界設定、Cloud Scheduler(4)はジョブのスケジューリングであり、いずれもSQLから生成AIを呼び出す機能ではありません。",
+    "reference": "https://cloud.google.com/bigquery/docs/generative-ai-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "gco-023",
+    "category": "google-cloud-offerings",
+    "subTopic": "Responsible AI / 安全フィルタ",
+    "difficulty": "medium",
+    "tags": ["responsible-ai", "safety-filters", "governance"],
+    "question": "Vertex AIで生成AIを業務利用する際、ヘイトや有害表現などの不適切なコンテンツの出力を抑制し、信頼度のしきい値を調整したい場合に活用できる仕組みはどれですか？",
+    "options": [
+      "Vertex AIの安全フィルタ(セーフティ属性スコア)などのResponsible AI機能",
+      "オートスケーリングのCPUしきい値設定",
+      "ロードバランサのヘルスチェック設定",
+      "ディスクの暗号鍵ローテーション設定"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Vertex AIには、生成結果に対するセーフティ属性スコアや構成可能な安全フィルタといったResponsible AI機能があり、有害コンテンツの出力を抑制し、用途に応じた信頼度のしきい値を設定できます(選択肢1)。オートスケーリングのしきい値(2)、ロードバランサのヘルスチェック(3)、ディスク暗号鍵のローテーション(4)はインフラやセキュリティ運用の設定であり、生成AIの安全性フィルタリングとは無関係です。",
+    "reference": "https://cloud.google.com/vertex-ai/generative-ai/docs/learn/responsible-ai",
+    "relatedMaterials": []
+  },
+  {
+    "id": "gco-024",
+    "category": "google-cloud-offerings",
+    "subTopic": "TPU・GPUインフラ",
+    "difficulty": "medium",
+    "tags": ["tpu", "infrastructure", "accelerator"],
+    "question": "大規模なモデルの学習や推論を高速化するためにGoogleが独自設計した、機械学習向けの専用ハードウェアアクセラレータはどれですか？",
+    "options": [
+      "Cloud TPU(Tensor Processing Unit)",
+      "Cloud Spanner",
+      "Cloud Load Balancing",
+      "Cloud VPN"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Cloud TPU(Tensor Processing Unit)は、機械学習のワークロード向けにGoogleが独自設計した専用アクセラレータで、大規模モデルの学習・推論を高速化します(選択肢1)。Cloud Spanner(2)はデータベース、Cloud Load Balancing(3)は負荷分散、Cloud VPN(4)はネットワーク接続のサービスであり、いずれもAI計算を高速化する専用ハードウェアではありません。",
+    "reference": "https://cloud.google.com/tpu",
+    "relatedMaterials": []
+  },
+  {
+    "id": "gco-025",
+    "category": "google-cloud-offerings",
+    "subTopic": "Vertex AI Pipelines・MLOps",
+    "difficulty": "medium",
+    "tags": ["vertex-ai-pipelines", "mlops", "orchestration"],
+    "question": "データ準備から学習・評価・デプロイまでのMLワークフローを、再現可能なかたちで自動化・オーケストレーションしたい場合に最も適したVertex AIの機能はどれですか？",
+    "options": [
+      "Vertex AI Pipelines",
+      "Vertex AI Studio",
+      "Cloud Shell",
+      "Cloud Trace"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Vertex AI Pipelinesは、MLワークフロー(データ準備・学習・評価・デプロイなど)をステップとして定義し、サーバーレスで自動実行・再現できるMLOps向けのオーケストレーション機能です(選択肢1)。Vertex AI Studio(2)はプロンプトの試作ツール、Cloud Shell(3)はブラウザ上のCLI環境、Cloud Trace(4)は分散トレーシングであり、いずれもMLワークフローの自動化を主目的とするものではありません。",
+    "reference": "https://cloud.google.com/vertex-ai/docs/pipelines/introduction",
+    "relatedMaterials": []
+  },
+  {
+    "id": "gco-026",
+    "category": "google-cloud-offerings",
+    "subTopic": "Document AI",
+    "difficulty": "hard",
+    "tags": ["document-ai", "use-case", "ai-api"],
+    "question": "「大量の紙の請求書をスキャンしたPDFから、支払先・金額・日付を自動で抽出し、後続システムに渡したい」という要件に対して適切な記述を2つ選んでください。",
+    "options": [
+      "Document AIを使えば、OCRと項目抽出により請求書から構造化データを取り出せる",
+      "抽出した構造化データをBigQueryなどに連携して後続処理に活用できる",
+      "Imagenを使えば、PDF内の文字を自動で読み取り項目抽出できる",
+      "Cloud Translationを使えば、PDFから金額や日付などの項目を構造化抽出できる"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "Document AIはOCRと項目抽出により請求書などの文書から支払先・金額・日付といった構造化データを取り出せ(選択肢1)、抽出結果はBigQueryなどへ連携して後続処理に活用できます(2)。Imagen(3)はテキストから画像を生成するモデルで文字読み取り・項目抽出は行わず、Cloud Translation(4)は翻訳サービスであり項目の構造化抽出は行わないため、いずれも誤りです。",
+    "reference": "https://cloud.google.com/document-ai/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "gco-027",
+    "category": "google-cloud-offerings",
+    "subTopic": "Gemini for Google Workspace",
+    "difficulty": "hard",
+    "tags": ["gemini-workspace", "productivity", "use-case"],
+    "question": "Gemini for Google Workspaceで実際に提供される支援の例として正しいものを2つ選んでください。",
+    "options": [
+      "Gmailで長いメールスレッドを要約する",
+      "Google スプレッドシートで自然言語の指示から表やデータ整理を支援する",
+      "物理データセンターのサーバーラックを自動で増設する",
+      "オンプレミスのネットワークスイッチのファームウェアを更新する"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "Gemini for Google Workspaceは、Gmailでのスレッド要約(選択肢1)やスプレッドシートでの自然言語による表作成・データ整理の支援(2)など、業務アプリ内の生成AI支援を提供します。サーバーラックの増設(3)やネットワークスイッチのファームウェア更新(4)は物理インフラ運用の作業であり、Workspaceの生成AI支援の機能ではありません。",
+    "reference": "https://workspace.google.com/solutions/ai/",
+    "relatedMaterials": []
+  },
+  {
+    "id": "gco-028",
+    "category": "google-cloud-offerings",
+    "subTopic": "Gemini API",
+    "difficulty": "hard",
+    "tags": ["gemini-api", "vertex-ai", "enterprise"],
+    "question": "ある企業が、Geminiを使うアプリを本番運用するにあたり、Google CloudのIAMやVPC Service Controls、データガバナンスなどエンタープライズ向けの統制下で利用したいと考えています。最も適した利用形態はどれですか？",
+    "options": [
+      "Vertex AI 経由で Gemini API を利用する",
+      "個人向けのAPIキーをコードに直接埋め込んで利用する",
+      "Geminiを使わず表計算ソフトのマクロで代替する",
+      "オンプレミスのサーバーにGeminiモデルを丸ごとコピーして運用する"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "本番運用でIAMやVPC Service Controls、データガバナンスなどエンタープライズの統制下でGeminiを使う場合は、Vertex AI経由でGemini APIを利用する形態が適しています(選択肢1)。個人向けAPIキーの直接埋め込み(2)は手軽ですが企業統制やセキュリティ管理の面で本番運用に不向きで、表計算マクロでの代替(3)は生成AIの利用形態ではなく、Geminiモデルを自社サーバーへ丸ごとコピーして運用すること(4)は提供されていないため、いずれも適切ではありません。",
+    "reference": "https://ai.google.dev/gemini-api/docs",
+    "relatedMaterials": []
   }
 ]
