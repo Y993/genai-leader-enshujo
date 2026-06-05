@@ -1,48 +1,29 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Quiz from '../../components/Quiz.astro';
-import RelatedMaterials from '../../components/RelatedMaterials.astro';
-import { CATEGORIES, getCategory } from '../../data/categories';
-import { ALL_QUESTIONS } from '../../data/questions';
-import { filterByCategory } from '../../lib/quiz';
+// Legacy redirect: /categories/<slug>/ → /genai-leader/categories/<slug>/
+// GitHub Pages cannot issue 301s, so use meta refresh + canonical to retire old URLs.
+import { getExam } from '../../data/exams';
 import { withBase } from '../../lib/url';
 
 export function getStaticPaths() {
-  return CATEGORIES.map((c) => ({ params: { slug: c.slug } }));
+  return getExam('genai-leader')!.categories.map((c) => ({
+    params: { slug: c.slug },
+    props: { slug: c.slug },
+  }));
 }
-const { slug } = Astro.params;
-const category = getCategory(slug!)!;
-const questions = filterByCategory(ALL_QUESTIONS, category.slug);
-const title = `${category.titleJa}の問題集`;
-const description = `${category.titleJa}（Generative AI Leader）の無料・日本語の練習問題${questions.length}問。即時に正誤と解説を確認できます。`;
+
+const { slug } = Astro.props;
+const dest = withBase(`/genai-leader/categories/${slug}/`);
+const canonical = new URL(dest, Astro.site).toString();
 ---
-<BaseLayout title={title} description={description} path={`/categories/${category.slug}/`}>
-  <div class="quiz-page-head">
-    <h1 class="quiz-page-title">{title}</h1>
-    <span class="badge">出題比率 約{category.weightPercent}%</span>
-  </div>
-
-  <Quiz questions={questions} />
-
-  <section class="quiz-about" aria-labelledby="about-heading">
-    <h2 id="about-heading" class="quiz-about__title">この分野について</h2>
-    <p>{category.intro}</p>
-  </section>
-
-  <RelatedMaterials />
-
-  <p class="quiz-page-foot"><a href={withBase('/')}>← トップにもどる</a></p>
-</BaseLayout>
-
-<script type="application/ld+json" set:html={JSON.stringify({
-  '@context': 'https://schema.org',
-  '@type': 'Quiz',
-  'name': title,
-  'about': { '@type': 'Thing', 'name': 'Google Cloud Generative AI Leader' },
-  'hasPart': questions.map((q) => ({
-    '@type': 'Question',
-    'eduQuestionType': 'Multiple choice',
-    'text': q.question,
-    'acceptedAnswer': { '@type': 'Answer', 'text': (Array.isArray(q.correct) ? q.correct : [q.correct]).map((i) => q.options[i]).join(' / ') },
-  })),
-})} />
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content={`0; url=${dest}`} />
+    <link rel="canonical" href={canonical} />
+    <meta name="robots" content="noindex, follow" />
+    <title>移動しました</title>
+  </head>
+  <body>
+    <p>このページは <a href={dest}>{canonical}</a> に移動しました。</p>
+  </body>
+</html>
