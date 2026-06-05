@@ -18,7 +18,7 @@ const title = `${exam.titleJa} 無料問題集（日本語）`;
     <p class="page-description">{exam.description}（全{total}問・登録不要）</p>
   </div>
 
-  <section aria-labelledby="category-heading">
+  <section aria-labelledby="category-heading" data-exam-root data-exam-slug={exam.slug}>
     <h2 id="category-heading" style="font-size:var(--text-xl);font-weight:var(--weight-bold);margin-block:var(--space-8) var(--space-4);color:var(--color-grey-900);">
       カテゴリから学習を始める
     </h2>
@@ -42,21 +42,23 @@ const title = `${exam.titleJa} 無料問題集（日本語）`;
   </section>
 </BaseLayout>
 
-<script define:vars={{ examSlug: exam.slug }}>
+<script>
   import { loadProgress } from '../../lib/storage';
   import { categoryStats } from '../../lib/progress';
   import { questionsFor } from '../../data/questions';
 
+  const root = document.querySelector('[data-exam-root]') as HTMLElement | null;
+  const examSlug = root?.dataset.examSlug ?? '';
   const p = loadProgress();
   document.querySelectorAll('[data-category-progress]').forEach((el) => {
-    const slug = el.dataset.categoryProgress;
+    const slug = (el as HTMLElement).dataset.categoryProgress!;
     const ids = questionsFor(examSlug, slug).map((q) => q.id);
     const s = categoryStats(p, ids);
-    el.textContent =
+    (el as HTMLElement).textContent =
       s.answered > 0
         ? `進捗 ${s.answered}/${s.total}・正答率 ${Math.round(s.rate * 100)}%`
         : '未着手';
-    const bar = document.querySelector(`[data-bar-slug="${slug}"]`);
+    const bar = document.querySelector(`[data-bar-slug="${slug}"]`) as HTMLElement | null;
     if (bar && s.total > 0) {
       bar.style.setProperty('--pct', `${Math.round((s.answered / s.total) * 100)}%`);
     }

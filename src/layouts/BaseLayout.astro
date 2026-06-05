@@ -20,7 +20,7 @@ export interface Props {
 
 const { title, description, path } = Astro.props;
 
-const siteName = 'GenAI Leader 演習場';
+const siteName = 'Google Cloud 認定 演習場';
 const canonical = new URL(withBase(path), Astro.site).toString();
 const ogImage = new URL(withBase('/og-default.png'), Astro.site).toString();
 const fullTitle = `${title} | ${siteName}`;
@@ -62,11 +62,11 @@ const fullTitle = `${title} | ${siteName}`;
     <header class="site-header" role="banner">
       <div class="site-header__inner">
         <a href={withBase('/')} class="site-logo">
-          GenAI Leader <span>演習場</span>
+          Google Cloud <span>認定 演習場</span>
         </a>
         <p class="site-tagline">Google Cloud 認定資格 学習サイト</p>
         <nav class="site-nav" aria-label="サイトナビゲーション">
-          <a href={withBase('/categories/')}>カテゴリ</a>
+          <a href={withBase('/')}>試験一覧</a>
           <a href={withBase('/about/')}>運営者情報</a>
         </nav>
       </div>
