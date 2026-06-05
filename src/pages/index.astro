@@ -1,46 +1,36 @@
 ---
 /**
  * src/pages/index.astro
- * Top page: hero + category grid with progress bars.
+ * Top page: exam selector (GenAI Leader / ACE / ...).
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { CATEGORIES } from '../data/categories';
+import { EXAMS } from '../data/exams';
 import { ALL_QUESTIONS } from '../data/questions';
 import { withBase } from '../lib/url';
 
 const total = ALL_QUESTIONS.length;
-const questionCount = (slug: string) => ALL_QUESTIONS.filter((q) => q.category === slug).length;
-
-const title = 'Generative AI Leader 無料問題集・模擬試験（日本語）';
-const description =
-  `Google Cloud Generative AI Leader 認定試験の無料・日本語練習問題集。全${total}問をカテゴリ別に解き、即時フィードバックで効率よく合格力を高めましょう。`;
+const countFor = (slug: string) => ALL_QUESTIONS.filter((q) => q.examId === slug).length;
+const title = 'Google Cloud 認定 演習場 — 無料問題集（日本語）';
+const description = `Google Cloud 認定試験の無料・日本語練習問題集。現在 ${EXAMS.length} 試験・計${total}問を即時フィードバックで演習できます。完全無料・登録不要。`;
 ---
 <BaseLayout title={title} description={description} path="/">
   <div class="page-hero">
-    <h1 class="page-title">GenAI Leader<br />無料 練習問題集</h1>
-    <p class="page-description">
-      Google Cloud Generative AI Leader 認定試験対策の日本語練習問題集。
-      全4カテゴリ・計{total}問を、その場で正誤確認しながら学習できます。
-      解説と出典リンク付き。完全無料・登録不要。
-    </p>
+    <h1 class="page-title">Google Cloud 認定<br />無料 演習場</h1>
+    <p class="page-description">{description}</p>
   </div>
 
-  <section aria-labelledby="category-heading">
-    <h2 id="category-heading" style="font-size:var(--text-xl);font-weight:var(--weight-bold);margin-block:var(--space-8) var(--space-4);color:var(--color-grey-900);">
-      カテゴリから学習を始める
+  <section aria-labelledby="exam-heading">
+    <h2 id="exam-heading" style="font-size:var(--text-xl);font-weight:var(--weight-bold);margin-block:var(--space-8) var(--space-4);color:var(--color-grey-900);">
+      試験を選ぶ
     </h2>
     <ul class="category-list">
-      {CATEGORIES.map((cat) => (
+      {EXAMS.map((e) => (
         <li>
-          <a href={withBase(`/categories/${cat.slug}/`)} style="text-decoration:none;display:block;">
+          <a href={withBase(`/${e.slug}/`)} style="text-decoration:none;display:block;">
             <div class="card card--hover">
-              <p class="cat-title">{cat.titleJa}</p>
-              <p class="cat-meta">全{questionCount(cat.slug)}問・出題比率{cat.weightPercent}%</p>
-              <p class="cat-desc">{cat.intro}</p>
-              <div class="cat-progress">
-                <div class="cat-progress__bar" data-bar-slug={cat.slug} style="--pct: 0%"></div>
-              </div>
-              <p class="cat-meta" data-category-progress={cat.slug} style="margin-block-start:var(--space-2);margin-block-end:0;">未着手</p>
+              <p class="cat-title">{e.titleJa}</p>
+              <p class="cat-meta">{e.shortJa}・全{countFor(e.slug)}問</p>
+              <p class="cat-desc">{e.tagline}</p>
             </div>
           </a>
         </li>
@@ -48,27 +38,3 @@ const description =
     </ul>
   </section>
 </BaseLayout>
-
-<script>
-  import { loadProgress } from '../lib/storage';
-  import { categoryStats } from '../lib/progress';
-  import { ALL_QUESTIONS } from '../data/questions';
-
-  const p = loadProgress();
-
-  document.querySelectorAll('[data-category-progress]').forEach((el) => {
-    const slug = (el as HTMLElement).dataset.categoryProgress!;
-    const ids = ALL_QUESTIONS.filter((q) => q.category === slug).map((q) => q.id);
-    const s = categoryStats(p, ids);
-    (el as HTMLElement).textContent =
-      s.answered > 0
-        ? `進捗 ${s.answered}/${s.total}・正答率 ${Math.round(s.rate * 100)}%`
-        : '未着手';
-    // Update the progress bar
-    const bar = document.querySelector(`[data-bar-slug="${slug}"]`) as HTMLElement | null;
-    if (bar && s.total > 0) {
-      const pct = Math.round((s.answered / s.total) * 100);
-      bar.style.setProperty('--pct', `${pct}%`);
-    }
-  });
-</script>
