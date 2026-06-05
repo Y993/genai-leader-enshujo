@@ -150,5 +150,195 @@
     "explanation": "正解は「ラベルはキーと値のペアでリソースを整理する仕組みで、課金データのエクスポートと組み合わせるとコストをラベル別に分解できる」です。ラベルはプロジェクトや多くのリソースに付与できるキー/値のメタデータで、リソースの整理・フィルタリングや、請求データの内訳分析（チーム別・環境別のコスト分解）に利用できます。ファイアウォールルールの適用対象を指定するのはラベルではなくネットワークタグ（network tags）の役割なので誤りです。ラベルは複数付与でき、後から追加・更新・削除も可能なので「1 つしか付けられず変更不可」は誤りです。ラベルはメタデータであり、付与しても IAM の権限が自動的に付くことはないため、その記述も誤りです。",
     "reference": "https://cloud.google.com/resource-manager/docs/creating-managing-labels",
     "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-009",
+    "category": "operate",
+    "subTopic": "GKE 運用(ノードプールのスケール・アップグレード)",
+    "difficulty": "medium",
+    "tags": ["gke", "kubernetes", "node-pool", "scaling"],
+    "question": "GKE Standard クラスタで、コスト最適化のため日中はノードを多く、夜間は少なくしたいと考えています。ノードプールには既にクラスタオートスケーラーが有効ですが、現在ノード数の下限が高く設定されており夜間に縮小しきれません。アプリは Deployment で稼働しレプリカ数も負荷に応じて変動させたいです。ノードプール側の構成として最も適切な操作はどれですか。",
+    "options": [
+      "ノードプールの自動スケーリングの最小ノード数（min-nodes）を引き下げ、Pod の HorizontalPodAutoscaler で負荷に応じてレプリカ数を調整する",
+      "ノードプールを削除し、毎晩 gcloud で手動でノード数を変更する運用に切り替える",
+      "クラスタのコントロールプレーンを毎晩アップグレードしてノード数をリセットする",
+      "Deployment の replicas を固定値にし、ノードオートスケーラーを無効化する"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "正解は、ノードプールの自動スケーリングの最小ノード数（min-nodes）を引き下げ、Pod の HorizontalPodAutoscaler でレプリカ数を調整する、です。クラスタオートスケーラーは Pod のリソース要求に応じてノードプールのサイズを min-nodes〜max-nodes の範囲で増減させます。下限が高いと夜間に縮小できないため、min-nodes を下げることでスケールインの余地が生まれます。さらに HorizontalPodAutoscaler で Deployment のレプリカ数を負荷に応じて変動させると、Pod 需要の低下がノード縮小につながり、両者が連動してコスト最適化が実現します。ノードプールを削除して毎晩手動変更するのは運用負荷が高く自動化に反します。コントロールプレーンのアップグレードはバージョン更新の操作であり、ノード数のリセット手段ではありません。replicas を固定しオートスケーラーを無効化すると需要に追従できず、コスト最適化の要件を満たしません。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/how-to/node-pools",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-010",
+    "category": "operate",
+    "subTopic": "Cloud Monitoring(カスタム指標)",
+    "difficulty": "easy",
+    "tags": ["monitoring", "custom-metrics", "observability"],
+    "question": "自社アプリ独自の業務指標（例: 1 分あたりの注文確定数）を Cloud Monitoring で可視化・アラート対象にしたいです。Google Cloud が標準で提供していないこの種の指標を扱うために利用する仕組みはどれですか。",
+    "options": [
+      "稼働時間チェック（uptime check）",
+      "Cloud Billing の予算アラート",
+      "ユーザー定義指標（カスタム指標 / user-defined metrics）",
+      "Compute Engine のマシンタイプ推奨"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "正解はユーザー定義指標（カスタム指標）です。ユーザー定義指標は Google Cloud が標準で定義していない、アプリ固有の値を計測・記録するための仕組みで、API・OpenTelemetry・Prometheus などを通じて Cloud Monitoring に書き込み、チャート表示やアラートに利用できます。稼働時間チェックは外部エンドポイントの到達性を測る機能で、独自の業務値を記録するものではありません。予算アラートは課金額がしきい値を超えたときの通知であり、アプリの業務指標とは無関係です。マシンタイプ推奨は VM のサイズ最適化を提案する機能で、カスタム指標の記録手段ではありません。",
+    "reference": "https://cloud.google.com/monitoring/custom-metrics",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-011",
+    "category": "operate",
+    "subTopic": "ログベースの指標",
+    "difficulty": "medium",
+    "tags": ["logging", "logs-based-metrics", "alerting"],
+    "question": "アプリのログには認証失敗時に「AUTH_FAILED」という文字列を含むエントリが出力されます。この文字列を含むログエントリの発生回数を時系列の指標として集計し、急増時にアラートを出したいです。最も適切な構成はどれですか。",
+    "options": [
+      "ログを Cloud Storage にエクスポートし、毎時バケット内のファイルを手動で grep して件数を数える",
+      "「AUTH_FAILED」に一致するログエントリを数えるカウンタ型のログベース指標を作成し、その指標にアラートポリシーを設定する",
+      "Cloud Trace でリクエストのレイテンシを計測し、レイテンシ増加で認証失敗を推定する",
+      "稼働時間チェックを認証エンドポイントに向けて設定し、失敗率を指標として使う"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "正解は、カウンタ型のログベース指標を作成してアラートポリシーを設定する、です。ログベース指標はログエントリの内容から導出される Cloud Monitoring 指標で、フィルタに一致するエントリ数を数えるカウンタ型などがあり、生成された時系列に対してアラートポリシーを設定できます。「AUTH_FAILED」に一致するエントリ数の急増を検知する用途に最適です。Cloud Storage にエクスポートして手動で grep するのは自動化されず時系列指標にもならず非効率です。Cloud Trace はレイテンシの分散トレースであり、特定文字列の出現回数を数える機能ではありません。稼働時間チェックは外部到達性の監視であって、ログ中の文字列出現を集計するものではありません。",
+    "reference": "https://cloud.google.com/logging/docs/logs-based-metrics",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-012",
+    "category": "operate",
+    "subTopic": "予算アラートの Pub/Sub による自動アクション",
+    "difficulty": "hard",
+    "tags": ["billing", "budget", "pubsub", "automation"],
+    "question": "サンドボックス用プロジェクトで、月間コストが予算の 100% に達したら自動的に課金を停止してリソースを無効化する仕組みを作りたいです。Cloud Billing の予算（Budget）を使ってプログラムによる自動アクションを実現するために構成すべきものを 2 つ選んでください。",
+    "options": [
+      "予算（Budget）に Pub/Sub トピックを接続し、しきい値超過時に通知メッセージを発行させる",
+      "予算のメール通知のスクリーンショットを担当者が確認して手動でプロジェクトを削除する",
+      "Pub/Sub トピックをトリガーに Cloud Functions などを実行し、課金の無効化やリソース停止を自動で行う",
+      "稼働時間チェックを予算額に向けて設定し、超過時に再起動させる"
+    ],
+    "isMultiple": true,
+    "correct": [0, 2],
+    "explanation": "正解は、予算に Pub/Sub トピックを接続して通知メッセージを発行させること（選択肢1）と、その Pub/Sub をトリガーに Cloud Functions などで課金無効化やリソース停止を自動実行すること（選択肢3）です。予算のプログラムによる通知では、しきい値や実コスト・予測コストの情報を含むメッセージが Pub/Sub トピックへ発行され、それを受け取った関数で Billing API を呼び出して課金を切り離したり、リソースを停止したりする自動アクションを実装できます。メール通知のスクリーンショットを人が見て手動削除する方法（選択肢2）は自動化ではなく要件を満たしません。稼働時間チェック（選択肢4）は外部エンドポイントの可用性監視機能であり、予算超過に応じた自動アクションとは無関係です。",
+    "reference": "https://cloud.google.com/billing/docs/how-to/budgets-programmatic-notifications",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-013",
+    "category": "operate",
+    "subTopic": "コスト最適化(Recommender・rightsizing)",
+    "difficulty": "medium",
+    "tags": ["cost-optimization", "recommender", "rightsizing", "compute-engine"],
+    "question": "ある Compute Engine VM 群が長期間にわたり割り当てた CPU・メモリに対して低い使用率で稼働しており、コスト削減の余地がありそうです。各 VM を個別に勘で調整するのではなく、実際の使用状況に基づいた根拠あるサイズ変更の提案を得たいです。最も適切な方法はどれですか。",
+    "options": [
+      "すべての VM を一律で最小のマシンタイプに変更する",
+      "VM をすべて削除し、必要になったら都度作り直す運用にする",
+      "稼働時間チェックを各 VM に設定して使用率を推定する",
+      "Compute Engine のマシンタイプ推奨（rightsizing recommendations / Recommender）を確認し、提案に基づいてサイズを変更する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "正解は、Compute Engine のマシンタイプ推奨（rightsizing recommendations / Recommender）を確認して提案に基づきサイズを変更する、です。この機能は VM の CPU・メモリの使用パターンを一定期間モニタリングして分析し、過剰割り当ての VM にはダウンサイズ、逼迫している VM にはアップサイズの推奨を自動生成します。実使用に基づく根拠あるサイズ変更の提案を得たいという要件に合致します。すべてを一律で最小マシンタイプに変更すると、負荷の高い VM で性能不足を招くおそれがあり乱暴です。VM を都度作り直す運用は手間が大きく、サイズ最適化の根拠にもなりません。稼働時間チェックは外部到達性の監視であって、リソース使用率に基づくサイズ提案を行う機能ではありません。",
+    "reference": "https://cloud.google.com/compute/docs/instances/apply-machine-type-recommendations-for-instances",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-014",
+    "category": "operate",
+    "subTopic": "カスタムイメージの管理とライフサイクル",
+    "difficulty": "medium",
+    "tags": ["compute-engine", "custom-image", "image-lifecycle", "mig"],
+    "question": "標準化したミドルウェア構成を含む VM をテンプレート化し、多数のインスタンスを同一構成で素早く起動できるようにしたいです。さらに、新バージョンへ移行する際は古い構成のイメージを新規作成では選ばれにくくしたいです。最も適切な方法はどれですか。",
+    "options": [
+      "構成済みディスクからカスタムイメージを作成して起動元に使い、世代交代時には旧イメージを非推奨（deprecated）に設定する",
+      "毎回まっさらな公開イメージから起動し、起動後に手作業でミドルウェアを毎台インストールする",
+      "VM のマシンタイプを大きくすることで構成の標準化を実現する",
+      "スナップショットスケジュールを設定すれば自動的に標準構成の新規 VM が量産される"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "正解は、構成済みディスクからカスタムイメージを作成して起動元に使い、世代交代時には旧イメージを非推奨（deprecated）に設定する、です。カスタムイメージはディスクやスナップショットなどから作成でき、同一構成の VM を素早く多数起動する起動元として使えます。イメージにはライフサイクル状態があり、旧バージョンを deprecated に設定すると新規作成時に選ばれにくくなり、後継イメージへ誘導できます。公開イメージから毎回手作業でインストールする方法は標準化・迅速化の要件に反します。マシンタイプを大きくするのは性能の話で、構成の標準化とは無関係です。スナップショットスケジュールはディスクの定期バックアップを自動化する機能で、標準構成の新規 VM を量産する仕組みではありません。",
+    "reference": "https://cloud.google.com/compute/docs/images/create-custom",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-015",
+    "category": "operate",
+    "subTopic": "メンテナンスポリシーとライブマイグレーション",
+    "difficulty": "hard",
+    "tags": ["compute-engine", "host-maintenance", "live-migration", "availability"],
+    "question": "重要な業務 VM について、Google 側のホストメンテナンス時にもできる限り停止させたくありません。この VM は GPU を使用しておらず、汎用のマシンタイプで稼働しています。ホストメンテナンス時の挙動を制御する設定として正しいものはどれですか。",
+    "options": [
+      "ホストメンテナンス時の挙動は変更できず、必ず VM が終了（TERMINATE）される",
+      "オートスケーリングを有効にすればホストメンテナンスは発生しなくなる",
+      "ホストメンテナンスポリシーで onHostMaintenance を MIGRATE（ライブマイグレーション）に設定すると、メンテナンス時に VM を別ホストへ移行して稼働を継続できる",
+      "スナップショットスケジュールを設定すればホストメンテナンス中も無停止で稼働する"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "正解は、ホストメンテナンスポリシーで onHostMaintenance を MIGRATE（ライブマイグレーション）に設定する、です。ホストメンテナンスポリシーは、ホストがメンテナンスやエラーに遭遇したときに VM がどう振る舞うかを決める設定で、MIGRATE を指定すると VM を別のホストへライブマイグレーションして稼働を継続できます。GPU を持たない汎用マシンタイプの VM はライブマイグレーションに対応します（GPU 付きインスタンスは TERMINATE が必要）。したがって「変更できず必ず終了する」は誤りです。オートスケーリングは負荷に応じた台数調整の仕組みで、ホストメンテナンスの発生有無を制御するものではありません。スナップショットスケジュールはディスクの定期バックアップであり、メンテナンス中の無停止稼働を保証するものではありません。",
+    "reference": "https://cloud.google.com/compute/docs/instances/setting-vm-host-options",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-016",
+    "category": "operate",
+    "subTopic": "通知チャネルとアラートの構成",
+    "difficulty": "medium",
+    "tags": ["monitoring", "alerting", "notification-channels"],
+    "question": "本番システムの重大アラートについて、オンコール担当へ即時に届く経路と、後続の自動処理を起動できる経路の両方で通知したいです。Cloud Monitoring のアラートポリシーに紐づける通知チャネルとして適切なものを 2 つ選んでください。",
+    "options": [
+      "PagerDuty や SMS など、オンコール担当へ即時に届く通知チャネルを構成する",
+      "Cloud Trace のスパンを通知チャネルとして登録する",
+      "Pub/Sub トピックを通知チャネルにして、メッセージを受けた自動処理（関数など）を起動する",
+      "BigQuery のテーブルを通知チャネルとして直接指定する"
+    ],
+    "isMultiple": true,
+    "correct": [0, 2],
+    "explanation": "正解は、PagerDuty や SMS などの即時通知チャネル（選択肢1）と、Pub/Sub トピックの通知チャネル（選択肢3）です。Cloud Monitoring の通知チャネルにはメール・モバイルアプリ・PagerDuty・SMS・Slack・Webhook・Pub/Sub・Google Chat などがあり、アラートポリシーの発火時にこれらへ通知できます。PagerDuty や SMS はオンコール担当へ即時に届く経路に適し、Pub/Sub はメッセージを受け取った Cloud Functions などで後続の自動処理を起動する経路に使えます。Cloud Trace のスパン（選択肢2）はトレースデータであって通知チャネルではありません。BigQuery テーブル（選択肢4）はデータウェアハウスの宛先であり、アラートの通知チャネルとして直接指定するものではありません。",
+    "reference": "https://cloud.google.com/monitoring/support/notification-options",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-017",
+    "category": "operate",
+    "subTopic": "Cloud Trace・Profiler",
+    "difficulty": "easy",
+    "tags": ["cloud-trace", "latency", "observability"],
+    "question": "マイクロサービス構成のアプリで、あるリクエストが複数のサービス呼び出しを経て応答するまでのどこで時間がかかっているかを、分散トレースとして可視化してレイテンシのボトルネックを特定したいです。最も適切なサービスはどれですか。",
+    "options": [
+      "Cloud Billing の請求レポート",
+      "Cloud Trace",
+      "スナップショットスケジュール",
+      "稼働時間チェック（uptime check）"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "正解は Cloud Trace です。Cloud Trace は分散トレーシングのサービスで、リクエストがアプリ内の各サービスや RPC 呼び出しを通過する際の処理時間を計測し、どこにレイテンシのボトルネックがあるかを可視化できます。Cloud Billing の請求レポートはコストの内訳を示すもので、レイテンシ分析とは無関係です。スナップショットスケジュールはディスクの定期バックアップ機能であり、トレースとは目的が異なります。稼働時間チェックは外部エンドポイントの可用性を測る機能で、サービス間呼び出しのレイテンシ内訳を可視化するものではありません。",
+    "reference": "https://cloud.google.com/trace/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-018",
+    "category": "operate",
+    "subTopic": "Cloud Monitoring(ダッシュボードと可視化)",
+    "difficulty": "medium",
+    "tags": ["monitoring", "dashboard", "visualization", "observability"],
+    "question": "運用チームが、複数のサービスにまたがる指標（CPU 使用率・リクエスト数・カスタム指標など）を 1 つの画面でまとめて継続的に監視できるようにしたいです。Cloud Monitoring で構成すべきものとして最も適切なのはどれですか。",
+    "options": [
+      "Logs Explorer のクエリを毎回手入力して結果を都度確認する",
+      "予算（Budget）とアラートだけを設定する",
+      "Cloud Trace のトレースリストを常時開いておく",
+      "複数の指標を折れ線グラフやスコアカードなどのウィジェットとして配置したカスタムダッシュボードを作成する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "正解は、複数の指標をウィジェットとして配置したカスタムダッシュボードを作成する、です。Cloud Monitoring のカスタムダッシュボードでは、折れ線グラフ・積み上げエリア・テーブル・ゲージ・スコアカードなどのウィジェットを用いて、異なるソースの指標（標準指標やカスタム指標）を同じ画面に並べて継続的に監視できます。Logs Explorer のクエリを毎回手入力する方法はログ閲覧向けで、複数指標を一画面で常時監視する用途には適しません。予算とアラートはコスト通知が目的で、指標の可視化ダッシュボードではありません。Cloud Trace のトレースリストはレイテンシ分析用であり、各種指標をまとめて監視する画面ではありません。",
+    "reference": "https://cloud.google.com/monitoring/dashboards",
+    "relatedMaterials": []
   }
 ]

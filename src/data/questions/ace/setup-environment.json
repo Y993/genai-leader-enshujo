@@ -131,5 +131,176 @@
     "explanation": "Google Cloud のリソース階層では IAM ポリシーは上位から下位へ継承され、フォルダに付与したロールはその配下のすべてのフォルダとプロジェクトに継承されます(選択肢3が正解)。継承はフォルダ配下のリソースに及ぶため、フォルダ自身のメタデータだけに限定されることはありません(選択肢1は誤り)。継承は上位から下位への一方向であり、下位のプロジェクトの付与が上位のフォルダや組織へ伝播することはありません(選択肢2は誤り)。組織・フォルダ・プロジェクトの各階層レベルで IAM ポリシーを設定でき、フォルダにもロールを付与できます(選択肢4は誤り)。",
     "reference": "https://cloud.google.com/resource-manager/docs/cloud-platform-resource-hierarchy",
     "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-008",
+    "category": "setup-environment",
+    "subTopic": "共有VPC(ホスト/サービスプロジェクト接続)",
+    "difficulty": "medium",
+    "tags": ["shared-vpc", "host-project", "service-project", "networking"],
+    "question": "ネットワークチームが一元的に管理する 1 つの共有 VPC ネットワークを用意し、複数のアプリケーションチームのプロジェクトからその共通ネットワークの内部 IP を使って通信させたいと考えています。共有 VPC の構成として正しいものはどれですか？",
+    "options": [
+      "各アプリケーションチームのプロジェクトをそれぞれホストプロジェクトとして有効化し、ネットワークチームのプロジェクトをサービスプロジェクトとして接続する",
+      "ネットワークチームのプロジェクトをホストプロジェクトとして有効化し、共有 VPC ネットワークを保持させたうえで、各アプリケーションチームのプロジェクトをサービスプロジェクトとして接続する",
+      "1 つのプロジェクトをホストプロジェクトとサービスプロジェクトの両方として同時に構成し、すべてのチームでそれを共有する",
+      "VPC ネットワークピアリングを使う必要があり、共有 VPC ではプロジェクトをまたいだ内部 IP 通信はできない"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "共有 VPC では、共通ネットワークを保持する 1 つのプロジェクトをホストプロジェクトとして有効化し、そのネットワークを利用する複数のプロジェクトをサービスプロジェクトとして接続します。ネットワークを一元管理するネットワークチームのプロジェクトをホスト、利用側のアプリケーションチームのプロジェクトをサービスにするのが正しい構成です(選択肢2が正解)。ホストとサービスの役割が逆では、共通ネットワークを保持するプロジェクトに利用側を接続できません(選択肢1は誤り)。1 つのプロジェクトをホストとサービスの両方として同時に構成することはできません(選択肢3は誤り)。共有 VPC はまさにプロジェクトをまたいで内部 IP 通信を実現する仕組みであり、ピアリングが必須というのは誤りです(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/vpc/docs/shared-vpc",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-009",
+    "category": "setup-environment",
+    "subTopic": "組織ポリシー(Organization Policy)の制約適用",
+    "difficulty": "medium",
+    "tags": ["organization-policy", "constraints", "governance", "resource-hierarchy"],
+    "question": "ある企業では、組織全体で外部 IP アドレスを持つ VM の作成を原則禁止しつつ、特定の DMZ フォルダ配下のプロジェクトだけは例外として許可したいと考えています。最小限の設定変更でこの要件を満たす方法として最も適切なものはどれですか？",
+    "options": [
+      "各プロジェクトの全ユーザーから VM 作成権限を IAM で剥奪し、外部 IP を持つ VM を作れないようにする",
+      "組織レベルで外部 IP を制限する組織ポリシーを設定するのではなく、すべてのプロジェクトで個別にファイアウォールルールを作成する",
+      "外部 IP を許可・拒否する制約は組織ポリシーには存在しないため、運用ルールの文書化で対応するしかない",
+      "組織レベルで外部 IP を制限する組織ポリシーの制約を設定し、DMZ フォルダにはその制約を上書き(許可)する組織ポリシーを設定する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "組織ポリシーは組織・フォルダ・プロジェクトの階層に沿って継承され、上位で設定した制約を下位で上書きできます。組織レベルで外部 IP を制限する制約を設定し、例外としたい DMZ フォルダでその制約を上書きして許可するのが、最小限の設定で要件を満たす方法です(選択肢4が正解)。IAM の権限剥奪は「誰が操作できるか」を制御するもので、設定内容(外部 IP の有無)そのものを禁止する用途には不向きです(選択肢1は誤り)。組織ポリシーを使えば階層で一括制御できるのに、各プロジェクトでファイアウォールを個別作成するのは非効率で要件(外部 IP 付き VM の作成抑止)も満たしません(選択肢2は誤り)。外部 IP の利用を制限する組織ポリシーの制約は実在するため、文書化だけで対応するのは誤りです(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/resource-manager/docs/organization-policy/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-010",
+    "category": "setup-environment",
+    "subTopic": "サービスアカウントのimpersonation(なりすまし)",
+    "difficulty": "hard",
+    "tags": ["service-account", "impersonation", "iam", "least-privilege", "security"],
+    "question": "開発者が長期のサービスアカウントキー(JSON キーファイル)を端末に置かずに、一時的にあるサービスアカウントの権限で gcloud コマンドを実行できるようにしたいと考えています。サービスアカウントの impersonation(なりすまし)に関する説明として正しいものを2つ選んでください。",
+    "options": [
+      "なりすましたい開発者(またはそのグループ)に、対象サービスアカウントに対する Service Account Token Creator(roles/iam.serviceAccountTokenCreator)ロールを付与する必要がある",
+      "個々の gcloud コマンドに `--impersonate-service-account` フラグを付けると、その実行に対して短命の認証情報が発行され、サービスアカウントの権限で実行される",
+      "impersonation を使うには必ず JSON キーファイルをダウンロードして端末に保存する必要がある",
+      "impersonation は組織の所有者(Owner)だけが利用でき、個々のユーザーやグループには許可できない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "サービスアカウントの impersonation を使うには、なりすます側のプリンシパル(ユーザーやグループ)に対象サービスアカウントへの Service Account Token Creator(roles/iam.serviceAccountTokenCreator)ロールを付与する必要があります。このロールには短命の認証情報を発行する権限が含まれます(選択肢1は正しい)。`--impersonate-service-account` フラグを個々の gcloud コマンドに付けると、その実行に対して短命の認証情報が発行され、サービスアカウントの権限でコマンドが実行されます(選択肢2は正しい)。impersonation はまさに長期キーファイルを端末に置かないための手段であり、JSON キーのダウンロードは不要です(選択肢3は誤り)。適切なロールを付与すれば任意のユーザーやグループが利用でき、Owner 限定ではありません(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/iam/docs/service-account-impersonation",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-011",
+    "category": "setup-environment",
+    "subTopic": "gcloud の認証(activate-service-account / application-default)",
+    "difficulty": "medium",
+    "tags": ["gcloud", "auth", "service-account", "ci-cd", "key-file"],
+    "question": "対話的なブラウザ認証が使えない CI/CD パイプライン上で、サービスアカウントのキーファイルを使って gcloud CLI を認証させたいと考えています。最も適切なコマンドはどれですか？",
+    "options": [
+      "gcloud auth activate-service-account --key-file=KEY_FILE.json",
+      "gcloud auth login",
+      "gcloud auth application-default login",
+      "gcloud config set account でメールアドレスを設定するだけでよい"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "gcloud auth activate-service-account はサービスアカウントのキーファイル(--key-file)を指定して gcloud CLI を非対話的に認証させるコマンドで、CI/CD のような自動化環境に適しています(選択肢1が正解)。gcloud auth login はブラウザを使う対話的なユーザー認証で、ヘッドレスなパイプラインには不向きです(選択肢2は誤り)。gcloud auth application-default login はアプリケーションのデフォルト認証情報(ADC)をローカル開発向けにユーザー認証で設定するコマンドで、これも対話的なブラウザ認証が前提です(選択肢3は誤り)。gcloud config set account は使用するアカウントを指定するだけで、認証情報(資格情報)を取得・有効化するものではありません(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-012",
+    "category": "setup-environment",
+    "subTopic": "Cloud Identity とユーザー・グループ管理",
+    "difficulty": "easy",
+    "tags": ["cloud-identity", "groups", "iam", "best-practice"],
+    "question": "多数の従業員に対して同じ IAM ロールを効率よく付与し、入退社や異動のたびのアクセス管理の手間を減らすためのベストプラクティスはどれですか？",
+    "options": [
+      "従業員ごとに個別にロールを付与し、退職時には 1 人ずつロールを外す運用にする",
+      "全員に基本ロールの Editor を付与して、後から不要な人だけ権限を絞る",
+      "Google グループ(Cloud Identity で管理)を作成してロールをグループに付与し、メンバーシップでアクセスを管理する",
+      "サービスアカウントを 1 つ作り、全従業員でそのキーを共有してログインする"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "Google グループ(Cloud Identity で管理)にロールを付与し、ユーザーをグループに追加・削除することでアクセスを管理するのがベストプラクティスです。グループのメンバーは付与された IAM ロールを継承し、入退社・異動はメンバーシップ変更だけで反映できます(選択肢3が正解)。従業員ごとに個別付与すると人数が増えるほど管理が煩雑になり、付け外しの漏れも起きやすくなります(選択肢1は誤り)。全員に Editor を付与するのは最小権限の原則に反する過剰な付与です(選択肢2は誤り)。人間のユーザーがサービスアカウントのキーを共有して使うのはセキュリティ上のアンチパターンであり、各ユーザーを個別に識別・管理できません(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/iam/docs/groups-in-cloud-console",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-013",
+    "category": "setup-environment",
+    "subTopic": "複数プロジェクトの課金アカウント紐付け・移行",
+    "difficulty": "medium",
+    "tags": ["billing", "billing-account", "permissions", "project"],
+    "question": "あるプロジェクトを、現在の課金アカウントから別の課金アカウントへ移行(リンクし直し)したいと考えています。この操作を実行するために必要な権限の組み合わせとして正しいものはどれですか？",
+    "options": [
+      "移行先プロジェクトに対する閲覧者(Viewer)ロールだけがあればよい",
+      "移行元の課金アカウントに対する Billing Account Administrator ロールだけがあればよい",
+      "課金アカウント側の権限は不要で、プロジェクトのオーナー権限さえあれば任意の課金アカウントへ移せる",
+      "プロジェクト側で課金を変更できる権限(プロジェクトオーナーまたは Project Billing Manager 等)と、移行先の課金アカウントに対する課金アカウント側の権限(Billing Account Administrator または Billing Account User 等)の両方が必要"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "プロジェクトの課金アカウントを変更(リンクし直し)するには、プロジェクト側で課金を変更できる権限(プロジェクトオーナーまたは Project Billing Manager 等)と、リンク先となる課金アカウントに対する権限(Billing Account Administrator または Billing Account User 等)の両方が必要です(選択肢4が正解)。閲覧者ロールだけでは課金の変更操作はできません(選択肢1は誤り)。移行元課金アカウントの管理者権限だけでは、移行先の課金アカウントに接続する権限が不足します(選択肢2は誤り)。プロジェクトのオーナー権限だけでは、リンク先の課金アカウントを利用する権限が無ければ任意の課金アカウントへは移せません(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/billing/docs/how-to/modify-project",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-014",
+    "category": "setup-environment",
+    "subTopic": "共有VPCの権限設計(最小権限)",
+    "difficulty": "hard",
+    "tags": ["shared-vpc", "iam", "least-privilege", "network-user", "host-project"],
+    "question": "共有 VPC 環境で、アプリケーションチームには「ネットワークチームが用意した特定のサブネットだけ」を使ってリソースを作成させ、ネットワーク構成そのものは変更させたくありません。最小権限の原則に沿った IAM 設計として正しいものを2つ選んでください。",
+    "options": [
+      "ホストプロジェクトの対象サブネットに対して、サービスプロジェクト管理者に Compute Network User(roles/compute.networkUser)ロールを付与する",
+      "サービスプロジェクト管理者に、ホストプロジェクト全体の Compute Network Admin(roles/compute.networkAdmin)ロールを付与する",
+      "必要なサブネット単位で Network User ロールを付与し、ホストプロジェクト全体ではなく特定サブネットだけに利用範囲を限定する",
+      "アプリケーションチームに対し、組織レベルで Owner ロールを付与してすべてのネットワーク操作を許可する"
+    ],
+    "isMultiple": true,
+    "correct": [0, 2],
+    "explanation": "共有 VPC では、サービスプロジェクト管理者にホストプロジェクトの対象サブネットに対する Compute Network User(roles/compute.networkUser)ロールを付与することで、そのサブネットを使ってリソースを作成できます(選択肢1は正しい)。さらに、ロールをプロジェクト全体ではなくサブネット単位で付与すれば、利用できるネットワーク範囲を必要なものだけに限定でき、最小権限に沿います(選択肢3は正しい)。Compute Network Admin はネットワーク構成を変更できる管理者ロールであり、構成を変更させたくないという要件に反します(選択肢2は誤り)。組織レベルの Owner は影響範囲が広すぎる最も過剰な付与で、最小権限の原則に明確に反します(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/vpc/docs/shared-vpc",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-015",
+    "category": "setup-environment",
+    "subTopic": "ラベルとタグの初期設計",
+    "difficulty": "easy",
+    "tags": ["labels", "cost-tracking", "billing", "metadata"],
+    "question": "新しい組織で、コスト配賦(部門・環境ごとの費用の内訳把握)をしやすくするために、リソースへ付与するメタデータを初期設計したいと考えています。この目的に最も適した機能はどれですか？",
+    "options": [
+      "リソースに任意の説明文を 1 つだけ書ける「description」フィールド",
+      "key-value 形式でリソースに付与でき、課金エクスポートでも費用の内訳に利用できる「ラベル(labels)」",
+      "プロジェクト ID を部門名に合わせて頻繁に変更する運用",
+      "IAM のロール名にコストセンターのコードを埋め込む運用"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "ラベル(labels)は key-value 形式でリソースやプロジェクトに付与できるメタデータで、環境(env=prod 等)や部門(team=sales 等)を付けておくと、課金データのエクスポートやレポートで費用を内訳ごとに把握(コスト配賦)できます(選択肢2が正解)。自由記述の説明文 1 つでは、機械的なフィルタリングや費用の内訳集計には使えません(選択肢1は誤り)。プロジェクト ID は作成後に変更できず、頻繁な変更運用は成り立ちません(選択肢3は誤り)。IAM のロールはアクセス制御のための仕組みで、ロール名にコードを埋め込んでもコスト配賦には利用できません(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/resource-manager/docs/creating-managing-labels",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-016",
+    "category": "setup-environment",
+    "subTopic": "gcloud の認証(application-default login / ADC)",
+    "difficulty": "medium",
+    "tags": ["gcloud", "adc", "application-default-credentials", "local-development"],
+    "question": "ローカルの開発端末で、自分のユーザー認証情報を使ってクライアントライブラリ(アプリケーションのコード)が自動的に認証情報を見つけられるようにしたいと考えています。この目的に最も適したコマンドはどれですか？",
+    "options": [
+      "gcloud auth application-default login",
+      "gcloud auth login",
+      "gcloud auth activate-service-account --key-file=KEY_FILE.json",
+      "gcloud config set project"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "gcloud auth application-default login は、ユーザー認証情報をアプリケーションのデフォルト認証情報(ADC)として既定の場所に保存し、クライアントライブラリが自動的に認証情報を発見できるようにするコマンドで、ローカル開発に適しています(選択肢1が正解)。gcloud auth login は gcloud CLI 自体のユーザー認証を設定しますが、ADC(アプリのコードが使う認証情報)を設定するわけではありません(選択肢2は誤り)。gcloud auth activate-service-account はサービスアカウントのキーファイルで認証する非対話的なコマンドで、ここで求められている「自分のユーザー認証情報を使う」用途とは異なります(選択肢3は誤り)。gcloud config set project は既定のプロジェクトを設定するだけで、認証情報の取得とは無関係です(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login",
+    "relatedMaterials": []
   }
 ]

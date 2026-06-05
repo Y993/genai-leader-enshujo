@@ -131,5 +131,176 @@
     "explanation": "MIG のオートスケーラーは、CPU 使用率・HTTP(S) ロードバランシングの処理キャパシティ・Cloud Monitoring のメトリクス・スケジュールに基づいてスケールしますが、アタッチされた永続ディスクの空き容量はスケーリングシグナルとして用意されていないため、これが『適切でないもの』として正解です。選択肢1の平均 CPU 使用率、選択肢2の HTTP(S) ロードバランシングのキャパシティ、選択肢4の Cloud Monitoring のメトリクスはいずれも公式にサポートされたオートスケーリングのシグナルです。",
     "reference": "https://cloud.google.com/compute/docs/autoscaler",
     "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-008",
+    "category": "plan-configure",
+    "subTopic": "共有VPC と VPCピアリングの選定",
+    "difficulty": "medium",
+    "tags": ["shared-vpc", "vpc-peering", "organization", "network-administration"],
+    "question": "ある企業には1つの組織(Organization)があり、複数の開発チームがそれぞれ独自のプロジェクトでワークロードを運用します。要件は、(1) ネットワーク管理を中央のネットワークチームに一元化し、各チームにはネットワーク変更権限を与えない、(2) すべてのプロジェクトのリソースが共通の内部IPネットワークで相互通信できる、(3) 各プロジェクトのリソース課金はそのプロジェクトに帰属させる、というものです。最も適した構成はどれですか？",
+    "options": [
+      "ホストプロジェクトに共通VPCを置き、各チームのプロジェクトをサービスプロジェクトとして接続する共有VPC(Shared VPC)を構成する",
+      "各チームのプロジェクトにそれぞれ独立したVPCを作成し、すべてをVPCネットワークピアリングでフルメッシュに相互接続する",
+      "各チームのプロジェクトにそれぞれVPCを作成し、Cloud VPN トンネルで相互接続する",
+      "すべてのチームを1つのプロジェクトに統合し、その中の単一VPCを全員で共有する"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "共有VPC(Shared VPC)は、ホストプロジェクトの共通VPCネットワークを複数のサービスプロジェクトに共有し、リソースが内部IPで相互通信できる仕組みです。ネットワーク管理をホストプロジェクト側のネットワークチームに集約しつつ、サービスプロジェクト管理者にはネットワーク変更権限を与えずにインスタンス作成のみを許可でき、課金は各サービスプロジェクトに帰属するため、3要件すべてを満たし正解です。選択肢2のVPCピアリングは各VPCが独立して管理されネットワーク管理の一元化にならず、非推移的なためフルメッシュ管理が煩雑です。選択肢3のCloud VPNは内部接続に過剰でスループットや管理コストの面で不適切です。選択肢4の単一プロジェクト統合はプロジェクト単位の権限分離や課金分離の要件に反します。",
+    "reference": "https://cloud.google.com/vpc/docs/shared-vpc",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-009",
+    "category": "plan-configure",
+    "subTopic": "Cloud NAT の計画",
+    "difficulty": "medium",
+    "tags": ["cloud-nat", "external-ip", "egress", "security"],
+    "question": "あるリージョンのサブネットに多数の Compute Engine VM を配置します。要件は、(1) これらの VM はインターネット上のパッケージリポジトリへ外向き(アウトバウンド)通信できる必要がある、(2) セキュリティ上、VM には外部IPアドレスを割り当てたくない、(3) インターネットから VM への直接の受信(インバウンド)接続は許可しない、というものです。最も適した構成はどれですか？",
+    "options": [
+      "各 VM にエフェメラル外部IPアドレスを割り当て、ファイアウォールで受信を遮断する",
+      "外部 HTTP(S) ロードバランサを VM の前段に配置し、そこを経由させる",
+      "VM を外部IPなしで作成し、サブネットのリージョンに Cloud Router と Cloud NAT を構成する",
+      "VPCネットワークピアリングを構成し、別 VPC 経由でインターネットへ出る"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "Cloud NAT はマネージドのネットワークアドレス変換サービスで、外部IPを持たない VM が共有された外部アドレスを使ってアウトバウンド通信を行えます。Cloud NAT は外部から内部への接続を開始させないため、受信を許可せず送信のみを可能にする要件に合致し、VM には外部IPを付与しないため正解です(リージョン単位で Cloud Router とともに構成)。選択肢1は各 VM に外部IPを割り当てる時点で要件2に反します。選択肢2の外部ロードバランサは受信トラフィックの分散用であり、VM のアウトバウンド通信を提供する仕組みではありません。選択肢4のVPCピアリングはピア先 VPC へ内部接続するだけで、それ自体がインターネットへの外向き経路にはなりません。",
+    "reference": "https://cloud.google.com/nat/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-010",
+    "category": "plan-configure",
+    "subTopic": "ハイブリッド接続の選定",
+    "difficulty": "hard",
+    "tags": ["dedicated-interconnect", "hybrid-connectivity", "sla", "bandwidth"],
+    "question": "オンプレミスのデータセンターと Google Cloud の VPC を接続します。要件は、(1) 専用回線レベルの 10 Gbps の安定した帯域が継続的に必要、(2) トラフィックはパブリックインターネットを経由させず、内部IPでプライベートに通信したい、(3) 自社設備を Google のコロケーション施設(ピアリングエッジ)に物理的に接続できる、というものです。最もコスト効率よく要件を満たす接続方式はどれですか？",
+    "options": [
+      "HA VPN(IPsec VPN トンネル)を複数本束ねて構成する",
+      "Dedicated Interconnect(専用相互接続)を構成する",
+      "Partner Interconnect(パートナー相互接続)をサービスプロバイダ経由で構成する",
+      "Direct Peering(直接ピアリング)を構成する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Dedicated Interconnect は、自社設備を Google のコロケーション施設で物理的に接続し、10 Gbps または 100 Gbps の専用回線で VPC に内部IPでプライベート接続する方式です。インターネットを経由せず大容量・安定帯域を継続的に必要とし、かつ Google のピアリングエッジに直接接続できる本シナリオに最も適し、エンドツーエンドのSLAも提供されるため正解です。選択肢1のHA VPNはインターネット経由のIPsecトンネルで、トンネルあたりの帯域に限りがあり、10 Gbps の安定帯域を専有する用途には不向きです。選択肢3のPartner Interconnectは Google のコロケーション施設に自前で物理接続できない場合にプロバイダ経由で接続する選択肢であり、要件3を自社で満たせる本シナリオでは Dedicated が直接的かつコスト効率的です。選択肢4のDirect Peeringは Google のパブリックサービス(Workspace 等)へのアクセス向けで、VPC への内部IPプライベート接続は提供しません。",
+    "reference": "https://cloud.google.com/network-connectivity/docs/how-to/choose-product",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-011",
+    "category": "plan-configure",
+    "subTopic": "IPアドレス計画(プライマリ・セカンダリ範囲)",
+    "difficulty": "medium",
+    "tags": ["ip-addressing", "secondary-range", "gke", "alias-ip", "rfc1918"],
+    "question": "GKE クラスタをデプロイするためのサブネットを設計しています。要件は、(1) ノード用のIPはサブネットのプライマリ範囲から割り当てる、(2) Pod と Service にはエイリアスIP(VPCネイティブ)用の専用範囲を確保する、(3) 将来オンプレミスと接続する予定があるため、オンプレで使用中のRFC1918範囲と重複しないアドレスを使う、というものです。IPアドレス計画の方針として最も適切なものはどれですか？",
+    "options": [
+      "サブネットにプライマリ範囲を1つだけ定義し、Pod と Service もそのプライマリ範囲から払い出す",
+      "Pod と Service 用に、プライマリ範囲と重複する別の /16 をセカンダリ範囲として割り当てる",
+      "RFC1918 以外のパブリックIP範囲をサブネットに割り当て、オンプレとの重複を回避する",
+      "プライマリ範囲をノード用に確保し、Pod 用と Service 用にそれぞれ別個のセカンダリ範囲を、オンプレ既存範囲と重複しないRFC1918から定義する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "VPCネイティブな GKE クラスタでは、ノードはサブネットのプライマリ範囲から、Pod と Service はそれぞれ別々のセカンダリ範囲(エイリアスIP用)から割り当てるのが正しい設計です。さらにオンプレ接続を見据えてプライマリ・セカンダリのいずれもオンプレ既存のRFC1918範囲と重複しないよう計画する必要があるため、選択肢4が正解です。選択肢1はセカンダリ範囲を使わずプライマリのみで Pod/Service を賄おうとしており、VPCネイティブの要件2に反します。選択肢2はプライマリ範囲と重複するセカンダリ範囲を定義しており、VPC内のIP範囲は一意でなければならないという原則に違反します。選択肢3はパブリックIP範囲をサブネットに使うもので、内部ネットワーク設計として不適切でありオンプレとの重複回避の正攻法でもありません。",
+    "reference": "https://cloud.google.com/vpc/docs/subnets",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-012",
+    "category": "plan-configure",
+    "subTopic": "ロードバランサのタイプ選定",
+    "difficulty": "medium",
+    "tags": ["load-balancing", "global-load-balancer", "http-load-balancer", "l7"],
+    "question": "世界中のユーザーに公開するウェブアプリケーションを計画しています。要件は、(1) 単一のエニーキャストIPで複数リージョンのバックエンドにトラフィックを分散する、(2) HTTP/HTTPS のURLパスに基づいてリクエストを振り分ける(コンテンツベースのルーティング)、(3) ユーザーに最も近いリージョンへ自動的にルーティングする、というものです。最も適したロードバランサはどれですか？",
+    "options": [
+      "リージョン内部パススルー ネットワーク ロードバランサ(L4)",
+      "リージョン外部アプリケーション ロードバランサ(L7)",
+      "グローバル外部アプリケーション ロードバランサ(L7)",
+      "グローバル外部プロキシ ネットワーク ロードバランサ(L4)"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "グローバル外部アプリケーション ロードバランサ(L7)は、単一のグローバル エニーキャストIPで複数リージョンのバックエンドに分散し、URLマップによるパスベースのコンテンツルーティングを行い、ユーザーに最も近いリージョンへ自動的にルーティングできるため、3要件すべてに合致し正解です。選択肢1の内部パススルー ネットワーク ロードバランサはL4かつ内部・単一リージョン向けで、グローバル分散やHTTPパスルーティングを行えません。選択肢2のリージョン外部アプリケーション ロードバランサはL7でパスルーティングは可能ですが、単一リージョンに限定されるためグローバル分散の要件1・3を満たしません。選択肢4のプロキシ ネットワーク ロードバランサはL4(TCP/SSL)であり、HTTPのURLパスに基づくコンテンツルーティング(要件2)はできません。",
+    "reference": "https://cloud.google.com/load-balancing/docs/choosing-load-balancer",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-013",
+    "category": "plan-configure",
+    "subTopic": "Spot VM の活用",
+    "difficulty": "easy",
+    "tags": ["spot-vm", "preemptible", "cost-optimization", "batch"],
+    "question": "中断しても自動で再試行できるバッチ処理(動画のエンコードジョブ)を Compute Engine で実行します。コストを最大限に抑えたく、ジョブの一部 VM が突然停止されても処理全体は続行できる設計になっています。最も適した VM の構成はどれですか？",
+    "options": [
+      "オンデマンドの標準 VM を確約利用割引なしで使う",
+      "Spot VM(プリエンプティブル相当)を使う",
+      "メモリ最適化マシンタイプの標準 VM を使う",
+      "ソールテナント ノード(専有ノード)上に標準 VM を配置する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Spot VM は Compute Engine の余剰キャパシティを大幅割引(多くのマシンタイプで最大90%前後)で利用でき、いつでも回収(プリエンプト)される可能性がある代わりにコストを最大限に抑えられます。中断耐性があり再試行可能なバッチ処理という本シナリオに最適なため正解です。選択肢1のオンデマンド標準VMは中断されない代わりに最も割引が少なく、コスト最小化の要件に反します。選択肢3のメモリ最適化標準VMは高価で、コスト最小化が目的の本ケースには不適切です。選択肢4のソールテナント ノードは物理サーバーを専有するコンプライアンス要件向けで、むしろコストが上がり目的に反します。",
+    "reference": "https://cloud.google.com/compute/docs/instances/spot",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-014",
+    "category": "plan-configure",
+    "subTopic": "確約利用割引(CUD)と継続利用割引",
+    "difficulty": "hard",
+    "tags": ["committed-use-discount", "sustained-use-discount", "cost-optimization", "spot-vm"],
+    "question": "Compute Engine のコスト最適化に関する次の説明のうち、正しいものを2つ選んでください。",
+    "options": [
+      "確約利用割引(CUD)は、1年間または3年間、一定量のリソース使用または支出をコミットすることで、オンデマンド料金より割引を受けられる",
+      "確約利用割引(CUD)を購入するには、事前にサポートへ電話して個別契約を結ぶ必要がある",
+      "ベースとなる安定した常時稼働ワークロードには確約利用割引(CUD)が適し、中断可能なバッチ処理には Spot VM が適している",
+      "確約利用割引(CUD)と Spot VM(プリエンプティブル料金)は、同一の VM に同時に二重適用され、割引が累積される"
+    ],
+    "isMultiple": true,
+    "correct": [0, 2],
+    "explanation": "選択肢1は正しく、確約利用割引(CUD)は1年または3年の期間にわたり一定量のリソース使用量または支出をコミットすることでオンデマンド料金より割引を受ける仕組みです。選択肢3も正しく、24時間稼働するような安定したベースのワークロードには長期コミットの CUD が、いつ中断されてもよいフォールトトレラントなバッチ処理には大幅割引の Spot VM が適しており、ワークロード特性に応じた使い分けが定石です。選択肢2は誤りで、CUD はコンソールや API から自分で購入でき、サポートへの個別電話契約は不要です。選択肢4も誤りで、Spot VM の割引価格は CUD の対象外であり、両者を同一VMに二重適用して累積させることはできません。",
+    "reference": "https://cloud.google.com/compute/docs/instances/committed-use-discounts-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-015",
+    "category": "plan-configure",
+    "subTopic": "永続ディスクのタイプ選定",
+    "difficulty": "medium",
+    "tags": ["persistent-disk", "pd-ssd", "iops", "storage-performance"],
+    "question": "Compute Engine 上で稼働させる本番のリレーショナルデータベースのために永続ディスク(Persistent Disk)を選定します。要件は、(1) 低レイテンシかつ高いIOPSが安定して求められる、(2) ただしプロビジョニングIOPSを明示指定するような最上位の特殊用途までは不要、(3) コストはできるだけ抑えたいが性能要件を最優先する、というものです。最も適したディスクタイプはどれですか？",
+    "options": [
+      "SSD 永続ディスク(pd-ssd)",
+      "標準永続ディスク(pd-standard)",
+      "バランス永続ディスク(pd-balanced)",
+      "エクストリーム永続ディスク(pd-extreme)"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "SSD 永続ディスク(pd-ssd)は、低レイテンシと高いIOPSを必要とするエンタープライズアプリケーションや高性能データベース向けに設計されており、性能要件を最優先しつつプロビジョニングIOPSの明示指定までは不要という本シナリオに最も適すため正解です。選択肢2の標準永続ディスク(pd-standard)はHDDベースで主にシーケンシャルI/Oの大容量処理向けであり、高IOPS・低レイテンシのDB要件には不足します。選択肢3のバランス永続ディスク(pd-balanced)はコストと性能の中間で汎用用途には良いものの、性能最優先のDBでは pd-ssd の方が要件に合致します。選択肢4のエクストリーム永続ディスク(pd-extreme)はIOPSを明示プロビジョニングできる最上位タイプですが、要件2でそこまでは不要とされており、コストも高くなるため最適ではありません。",
+    "reference": "https://cloud.google.com/compute/docs/disks/persistent-disks",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-016",
+    "category": "plan-configure",
+    "subTopic": "リージョン・ゾーン冗長の設計",
+    "difficulty": "easy",
+    "tags": ["high-availability", "zonal-redundancy", "managed-instance-group", "load-balancing"],
+    "question": "単一リージョン内で稼働するウェブ層について、1つのゾーンに障害が発生してもサービスを継続できるよう高可用性を確保したいと考えています。可用性を高める設計として適切なものを2つ選んでください。",
+    "options": [
+      "すべての VM を1つのゾーンにまとめて配置し、管理を簡素化する",
+      "リージョン マネージドインスタンスグループ(リージョン MIG)を使い、VM を同一リージョン内の複数ゾーンに分散して配置する",
+      "永続ディスクのスナップショットを取得しておけば、それだけでゾーン障害時も無停止でサービスが継続される",
+      "複数ゾーンのインスタンスをバックエンドにまとめるロードバランサを構成し、障害ゾーンを自動的に迂回させる"
+    ],
+    "isMultiple": true,
+    "correct": [1, 3],
+    "explanation": "選択肢2は正しく、リージョン マネージドインスタンスグループは VM を同一リージョン内の複数ゾーンに自動分散して配置でき、単一ゾーン障害時も他ゾーンのインスタンスでサービスを継続できます。選択肢4も正しく、複数ゾーンのインスタンスをバックエンドに束ねたロードバランサはヘルスチェックで障害ゾーンを検知し自動的にトラフィックを迂回させ可用性を高めます。選択肢1は全 VM を単一ゾーンに集約するため、そのゾーンが落ちると全断となり高可用性に反します。選択肢3のスナップショットはバックアップ・復旧の手段であり、取得しただけでゾーン障害時に無停止で継続できるわけではないため誤りです。",
+    "reference": "https://cloud.google.com/compute/docs/instance-groups/distributing-instances-with-regional-instance-groups",
+    "relatedMaterials": []
   }
 ]

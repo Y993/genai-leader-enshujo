@@ -18,17 +18,17 @@ describe('question dataset integrity', () => {
   it('questionsFor filters by exam+category', () => {
     expect(questionsFor('genai-leader', 'fundamentals').length).toBe(24);
   });
-  it('ace has 40 questions', () => {
-    expect(QUESTIONS_BY_EXAM['ace'].length).toBe(40);
+  it('ace has 68 questions', () => {
+    expect(QUESTIONS_BY_EXAM['ace'].length).toBe(68);
   });
   it('ace category counts match the plan', () => {
-    expect(questionsFor('ace', 'setup-environment').length).toBe(7);
-    expect(questionsFor('ace', 'plan-configure').length).toBe(7);
+    expect(questionsFor('ace', 'setup-environment').length).toBe(16);
+    expect(questionsFor('ace', 'plan-configure').length).toBe(16);
     expect(questionsFor('ace', 'deploy-implement').length).toBe(10);
-    expect(questionsFor('ace', 'operate').length).toBe(8);
+    expect(questionsFor('ace', 'operate').length).toBe(18);
     expect(questionsFor('ace', 'access-security').length).toBe(8);
   });
-  it('has 120 questions in total', () => {
-    expect(ALL_QUESTIONS.length).toBe(120);
+  it('has 148 questions in total', () => {
+    expect(ALL_QUESTIONS.length).toBe(148);
   });
 });
