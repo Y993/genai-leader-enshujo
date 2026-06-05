@@ -188,5 +188,252 @@
     "explanation": "MIG はインスタンステンプレートに基づく同一構成の VM 群を管理し、オートヒーリング（アプリのヘルスチェック失敗時に VM を自動再作成）とオートスケーリング（負荷に応じた台数の自動増減）を提供します（選択肢1・2が正しい）。選択肢3のような全インスタンス間のディスクデータのリアルタイム同期は MIG の機能ではありません（共有ストレージが必要なら Filestore 等を別途使います）。選択肢4の異種混在は MIG ではなく『非マネージド インスタンスグループ(unmanaged instance group)』の特徴で、MIG は同一テンプレートに基づく均質な VM を前提とします。",
     "reference": "https://cloud.google.com/compute/docs/instance-groups",
     "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-011",
+    "category": "deploy-implement",
+    "subTopic": "Terraform による IaC",
+    "difficulty": "medium",
+    "tags": ["terraform", "iac", "automation"],
+    "question": "Terraform で Google Cloud のインフラを構築しています。main.tf に新しいリソースを追記しました。実際にクラウド上へ変更を適用する前に『どのリソースが作成・変更・削除されるか』を確認し、その後に適用したいです。正しいコマンドの順序はどれですか？",
+    "options": [
+      "terraform validate のあとに terraform import を実行する",
+      "terraform deploy のあとに terraform commit を実行する",
+      "terraform plan で変更内容を確認し、そのあと terraform apply で適用する",
+      "terraform apply -auto-approve を実行すれば計画と適用が両方とも省略できる"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "Terraform では `terraform plan` が現在の状態と構成ファイルを比較し、作成・変更・削除されるリソースの実行計画を表示します。内容を確認したうえで `terraform apply` を実行すると、その計画どおりに変更が適用されます（選択肢3）。選択肢1の `terraform validate` は構文・設定の妥当性チェックのみで変更内容のプレビューではなく、`terraform import` は既存リソースを state に取り込むコマンドです。選択肢2の `terraform deploy` や `terraform commit` というサブコマンドは存在しません。選択肢4の `-auto-approve` は適用前の対話的承認を省略するだけで、変更内容を事前確認したいという要件には反します。",
+    "reference": "https://cloud.google.com/docs/terraform/get-started-with-terraform",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-012",
+    "category": "deploy-implement",
+    "subTopic": "宣言的 IaC とコマンド型デプロイの使い分け",
+    "difficulty": "hard",
+    "tags": ["iac", "deployment-manager", "terraform"],
+    "question": "あるチームは、複数の Compute Engine インスタンス・VPC・ファイアウォールルールから成る環境を、構成ファイルで宣言的に定義し、同一構成を繰り返し再現できるようにしたいと考えています。次のうち、この『宣言的な Infrastructure as Code(IaC)』のアプローチに該当するものとして最も適切なのはどれですか？",
+    "options": [
+      "デプロイ手順を Bash スクリプトに並べた一連の gcloud compute instances create コマンドを順に実行する",
+      "YAML(Deployment Manager)や HCL(Terraform)の構成ファイルにリソースの望ましい状態を記述し、ツールに現在状態との差分を反映させる",
+      "Cloud Console の画面を操作してリソースを1つずつ手作業で作成し、スクリーンショットを手順書として残す",
+      "Cloud Shell の履歴に残ったコマンドをコピーして別プロジェクトに貼り付けて再実行する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "宣言的 IaC では『どうやって作るか』ではなく『最終的にどうあるべきか（望ましい状態）』を構成ファイルに記述し、ツール（Terraform / Deployment Manager 等）が現在の状態との差分を計算して必要な操作だけを適用します。これにより同一構成の再現性・冪等性が得られます（選択肢2）。選択肢1や4のように gcloud コマンドを順番に並べるのは命令的（imperative）なアプローチで、実行順序や既存状態に依存し冪等性が保証されません。選択肢3の手作業は再現性・自動化のいずれも満たさず IaC ではありません。",
+    "reference": "https://cloud.google.com/deployment-manager/docs/configuration/create-basic-configuration",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-013",
+    "category": "deploy-implement",
+    "subTopic": "GKE ノードプールの作成・管理",
+    "difficulty": "easy",
+    "tags": ["gke", "node-pool", "gcloud"],
+    "question": "既存の GKE Standard クラスタ prod-cluster に、専用のワークロードを動かすための新しいノードプールを追加したいです。最も適切なコマンドはどれですか？",
+    "options": [
+      "gcloud container node-pools create high-mem-pool --cluster=prod-cluster --machine-type=e2-highmem-4",
+      "gcloud container clusters create-pool high-mem-pool --cluster=prod-cluster",
+      "kubectl create nodepool high-mem-pool --cluster=prod-cluster",
+      "gcloud compute node-pools add high-mem-pool --cluster=prod-cluster"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "GKE のノードプール追加は `gcloud container node-pools create <名前> --cluster=<クラスタ名>` を使い、必要に応じて `--machine-type` などでノード構成を指定します（選択肢1）。選択肢2の `clusters create-pool` というサブコマンドは存在しません。選択肢3の `kubectl` は Kubernetes API（Pod や Deployment など）を操作するツールで、GKE のインフラであるノードプールは作成できません（ノードプールは Google Cloud 側の概念です）。選択肢4の `gcloud compute node-pools` というコマンドグループは存在しません（ノードプールは `gcloud container` 配下です）。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/how-to/node-pools",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-014",
+    "category": "deploy-implement",
+    "subTopic": "GKE Autopilot と Standard の使い分け",
+    "difficulty": "medium",
+    "tags": ["gke", "autopilot", "kubernetes"],
+    "question": "新しい GKE クラスタを作成します。チームには Kubernetes の運用経験者が少なく、ノードのプロビジョニング・スケーリング・セキュリティ設定などのインフラ管理を Google にできるだけ任せ、実行された Pod に対して課金される運用にしたいです。最も適した選択はどれですか？",
+    "options": [
+      "Standard クラスタを作成し、ノードプールのサイズとマシンタイプを手動で常時調整する",
+      "Standard クラスタを作成し、ノードに直接 SSH してパッチ適用を自前で運用する",
+      "Compute Engine 上に kubeadm で自前の Kubernetes クラスタを構築する",
+      "Autopilot クラスタを作成し、ノード管理を Google に任せて Pod のリソース要求に基づく課金で運用する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "GKE Autopilot は、ノードのプロビジョニング・スケーリング・アップグレード・セキュリティ設定などのインフラ管理を Google が行うマネージドモードで、デプロイした Pod のリソース要求量に基づいて課金されます。運用負荷を最小化したいケースに最適です（選択肢4）。選択肢1・2の Standard はノードプールやノードの管理をユーザーが担うため、要件（管理を任せたい）に反します。選択肢3の自前構築は GKE のマネージド機能を活用せず、最も運用負荷が高くなります。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-015",
+    "category": "deploy-implement",
+    "subTopic": "kubectl によるワークロードのスケール",
+    "difficulty": "medium",
+    "tags": ["gke", "kubectl", "scaling"],
+    "question": "GKE 上で稼働中の Deployment『api-server』のレプリカ数を、手動で 3 から 6 に増やしたいです。最も適切な kubectl コマンドはどれですか？",
+    "options": [
+      "kubectl resize deployment api-server --count=6",
+      "kubectl scale deployment api-server --replicas=6",
+      "kubectl autoscale deployment api-server --replicas=6",
+      "kubectl set replicas deployment/api-server 6"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Deployment のレプリカ数を手動で変更するには `kubectl scale deployment <名前> --replicas=<数>` を使います（選択肢2）。選択肢1の `kubectl resize` というサブコマンドは存在しません。選択肢3の `kubectl autoscale` は Horizontal Pod Autoscaler を作成して負荷に応じた自動スケールを設定するコマンドで、`--replicas` ではなく `--min`/`--max`/`--cpu-percent` を指定します（手動で固定値に増やす用途ではありません）。選択肢4の `kubectl set replicas` というサブコマンドは存在しません。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/how-to/scaling-apps",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-016",
+    "category": "deploy-implement",
+    "subTopic": "GKE Workload Identity",
+    "difficulty": "hard",
+    "tags": ["gke", "workload-identity", "security"],
+    "question": "GKE 上の Pod から Google Cloud API（例: Cloud Storage）へ安全にアクセスさせたいです。サービスアカウントキー(JSON)をコンテナに埋め込まずに認証する推奨方式『Workload Identity Federation for GKE』に関する正しい記述を2つ選んでください。",
+    "options": [
+      "Kubernetes ServiceAccount を IAM の権限（プリンシパル）に関連付け、Pod はその Kubernetes ServiceAccount として Google Cloud API を呼び出す",
+      "各ノードにサービスアカウントキーの JSON ファイルを配布し、Pod がそれを読み込んで認証する",
+      "Autopilot クラスタでは Workload Identity がデフォルトで有効になっている",
+      "Workload Identity を使うには、すべての Pod に外部 IP アドレスを割り当てる必要がある"
+    ],
+    "isMultiple": true,
+    "correct": [0, 2],
+    "explanation": "Workload Identity Federation for GKE は、Kubernetes ServiceAccount を IAM のプリンシパル/権限に関連付け、Pod がその Kubernetes ServiceAccount として Google Cloud API を呼び出せるようにする推奨方式です（選択肢1）。また Autopilot クラスタではデフォルトで有効化されています（選択肢3）。選択肢2のサービスアカウントキー(JSON)の配布は、キー漏洩リスクがあり Workload Identity が回避しようとしているまさにアンチパターンです。選択肢4の外部 IP の割り当ては認証方式とは無関係で、Workload Identity の要件ではありません。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-017",
+    "category": "deploy-implement",
+    "subTopic": "ファイアウォールルール(ingress/egress)",
+    "difficulty": "medium",
+    "tags": ["firewall", "networking", "gcloud"],
+    "question": "VPC ネットワーク内で、ネットワークタグ『web』が付いた VM だけに対し、インターネットから TCP 443 への受信接続を許可するファイアウォールルールを作成したいです。要件を満たすコマンドはどれですか？",
+    "options": [
+      "gcloud compute firewall-rules create allow-https --direction=EGRESS --action=ALLOW --rules=tcp:443 --target-tags=web",
+      "gcloud compute firewall-rules create allow-https --direction=INGRESS --action=ALLOW --rules=tcp:443 --source-tags=web",
+      "gcloud compute firewall-rules create allow-https --direction=INGRESS --action=ALLOW --rules=tcp:443 --target-tags=web --source-ranges=0.0.0.0/0",
+      "gcloud compute firewall-rules create allow-https --direction=INGRESS --action=DENY --rules=tcp:443 --target-tags=web --source-ranges=0.0.0.0/0"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "インターネット（外部）から VM への受信は ingress（受信方向）であり `--direction=INGRESS` を指定します。許可なので `--action=ALLOW`、対象を絞るのは適用先 VM を示す `--target-tags=web`、送信元はインターネット全体なので `--source-ranges=0.0.0.0/0` を使います（選択肢3）。選択肢1は方向が EGRESS（送信）で受信制御になりません。選択肢2は `--source-tags`（送信元の VM タグ）を使っており、これは適用先 VM の絞り込み（target）ではなく送信元の指定であるうえ、インターネットからの送信元範囲も指定されていません。選択肢4は `--action=DENY` で、許可したいという要件に反します。",
+    "reference": "https://cloud.google.com/vpc/docs/firewalls",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-018",
+    "category": "deploy-implement",
+    "subTopic": "Cloud NAT の構成",
+    "difficulty": "medium",
+    "tags": ["cloud-nat", "networking", "security"],
+    "question": "プライベートサブネット内の Compute Engine VM 群には外部 IP アドレスを割り当てていません。これらの VM から OS アップデート取得のためにインターネットへ送信（アウトバウンド）アクセスさせたいですが、インターネットからの受信（インバウンド）接続は一切許可したくありません。最も適切なソリューションはどれですか？",
+    "options": [
+      "Cloud NAT ゲートウェイを構成して、外部 IP を持たない VM からのアウトバウンド接続のみを許可する",
+      "各 VM にエフェメラルな外部 IP アドレスを割り当てる",
+      "外部アプリケーション ロードバランサを各 VM の前段に配置する",
+      "VPC ピアリングを設定してインターネットへ接続する"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Cloud NAT は、外部 IP を持たない VM が共有の NAT IP を介してインターネットへアウトバウンド接続できるようにするマネージドサービスで、未承諾のインバウンド接続は許可しません（応答パケットのみ通過）。要件に完全に合致します（選択肢0）。選択肢2の外部 IP 割り当ては、VM がインターネットから直接到達可能になり、インバウンドを許可したくないという要件に反します。選択肢3の外部 LB はインターネットからの受信トラフィックを VM に振り分けるもので、目的（アウトバウンド）と逆です。選択肢4の VPC ピアリングは VPC 同士の接続であり、インターネットへの NAT 接続は提供しません。",
+    "reference": "https://cloud.google.com/nat/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-019",
+    "category": "deploy-implement",
+    "subTopic": "内部/外部ロードバランサの構成",
+    "difficulty": "hard",
+    "tags": ["load-balancing", "networking", "architecture"],
+    "question": "3 層アーキテクチャを構成しています。(1) インターネット上のユーザーからの HTTP(S) を受ける Web 層、(2) 同一 VPC 内の Web 層からのみアクセスされる内部 API 層、の 2 つにロードバランサを用意します。各層に最も適切なロードバランサの組み合わせとして正しいものを2つ選んでください。",
+    "options": [
+      "Web 層には内部アプリケーション ロードバランサを使う",
+      "Web 層には外部アプリケーション ロードバランサを使う",
+      "API 層には外部アプリケーション ロードバランサを使う",
+      "API 層には内部アプリケーション ロードバランサを使う"
+    ],
+    "isMultiple": true,
+    "correct": [1, 3],
+    "explanation": "インターネット上のユーザーからの HTTP(S) を受ける Web 層には、外部からのトラフィックを受けられる外部アプリケーション ロードバランサが適切です（選択肢1）。一方、同一 VPC 内のクライアント（Web 層）からのみアクセスされる内部 API 層には、VPC 内部 IP で公開され外部には露出しない内部アプリケーション ロードバランサが適切です（選択肢3）。選択肢0は Web 層を内部 LB にしており、インターネットからのアクセスを受けられません。選択肢2は内部専用であるべき API 層を外部 LB で公開してしまい、不要にインターネットへ露出させるため不適切です。",
+    "reference": "https://cloud.google.com/load-balancing/docs/https",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-020",
+    "category": "deploy-implement",
+    "subTopic": "Spot VM の作成",
+    "difficulty": "easy",
+    "tags": ["compute-engine", "spot-vm", "gcloud"],
+    "question": "中断されても問題ないバッチ処理向けに、コストを大幅に抑えた Spot VM を作成したいです。最も適切なコマンドはどれですか？",
+    "options": [
+      "gcloud compute instances create batch-vm --zone=asia-northeast1-a --discount=spot",
+      "gcloud compute instances create batch-vm --zone=asia-northeast1-a --type=preemptible-spot",
+      "gcloud compute spot-instances create batch-vm --zone=asia-northeast1-a",
+      "gcloud compute instances create batch-vm --zone=asia-northeast1-a --provisioning-model=SPOT"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "Spot VM の作成は通常の `gcloud compute instances create` に `--provisioning-model=SPOT` を付与します（選択肢3）。選択肢1の `--discount=spot` というフラグは存在しません。選択肢2の `--type=preemptible-spot` というフラグも存在しません（旧来のプリエンプティブル VM は別フラグ `--preemptible` でしたが、現在は Spot VM が推奨され `--provisioning-model=SPOT` を使います）。選択肢3の `gcloud compute spot-instances` というコマンドグループは存在しません。",
+    "reference": "https://cloud.google.com/compute/docs/instances/spot",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-021",
+    "category": "deploy-implement",
+    "subTopic": "起動スクリプトとメタデータ",
+    "difficulty": "medium",
+    "tags": ["compute-engine", "startup-script", "metadata"],
+    "question": "ローカルワークステーションにある startup.sh というシェルスクリプトを、新規作成する Compute Engine VM の起動時に自動実行させたいです。最も適切なコマンドはどれですか？",
+    "options": [
+      "gcloud compute instances create vm1 --zone=asia-northeast1-a --run-script=startup.sh",
+      "gcloud compute instances create vm1 --zone=asia-northeast1-a --metadata-from-file=startup-script=startup.sh",
+      "gcloud compute instances create vm1 --zone=asia-northeast1-a --metadata=startup-script-file=startup.sh",
+      "gcloud compute instances create vm1 --zone=asia-northeast1-a --boot-script=startup.sh"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "ローカルのスクリプトファイルを起動スクリプトとして渡すには、`--metadata-from-file=startup-script=<ファイルパス>` を使い、`startup-script` というメタデータキーにファイルの中身を設定します（選択肢1）。VM はブート時にこのメタデータキーのスクリプトを自動実行します。選択肢0の `--run-script` フラグは存在しません。選択肢2の `--metadata=startup-script-file=...` は、`--metadata` がキーと値（文字列）を直接渡すフラグでありファイルの中身を読み込まないため、`startup-script-file` という存在しないキー名に文字列が入るだけで機能しません（ファイルから読むなら `--metadata-from-file`）。選択肢3の `--boot-script` フラグは存在しません。",
+    "reference": "https://cloud.google.com/compute/docs/instances/startup-scripts/linux",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-022",
+    "category": "deploy-implement",
+    "subTopic": "ディスクのアタッチとリサイズ",
+    "difficulty": "medium",
+    "tags": ["persistent-disk", "compute-engine", "gcloud"],
+    "question": "稼働中の VM に追加のデータ用永続ディスクを増設・拡張する運用について、正しい記述を2つ選んでください。",
+    "options": [
+      "別途作成済みの永続ディスクは gcloud compute instances attach-disk で実行中の VM にアタッチできる",
+      "gcloud compute disks resize で永続ディスクのサイズを増やすことはできるが、サイズを縮小することはできない",
+      "永続ディスクは gcloud compute disks resize でサイズを自由に縮小（ダウンサイズ）できる",
+      "永続ディスクのアタッチには必ず VM を停止しなければならず、実行中はアタッチできない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "永続ディスクは実行中の VM にも `gcloud compute instances attach-disk` でアタッチできます（選択肢0）。また `gcloud compute disks resize --size=...` でサイズを増やすことは可能ですが、データ損失防止のため縮小（ダウンサイズ）はできません（選択肢1）。選択肢2はその逆で、縮小はサポートされないため誤りです。選択肢3はアタッチに VM 停止が必須としていますが、実行中の VM にもアタッチ可能なので誤りです。",
+    "reference": "https://cloud.google.com/compute/docs/disks/add-persistent-disk",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-023",
+    "category": "deploy-implement",
+    "subTopic": "ステートフルMIG",
+    "difficulty": "hard",
+    "tags": ["mig", "stateful", "compute-engine"],
+    "question": "ステートフルなアプリ（各ノードが固有のデータディスクと固定の識別子を持つ分散データベース）を MIG で運用します。オートヒーリングや更新で VM が再作成されても、各 VM の名前・アタッチされた永続ディスク・特定の状態を保持したいです。最も適切な構成はどれですか？",
+    "options": [
+      "ステートフル MIG を構成し、ステートフルポリシーや各インスタンス構成で永続ディスク・インスタンス名・メタデータなどを保持対象に指定する",
+      "通常のステートレス MIG をそのまま使えば、VM 再作成時にも自動でディスクと名前が保持される",
+      "MIG を使わず、VM を 1 台ずつ手動作成して運用する以外に状態を保持する方法はない",
+      "オートスケーラーの最小サイズを最大サイズと同じ値に固定すれば、各 VM の永続ディスクと識別子が保持される"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "ステートフル MIG は、ステートフルポリシー（全 VM 共通の保持設定）や各インスタンス構成（per-instance config）を用いて、永続ディスク・インスタンス名・IP・メタデータなどを VM の再作成（オートヒーリング・更新）をまたいで保持できます（選択肢0）。選択肢1のステートレス MIG は VM を交換可能なものとして扱い、デフォルトでは状態（特に追加ディスクや名前）を保持しません。選択肢2は誤りで、MIG のステートフル機能を使えば自動化と状態保持を両立できます。選択肢3のサイズ固定はスケール台数を固定するだけで、各 VM の永続ディスクや識別子の保持を保証するものではありません。",
+    "reference": "https://cloud.google.com/compute/docs/instance-groups/stateful-migs",
+    "relatedMaterials": []
   }
 ]
