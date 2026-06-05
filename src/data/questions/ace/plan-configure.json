@@ -7,13 +7,13 @@
     "tags": ["compute-engine", "machine-family", "memory-optimized"],
     "question": "SAP HANA のような、非常に大きなメモリを必要とするインメモリデータベースを Compute Engine 上で実行する計画があります。最も適したマシンファミリーはどれですか？",
     "options": [
-      "汎用(general-purpose、E2 シリーズなど)",
       "メモリ最適化(memory-optimized、M シリーズなど)",
+      "汎用(general-purpose、E2 シリーズなど)",
       "コンピューティング最適化(compute-optimized、C2 シリーズなど)",
       "アクセラレータ最適化(accelerator-optimized、A2 シリーズなど)"
     ],
     "isMultiple": false,
-    "correct": 1,
+    "correct": 0,
     "explanation": "メモリ最適化マシンファミリー(M シリーズなど)は vCPU あたりのメモリ量が最も多く、SAP HANA や大規模インメモリデータベースのようなメモリ集約型ワークロード向けに設計されているため正解です。汎用(E2 など)は価格と性能のバランス型で大容量メモリ用途には不向きです。コンピューティング最適化(C2 など)は高い演算性能を重視しメモリ比率は標準的です。アクセラレータ最適化(A2 など)は GPU を用いた ML/HPC 向けで、メモリ集約用途のための最適解ではありません。",
     "reference": "https://cloud.google.com/compute/docs/machine-resource",
     "relatedMaterials": []
@@ -27,12 +27,12 @@
     "question": "法令対応のために保管するバックアップデータがあり、アクセス頻度は年に1回未満と見込まれます。保管コストを最小化したい場合に選ぶべき Cloud Storage のストレージクラスはどれですか？",
     "options": [
       "Standard ストレージ",
-      "Nearline ストレージ",
       "Archive ストレージ",
+      "Nearline ストレージ",
       "Coldline ストレージ"
     ],
     "isMultiple": false,
-    "correct": 2,
+    "correct": 1,
     "explanation": "Archive ストレージは年に1回未満しかアクセスしない長期保管データ向けに設計され、保管コストが最も低い(最小保管期間365日)ため正解です。Standard は頻繁にアクセスするホットデータ向けで保管単価が高く不適切です。Nearline は月1回程度(最小30日)、Coldline は四半期に1回程度(最小90日)のアクセスを想定しており、年1回未満のアクセスでは Archive のほうが保管コストを最小化できます。",
     "reference": "https://cloud.google.com/storage/docs/storage-classes",
     "relatedMaterials": []
@@ -47,11 +47,11 @@
     "options": [
       "ゾーン永続ディスク(zonal Persistent Disk)",
       "ローカル SSD(Local SSD)",
-      "Cloud Storage バケット(gsutil でのオブジェクト操作)",
-      "Filestore"
+      "Filestore",
+      "Cloud Storage バケット(gsutil でのオブジェクト操作)"
     ],
     "isMultiple": false,
-    "correct": 3,
+    "correct": 2,
     "explanation": "Filestore はフルマネージドの NFS ファイルサーバーで、複数の VM や GKE Pod から同一ファイルシステムへ同時にマウント・アクセスでき、共有ファイルストレージの要件に最適なため正解です。ゾーン永続ディスクは通常1つの VM に読み書きアタッチされるブロックストレージで、複数 VM からの同時読み書き共有には向きません。ローカル SSD は VM に物理的に接続される一時的なブロックストレージで永続性・共有性がありません。Cloud Storage はオブジェクトストレージであり、POSIX 準拠のファイルシステムとして直接 NFS マウントする用途には適しません。",
     "reference": "https://cloud.google.com/filestore/docs/overview",
     "relatedMaterials": []
@@ -84,12 +84,12 @@
     "question": "新しいワークロードを Google Cloud にデプロイする前に、Compute Engine VM と Cloud Storage を組み合わせた月額のおおよその費用を、リソースを実際に作成せずに見積もりたいと考えています。最も適したツールはどれですか？",
     "options": [
       "Cloud Billing の請求レポート(Reports)",
-      "Google Cloud Pricing Calculator",
       "予算とアラート(Budgets & alerts)",
-      "Cloud Monitoring のダッシュボード"
+      "Cloud Monitoring のダッシュボード",
+      "Google Cloud Pricing Calculator"
     ],
     "isMultiple": false,
-    "correct": 1,
+    "correct": 3,
     "explanation": "Google Cloud Pricing Calculator はデプロイ前に各プロダクトの構成を入力して費用を試算し、見積もりを共有できるツールで、リソースを作らずに事前見積もりを行う要件に最適なため正解です。請求レポートは既に発生した実際のコストを可視化するもので事前見積もりには使えません。予算とアラートは設定した上限に対して実支出を監視・通知する仕組みで、事前の費用試算ツールではありません。Cloud Monitoring はリソースの稼働状況やメトリクスの監視用であり、コスト見積もりツールではありません。",
     "reference": "https://cloud.google.com/products/calculator",
     "relatedMaterials": []
@@ -103,12 +103,12 @@
     "question": "グローバルに展開する金融系アプリケーションのために、強整合性のあるリレーショナルデータベースを計画しています。要件は、SQL と ACID トランザクションのサポート、水平方向への無制限に近いスケール、そしてマルチリージョン構成での非常に高い可用性(99.999%)です。最も適したマネージドサービスはどれですか？",
     "options": [
       "Cloud SQL(高可用性構成)",
-      "Firestore",
       "Cloud Spanner",
+      "Firestore",
       "BigQuery"
     ],
     "isMultiple": false,
-    "correct": 2,
+    "correct": 1,
     "explanation": "Cloud Spanner はリレーショナル(SQL/ACID トランザクション)でありながら水平スケールと強整合性を両立し、マルチリージョン構成で 99.999% の可用性を提供できる唯一の選択肢のため正解です。Cloud SQL は MySQL/PostgreSQL/SQL Server のマネージドサービスで HA 構成は可能ですが、本質的にはスケールアップ型で水平方向の無制限スケールやグローバル分散には向きません。Firestore は NoSQL ドキュメントデータベースで、SQL ベースのリレーショナル要件には合致しません。BigQuery は分析(OLAP)向けのデータウェアハウスであり、低レイテンシのトランザクション処理(OLTP)用途には適しません。",
     "reference": "https://cloud.google.com/spanner/docs/instances",
     "relatedMaterials": []
@@ -121,14 +121,14 @@
     "tags": ["autoscaling", "managed-instance-group", "compute-engine"],
     "question": "Compute Engine のマネージドインスタンスグループ(MIG)に対してオートスケーリングを設定したいと考えています。MIG のオートスケーラーがスケーリングの判断に使用できるシグナルとして、適切でないものはどれですか？",
     "options": [
-      "アタッチされた永続ディスクの空き容量",
       "平均 CPU 使用率",
       "HTTP(S) ロードバランシングの処理キャパシティ(使用率)",
+      "アタッチされた永続ディスクの空き容量",
       "Cloud Monitoring のカスタム指標(メトリクス)"
     ],
     "isMultiple": false,
-    "correct": 0,
-    "explanation": "MIG のオートスケーラーは、CPU 使用率・HTTP(S) ロードバランシングの処理キャパシティ・Cloud Monitoring のメトリクス・スケジュールに基づいてスケールしますが、アタッチされた永続ディスクの空き容量はスケーリングシグナルとして用意されていないため、これが『適切でないもの』として正解です。選択肢2の平均 CPU 使用率、選択肢3の HTTP(S) ロードバランシングのキャパシティ、選択肢4の Cloud Monitoring のメトリクスはいずれも公式にサポートされたオートスケーリングのシグナルです。",
+    "correct": 2,
+    "explanation": "MIG のオートスケーラーは、CPU 使用率・HTTP(S) ロードバランシングの処理キャパシティ・Cloud Monitoring のメトリクス・スケジュールに基づいてスケールしますが、アタッチされた永続ディスクの空き容量はスケーリングシグナルとして用意されていないため、これが『適切でないもの』として正解です。選択肢1の平均 CPU 使用率、選択肢2の HTTP(S) ロードバランシングのキャパシティ、選択肢4の Cloud Monitoring のメトリクスはいずれも公式にサポートされたオートスケーリングのシグナルです。",
     "reference": "https://cloud.google.com/compute/docs/autoscaler",
     "relatedMaterials": []
   }

@@ -83,14 +83,14 @@
     "tags": ["vpc", "firewall", "networking"],
     "question": "VPC ファイアウォールルールを作成する際に priority（優先度）を指定しなかった場合、そのルールに割り当てられるデフォルトの優先度はいくつですか？",
     "options": [
-      "1000",
       "0",
+      "1000",
       "65535",
       "100"
     ],
     "isMultiple": false,
-    "correct": 0,
-    "explanation": "ファイアウォールルールで priority を省略すると、デフォルトで 1000 が割り当てられます。優先度は 0〜65535 の範囲で、数値が小さいほど優先されます。選択肢2の 0 は指定可能な最高優先度ですがデフォルト値ではありません。選択肢3の 65535 は指定可能な最低優先度であり、暗黙のルール（implied rules）に対応する値で、デフォルト値ではありません。選択肢4の 100 はデフォルト値ではありません。",
+    "correct": 1,
+    "explanation": "ファイアウォールルールで priority を省略すると、デフォルトで 1000 が割り当てられます。優先度は 0〜65535 の範囲で、数値が小さいほど優先されます。選択肢1の 0 は指定可能な最高優先度ですがデフォルト値ではありません。選択肢3の 65535 は指定可能な最低優先度であり、暗黙のルール（implied rules）に対応する値で、デフォルト値ではありません。選択肢4の 100 はデフォルト値ではありません。",
     "reference": "https://cloud.google.com/vpc/docs/firewalls",
     "relatedMaterials": []
   },
@@ -102,14 +102,14 @@
     "tags": ["gke", "kubernetes", "kubectl"],
     "question": "GKE クラスタにデプロイ済みの Deployment『frontend』を、外部のインターネットから HTTP でアクセスできるように公開したいです。最も適切な Kubernetes Service の type はどれですか？",
     "options": [
-      "LoadBalancer",
       "ClusterIP",
       "NodePort のみ（追加設定なし）",
+      "LoadBalancer",
       "ExternalName"
     ],
     "isMultiple": false,
-    "correct": 0,
-    "explanation": "Service の type を LoadBalancer にすると、Google Cloud のロードバランサが自動でプロビジョニングされ、外部 IP を通じてインターネットからアクセスできます。選択肢2の ClusterIP はクラスタ内部からのみアクセス可能で外部公開できません。選択肢3の NodePort は各ノードの特定ポートを開きますが、ノード IP の管理やファイアウォール設定が別途必要で、外部公開の標準的な手段としては LoadBalancer が適切です。選択肢4の ExternalName は外部 DNS 名へのエイリアスを作るもので、クラスタ内ワークロードの公開には使いません。",
+    "correct": 2,
+    "explanation": "Service の type を LoadBalancer にすると、Google Cloud のロードバランサが自動でプロビジョニングされ、外部 IP を通じてインターネットからアクセスできます。選択肢1の ClusterIP はクラスタ内部からのみアクセス可能で外部公開できません。選択肢2の NodePort は各ノードの特定ポートを開きますが、ノード IP の管理やファイアウォール設定が別途必要で、外部公開の標準的な手段としては LoadBalancer が適切です。選択肢4の ExternalName は外部 DNS 名へのエイリアスを作るもので、クラスタ内ワークロードの公開には使いません。",
     "reference": "https://cloud.google.com/kubernetes-engine/docs/deploy-app-cluster",
     "relatedMaterials": []
   },
@@ -140,14 +140,14 @@
     "tags": ["app-engine", "deployment", "gcloud"],
     "question": "app.yaml を含むアプリケーションのソースコードを、App Engine standard 環境にデプロイしたいです。最も適切なコマンドはどれですか？",
     "options": [
-      "gcloud app deploy",
       "gcloud appengine push",
       "gcloud app create --deploy",
-      "gcloud run deploy --platform=appengine"
+      "gcloud run deploy --platform=appengine",
+      "gcloud app deploy"
     ],
     "isMultiple": false,
-    "correct": 0,
-    "explanation": "App Engine へのデプロイは、`app.yaml` があるディレクトリで `gcloud app deploy` を実行します（必要に応じて構成ファイルのパスを引数に指定）。選択肢2の `appengine push` というコマンドグループ・サブコマンドは存在しません。選択肢3の `gcloud app create` は App Engine アプリケーション（リージョン）の初期化に使うもので、コードのデプロイは行いません。選択肢4の `gcloud run deploy` は Cloud Run 用で、`--platform=appengine` という指定もありません。",
+    "correct": 3,
+    "explanation": "App Engine へのデプロイは、`app.yaml` があるディレクトリで `gcloud app deploy` を実行します（必要に応じて構成ファイルのパスを引数に指定）。選択肢1の `appengine push` というコマンドグループ・サブコマンドは存在しません。選択肢2の `gcloud app create` は App Engine アプリケーション（リージョン）の初期化に使うもので、コードのデプロイは行いません。選択肢3の `gcloud run deploy` は Cloud Run 用で、`--platform=appengine` という指定もありません。",
     "reference": "https://cloud.google.com/appengine/docs/standard",
     "relatedMaterials": []
   },
