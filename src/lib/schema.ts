@@ -1,18 +1,10 @@
 // src/lib/schema.ts
 import { z } from 'zod';
 
-export const CATEGORY_SLUGS = [
-  'fundamentals',
-  'google-cloud-offerings',
-  'improve-output',
-  'business-strategy',
-] as const;
-export type CategorySlug = (typeof CATEGORY_SLUGS)[number];
-
 export const QuestionSchema = z
   .object({
     id: z.string().min(1),
-    category: z.enum(CATEGORY_SLUGS),
+    category: z.string().min(1),
     subTopic: z.string().min(1),
     difficulty: z.enum(['easy', 'medium', 'hard']),
     tags: z.array(z.string()).default([]),
@@ -41,10 +33,16 @@ export const QuestionSchema = z
     }
   });
 
-export type Question = z.infer<typeof QuestionSchema>;
+// examId は読み込み時(index.ts)にディレクトリから注入する（JSONには書かない）。
+export type Question = z.infer<typeof QuestionSchema> & { examId: string };
 
-// 1ファイル分(=1カテゴリ)の配列を検証。失敗時は id 付きで throw（ビルドを止める）。
-export function validateQuestions(raw: unknown[], expectedCategory: CategorySlug): Question[] {
+// 1ファイル分(=1カテゴリ)の配列を検証。examId を注入し、失敗時は id 付きで throw（ビルドを止める）。
+export function validateQuestions(
+  raw: unknown[],
+  examId: string,
+  expectedCategory: string,
+  validCategories: readonly string[],
+): Question[] {
   return raw.map((item, index) => {
     const result = QuestionSchema.safeParse(item);
     if (!result.success) {
@@ -54,6 +52,9 @@ export function validateQuestions(raw: unknown[], expectedCategory: CategorySlug
     if (result.data.category !== expectedCategory) {
       throw new Error(`Question ${result.data.id} has category "${result.data.category}" but file expects "${expectedCategory}"`);
     }
-    return result.data;
+    if (!validCategories.includes(result.data.category)) {
+      throw new Error(`Question ${result.data.id} category "${result.data.category}" is not in exam "${examId}"`);
+    }
+    return { ...result.data, examId };
   });
 }

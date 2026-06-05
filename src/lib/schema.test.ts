@@ -40,11 +40,20 @@ describe('QuestionSchema', () => {
 });
 
 describe('validateQuestions', () => {
+  const cats = ['fundamentals', 'improve-output'] as const;
   it('throws with the offending id when a question is invalid', () => {
     const bad = [{ ...valid, id: 'bad-1', correct: 99 }];
-    expect(() => validateQuestions(bad, 'fundamentals')).toThrow(/bad-1/);
+    expect(() => validateQuestions(bad, 'genai-leader', 'fundamentals', cats)).toThrow(/bad-1/);
   });
   it('throws when category does not match the file', () => {
-    expect(() => validateQuestions([valid], 'improve-output')).toThrow(/category/i);
+    expect(() => validateQuestions([valid], 'genai-leader', 'improve-output', cats)).toThrow(/category/i);
+  });
+  it('throws when category is not in the exam set', () => {
+    const q = { ...valid, category: 'unknown-cat' };
+    expect(() => validateQuestions([q], 'genai-leader', 'unknown-cat', cats)).toThrow(/exam/i);
+  });
+  it('injects examId on success', () => {
+    const out = validateQuestions([valid], 'genai-leader', 'fundamentals', cats);
+    expect(out[0].examId).toBe('genai-leader');
   });
 });

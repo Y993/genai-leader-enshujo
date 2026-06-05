@@ -1,5 +1,5 @@
 // src/lib/quiz.ts
-import type { Question, CategorySlug } from './schema';
+import type { Question } from './schema';
 
 export function isCorrect(question: Question, selected: number[]): boolean {
   const correct = Array.isArray(question.correct) ? question.correct : [question.correct];
@@ -9,7 +9,7 @@ export function isCorrect(question: Question, selected: number[]): boolean {
   return a.every((v, i) => v === b[i]);
 }
 
-export function filterByCategory(questions: Question[], category: CategorySlug): Question[] {
+export function filterByCategory(questions: Question[], category: string): Question[] {
   return questions.filter((q) => q.category === category);
 }
 
