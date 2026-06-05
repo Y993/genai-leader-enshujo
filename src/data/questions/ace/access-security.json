@@ -1,1 +1,154 @@
-[]
+[
+  {
+    "id": "ace-sec-001",
+    "category": "access-security",
+    "subTopic": "IAM の基本ロール・事前定義ロール・カスタムロール",
+    "difficulty": "easy",
+    "tags": ["iam", "roles", "predefined-roles"],
+    "question": "Google Cloud の IAM で、Google が作成・管理し、特定のサービスに対してきめ細かな権限のまとまりを提供するロールの種類はどれですか？",
+    "options": [
+      "基本ロール（basic role）",
+      "事前定義ロール（predefined role）",
+      "カスタムロール（custom role）",
+      "サービスアカウントロール（service account role）"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "事前定義ロールは Google Cloud が作成・保守し、特定サービスに対してきめ細かなアクセスを提供するロールで、本番環境で推奨される選択肢です（選択肢2）。基本ロール（選択肢1: オーナー/編集者/閲覧者）はプロジェクト全体に広範な権限を与えるためきめ細かくなく、最小権限には不向きです。カスタムロール（選択肢3）は利用者が権限を組み合わせて作る独自ロールで、Google が管理するものではありません。『サービスアカウントロール』（選択肢4）という名称のロール種別は存在しません。",
+    "reference": "https://cloud.google.com/iam/docs/roles-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-002",
+    "category": "access-security",
+    "subTopic": "サービスアカウントとサービスアカウントキー",
+    "difficulty": "easy",
+    "tags": ["iam", "service-account"],
+    "question": "Compute Engine 上で動くアプリケーションが、人間のユーザーではなくアプリ自身の ID として Google Cloud API を呼び出すために使うべきものはどれですか？",
+    "options": [
+      "個人の Google アカウント（ユーザーアカウント）",
+      "API キー単体",
+      "サービスアカウント",
+      "Google グループ"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "サービスアカウントは、人ではなくアプリケーションや Compute Engine インスタンスなどのワークロードが使うことを想定した特別なアカウントで、ワークロードの ID として API 呼び出しを認証します（選択肢3）。個人の Google アカウント（選択肢1）は人間用で、退職や権限変更で運用が壊れやすくアプリの ID には不適切です。API キー（選択肢2）は一部 API の識別には使えますが認証・認可の主体（ID）にはならず、IAM 権限を割り当てる対象になりません。Google グループ（選択肢4）は複数のユーザーへ一括で権限を付与するための集合で、ワークロードが名乗る ID ではありません。",
+    "reference": "https://cloud.google.com/iam/docs/service-account-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-003",
+    "category": "access-security",
+    "subTopic": "最小権限の原則",
+    "difficulty": "medium",
+    "tags": ["iam", "least-privilege", "best-practices"],
+    "question": "本番環境で、ある担当者に Cloud Storage バケットの読み取りだけを許可したいとします。最小権限の原則に最も沿った権限付与はどれですか？",
+    "options": [
+      "基本ロール roles/editor をプロジェクトに付与する",
+      "基本ロール roles/owner をプロジェクトに付与する",
+      "roles/storage.admin を付与する",
+      "事前定義ロール roles/storage.objectViewer を付与する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "最小権限の原則では、業務に必要な最小限の権限のみを与えます。roles/storage.objectViewer はオブジェクトの読み取りに絞られた事前定義ロールで、要件（読み取りのみ）に最も合致します（選択肢4）。roles/editor（選択肢1）と roles/owner（選択肢2）は基本ロールで、プロジェクト内の多数のリソースに対する広範な権限を与えるため過剰であり、本番環境では基本ロールの付与を避けるよう推奨されています。roles/storage.admin（選択肢3）はバケットやオブジェクトの作成・削除・IAM 変更まで可能で、読み取りだけの要件に対して権限過多です。",
+    "reference": "https://cloud.google.com/iam/docs/using-iam-securely",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-004",
+    "category": "access-security",
+    "subTopic": "IAM ポリシーバインディング (gcloud add-iam-policy-binding)",
+    "difficulty": "medium",
+    "tags": ["iam", "gcloud", "policy-binding"],
+    "question": "ユーザー alice@example.com に対し、プロジェクト my-project で roles/logging.viewer ロールを付与する gcloud コマンドとして正しいものはどれですか？",
+    "options": [
+      "gcloud projects add-iam-policy-binding my-project --member=\"user:alice@example.com\" --role=\"roles/logging.viewer\"",
+      "gcloud projects set-iam-policy my-project --member=\"user:alice@example.com\" --role=\"roles/logging.viewer\"",
+      "gcloud iam roles add my-project --user=\"alice@example.com\" --role=\"roles/logging.viewer\"",
+      "gcloud projects add-iam-policy-binding my-project --user=\"alice@example.com\" --permission=\"roles/logging.viewer\""
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "個々のプリンシパルに 1 つのロールを手早く付与するには add-iam-policy-binding を使い、--member でプリンシパル（user:/serviceAccount:/group: などの接頭辞付き）を、--role でロールを指定します（選択肢1）。set-iam-policy（選択肢2）はポリシー全体を JSON/YAML ファイルで置き換えるコマンドで、--member/--role フラグは取りません。選択肢3の gcloud iam roles add というコマンドは存在しません（roles サブコマンドはカスタムロールの作成・管理用）。選択肢4はフラグ名が誤りで、プリンシパルは --user ではなく --member、ロールは --permission ではなく --role で指定します。",
+    "reference": "https://cloud.google.com/iam/docs/granting-changing-revoking-access",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-005",
+    "category": "access-security",
+    "subTopic": "リソース階層とIAMポリシーの継承",
+    "difficulty": "medium",
+    "tags": ["iam", "resource-hierarchy", "inheritance"],
+    "question": "あるフォルダに対して roles/viewer を付与しました。このフォルダ配下のプロジェクトおよびそのリソースに対する効果として正しいものはどれですか？",
+    "options": [
+      "フォルダで付与したポリシーは配下のプロジェクトとそのリソースに継承され、それらに対しても閲覧者の権限が有効になる",
+      "フォルダレベルの付与はそのフォルダ自体にのみ効果があり、配下のプロジェクトには一切継承されない",
+      "ポリシーは下位から上位へ伝播し、フォルダの親である組織にも閲覧者権限が付与される",
+      "配下のプロジェクトで明示的に同じロールを付与し直さない限り、継承は発生しない"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Google Cloud のリソース階層（組織 > フォルダ > プロジェクト > リソース）では、上位リソースに設定した IAM ポリシーが下位へと継承され、下位リソースで有効な実効ポリシーは自身と祖先のポリシーの和集合になります。よってフォルダの roles/viewer は配下のプロジェクトとリソースに継承されます（選択肢1）。選択肢2は継承が起きないとしている点で誤りです。選択肢3は継承の向きが逆で、ポリシーは上位から下位へ流れ、子の付与が親に遡ることはありません。選択肢4は継承を否定しており、明示的な再付与がなくても継承は自動的に有効になります。",
+    "reference": "https://cloud.google.com/resource-manager/docs/cloud-platform-resource-hierarchy",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-006",
+    "category": "access-security",
+    "subTopic": "カスタムロール",
+    "difficulty": "medium",
+    "tags": ["iam", "custom-roles"],
+    "question": "IAM のカスタムロールに関する説明として正しいものを2つ選んでください。",
+    "options": [
+      "1 つ以上の権限（permission）を組み合わせて、組織やプロジェクトの要件に合わせた独自のロールを作成できる",
+      "カスタムロールは組織レベルまたはプロジェクトレベルで作成・管理できる",
+      "カスタムロールに含めた権限は Google が自動的に最新状態へ更新・保守してくれる",
+      "カスタムロールはフォルダレベルで作成する必要がある"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "カスタムロールは利用者が必要な権限を組み合わせて作る独自ロールで（選択肢1）、組織レベルまたはプロジェクトレベルで作成・管理できます（選択肢2）。選択肢3は誤りで、権限の保守はカスタムロールの作成者の責任です。新しい権限の追加や非推奨化への追従を自動で行ってくれるのは Google が管理する事前定義ロールであり、カスタムロールではありません。選択肢4も誤りで、カスタムロールはフォルダレベルでは作成できず、作成できるのは組織またはプロジェクトのレベルです。",
+    "reference": "https://cloud.google.com/iam/docs/creating-custom-roles",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-007",
+    "category": "access-security",
+    "subTopic": "Cloud KMS と暗号化 (CMEK)",
+    "difficulty": "hard",
+    "tags": ["kms", "cmek", "encryption"],
+    "question": "規制要件により、BigQuery や Cloud Storage に保存するデータの暗号鍵を自分たちで管理・制御し、ローテーションや無効化を自分で行いたいと考えています。最も適した方法はどれですか？",
+    "options": [
+      "Cloud KMS で鍵を作成し、対応サービスでその鍵を CMEK（顧客管理の暗号鍵）として指定する",
+      "Google が既定で行う暗号化（Google 管理の鍵）にそのまま任せる",
+      "各リソースに roles/owner を付与して暗号化を有効にする",
+      "VPC Service Controls を構成して保存データを暗号化する"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "CMEK（顧客管理の暗号鍵）では、Cloud KMS（または Cloud HSM/External Key Manager）で自分が所有・管理する鍵を作成し、対応サービスにその鍵を指定することで、鍵のローテーション・無効化・破棄などのライフサイクルを自分で制御できます（選択肢1）。Google 管理の鍵による既定の暗号化（選択肢2）は常に有効ですが、鍵の管理・ローテーション制御は利用者側で行えないため要件を満たしません。roles/owner の付与（選択肢3）は IAM の権限付与であり、暗号鍵の管理機能ではありません。VPC Service Controls（選択肢4）はサービス境界を作ってデータ持ち出しを防ぐ仕組みで、保存データの暗号鍵管理を行うものではありません。",
+    "reference": "https://cloud.google.com/kms/docs/cmek",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-008",
+    "category": "access-security",
+    "subTopic": "監査ログ (Cloud Audit Logs)",
+    "difficulty": "hard",
+    "tags": ["audit-logs", "logging", "data-access"],
+    "question": "Cloud Audit Logs において、リソースの構成やメタデータを変更する管理操作を記録する『管理アクティビティ監査ログ』と、データの読み取りや書き込みを記録する『データアクセス監査ログ』の既定の挙動として正しいものはどれですか？",
+    "options": [
+      "管理アクティビティ監査ログは常に記録され無効化できないが、データアクセス監査ログ（BigQuery を除く）は既定で無効で、明示的に有効化する必要がある",
+      "どちらも既定で無効になっており、両方を明示的に有効化する必要がある",
+      "どちらも常に記録され、無効化することはできない",
+      "管理アクティビティ監査ログは既定で無効だが、データアクセス監査ログは常に記録される"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "管理アクティビティ監査ログは、構成やメタデータを変更する管理操作を記録し、常に書き込まれて無効化・除外・構成変更ができません。一方、データアクセス監査ログは量が大きくなりやすいため（BigQuery のものを除き）既定で無効で、必要に応じて明示的に有効化します（選択肢1）。選択肢2は管理アクティビティログまで無効としている点で誤りです。選択肢3はデータアクセスログまで常時記録としている点で誤りです。選択肢4は両者の既定の挙動を取り違えており誤りです。",
+    "reference": "https://cloud.google.com/logging/docs/audit",
+    "relatedMaterials": []
+  }
+]

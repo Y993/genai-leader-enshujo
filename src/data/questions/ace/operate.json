@@ -1,1 +1,154 @@
-[]
+[
+  {
+    "id": "ace-ops-001",
+    "category": "operate",
+    "subTopic": "Cloud Logging(ログ閲覧)",
+    "difficulty": "easy",
+    "tags": ["logging", "logs-explorer", "observability"],
+    "question": "本番環境の Compute Engine VM で発生したエラーを調査するため、特定のリソースタイプ・重大度・期間でログエントリを対話的に絞り込んで閲覧したいです。Google Cloud コンソールで最初に使うべきツールはどれですか。",
+    "options": [
+      "Cloud Logging の Logs Explorer（ログエクスプローラ）",
+      "Cloud Trace のトレースリスト",
+      "Cloud Monitoring のダッシュボード",
+      "Error Reporting のグループ一覧のみ"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "正解は Logs Explorer です。Logs Explorer はログバケットに保存されたログエントリを取得・表示・分析するためのツールで、リソースタイプ・ログ名・重大度・期間などをメニューやクエリ言語で指定して対話的に絞り込めます。Cloud Trace はリクエストのレイテンシ（分散トレース）を可視化するツールでログエントリの閲覧用ではありません。Cloud Monitoring のダッシュボードは指標（メトリクス）をグラフ化するもので、生のログエントリを行単位で検索する用途には向きません。Error Reporting はアプリのエラーを自動的にグループ化して集計しますが、任意のリソース・重大度・期間でログを自由に絞り込むには Logs Explorer が適しています。",
+    "reference": "https://cloud.google.com/logging/docs/view/logs-explorer-interface",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-002",
+    "category": "operate",
+    "subTopic": "アラートポリシーと稼働時間チェック(uptime check)",
+    "difficulty": "easy",
+    "tags": ["monitoring", "uptime-check", "alerting"],
+    "question": "公開している Web アプリケーションが外部から HTTP で到達可能かどうかを、複数のリージョンから定期的に確認し、失敗が続いたら通知を受け取りたいです。Cloud Monitoring で構成すべき機能はどれですか。",
+    "options": [
+      "ログベースの指標だけを作成する",
+      "Cloud Profiler のプロファイルを有効化する",
+      "稼働時間チェック（uptime check）とアラートポリシーを組み合わせる",
+      "BigQuery への課金データエクスポートを設定する"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "正解は稼働時間チェックとアラートポリシーの組み合わせです。稼働時間チェックは Google Cloud が複数リージョンのチェッカーから HTTP/HTTPS/TCP でエンドポイントへ定期的にリクエストを送り、可用性を測定します。その結果に対してアラートポリシーを設定すれば、失敗時に通知を受け取れます。ログベースの指標はログエントリから指標を生成する仕組みで、外部からの到達性を能動的に確認する機能ではありません。Cloud Profiler はアプリの CPU やメモリ使用をプロファイリングするもので、可用性監視とは無関係です。BigQuery への課金データエクスポートはコスト分析用であり、稼働監視とは目的が異なります。",
+    "reference": "https://cloud.google.com/monitoring/uptime-checks/introduction",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-003",
+    "category": "operate",
+    "subTopic": "インスタンスのマシンタイプ変更",
+    "difficulty": "medium",
+    "tags": ["compute-engine", "machine-type", "resize"],
+    "question": "稼働中の Compute Engine VM が CPU 不足のため、より大きなマシンタイプ（vCPU 数の多いもの）に変更したいです。データを保持したまま既存の VM のマシンタイプを変更する正しい手順はどれですか。",
+    "options": [
+      "稼働させたまま gcloud でマシンタイプを変更する（停止は不要）",
+      "VM を停止（TERMINATED 状態）してからマシンタイプを変更し、再起動する",
+      "VM を削除してから同じ名前で新規作成し直す必要がある",
+      "マシンタイプはディスクのサイズ変更でのみ間接的に変更できる"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "正解は「VM を停止してからマシンタイプを変更し、再起動する」です。マシンタイプを変更できるのは停止済み（TERMINATED 状態）の VM のみで、停止→マシンタイプ変更→起動の手順を踏みます。ブートディスクやデータは保持されます。稼働中のまま変更することはできないため「停止は不要」は誤りです。マシンタイプ変更のために VM を削除・再作成する必要はなく、既存 VM を停止して変更すれば足ります。マシンタイプ（vCPU/メモリ）はディスクサイズとは独立した属性であり、ディスクのサイズ変更で変わるものではありません。",
+    "reference": "https://cloud.google.com/compute/docs/instances/changing-machine-type-of-stopped-instance",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-004",
+    "category": "operate",
+    "subTopic": "スナップショットとバックアップのスケジュール",
+    "difficulty": "medium",
+    "tags": ["compute-engine", "snapshot", "backup", "disk"],
+    "question": "本番 VM のゾーン永続ディスクを、運用者の手作業に頼らず毎日自動でバックアップし、古いスナップショットは一定期間で自動削除したいです。最も適切な方法はどれですか。",
+    "options": [
+      "Cloud Scheduler のジョブを書いて毎回手動で gcloud snapshot を実行する",
+      "ディスクを Cloud Storage バケットに直接コピーする cron を VM 内で動かす",
+      "マシンイメージを 1 回だけ作成しておく",
+      "スナップショットスケジュール（スナップショットスケジュールポリシー）をディスクに適用する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "正解はスナップショットスケジュール（スナップショットスケジュールポリシー）です。これは永続ディスクや Hyperdisk に対して、時間単位・日単位・週単位で自動的にスナップショットを作成し、保持期間（リテンション）を設定して古いスナップショットを自動削除できる Compute Engine のマネージド機能です。手作業や運用者依存を排除できます。Cloud Scheduler で gcloud を手動実行する案は仕組みとして可能でも、保持ポリシーの自動管理などを自前で実装する必要があり、推奨される標準手段ではありません。VM 内の cron でディスクを Cloud Storage に直接コピーするのは整合性が取りにくく非推奨です。マシンイメージを 1 回作るだけでは「毎日自動」「自動削除」という要件を満たしません。",
+    "reference": "https://cloud.google.com/compute/docs/disks/scheduled-snapshots",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-005",
+    "category": "operate",
+    "subTopic": "コスト管理と請求レポート・BigQueryエクスポート",
+    "difficulty": "medium",
+    "tags": ["billing", "bigquery", "cost-management"],
+    "question": "経理部門から「サービス別・プロジェクト別・ラベル別の利用コストを SQL で柔軟に集計し、社内 BI ツールに連携したい」と依頼されました。Cloud Billing で最初に有効化すべき機能はどれですか。",
+    "options": [
+      "コンソールの請求レポート画面のスクリーンショットを毎月共有する",
+      "Cloud Billing データの BigQuery へのエクスポートを有効化する",
+      "予算（Budget）とアラートだけを設定する",
+      "Cloud Monitoring の指標としてコストを記録する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "正解は Cloud Billing データの BigQuery エクスポートです。これを有効化すると、利用状況・コスト見積もり・料金データが 1 日を通して自動的に指定の BigQuery データセットに書き出され、サービス別・プロジェクト別・ラベル別などの粒度で SQL によって柔軟に集計でき、BI ツールにも連携しやすくなります。コンソールの請求レポートのスクリーンショット共有は手作業で SQL 集計や自動連携には不向きです。予算とアラートはコスト超過の通知が目的で、明細データを SQL で分析する機能ではありません。Cloud Monitoring はインフラの指標監視ツールであり、課金明細を SQL 分析するための一次手段ではありません。",
+    "reference": "https://cloud.google.com/billing/docs/how-to/export-data-bigquery",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-006",
+    "category": "operate",
+    "subTopic": "マネージドインスタンスグループの自動スケーリング",
+    "difficulty": "medium",
+    "tags": ["compute-engine", "mig", "autoscaling"],
+    "question": "ステートレスな Web サーバーを動かすマネージドインスタンスグループ（MIG）で、平均 CPU 使用率に応じて自動的に VM 台数を増減させたいです。オートスケーラについて正しい説明はどれですか。",
+    "options": [
+      "オートスケーリングはアンマネージドインスタンスグループでのみ利用できる",
+      "オートスケーリングを設定すると別途固定の追加料金が必ず発生する",
+      "平均 CPU 使用率・HTTP ロードバランシングの処理能力・Cloud Monitoring 指標・スケジュールなどをスケーリングのシグナルとして使える",
+      "スケーリングのシグナルとして使えるのはディスク使用率のみである"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "正解は、平均 CPU 使用率・HTTP(S) ロードバランシングの処理能力・Cloud Monitoring 指標・スケジュールなどをシグナルとして使える、です。MIG のオートスケーラはこれらの負荷に応じて VM をスケールアウト/スケールインします。オートスケーリングはマネージドインスタンスグループ（MIG）の機能であり、アンマネージドインスタンスグループでは利用できないため、その逆の記述は誤りです。オートスケーリングの構成自体に追加料金はかからず、課金されるのは実際に稼働した VM の使用分のみです。シグナルは CPU 使用率に限らず複数あり、「ディスク使用率のみ」は誤りです。",
+    "reference": "https://cloud.google.com/compute/docs/autoscaler",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-007",
+    "category": "operate",
+    "subTopic": "Cloud Logging(エクスポート・シンク)",
+    "difficulty": "hard",
+    "tags": ["logging", "sink", "export", "compliance"],
+    "question": "コンプライアンス要件により、すべての監査ログを長期保管用に Cloud Storage バケットへ、リアルタイム分析用に BigQuery データセットへ、それぞれ継続的に転送する必要があります。Cloud Logging でこの転送を実現するために構成すべきものを 2 つ選んでください。",
+    "options": [
+      "宛先を Cloud Storage バケットにしたログシンク（log sink）を作成する",
+      "宛先を BigQuery データセットにしたログシンク（log sink）を作成する",
+      "Logs Explorer で手動でクエリ結果を CSV としてダウンロードする",
+      "稼働時間チェックを Cloud Storage と BigQuery に向けて設定する"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "正解はログシンクを 2 つ作成することです。ログシンクはフィルタに一致したログエントリを指定の宛先へ継続的にルーティングする仕組みで、宛先には Cloud Storage バケット、BigQuery データセット、Pub/Sub トピック、別プロジェクトのログバケットなどを選べます。長期保管用に Cloud Storage を宛先とするシンク、リアルタイム分析用に BigQuery を宛先とするシンクをそれぞれ作成すれば、両方への継続的な転送を自動化できます。Logs Explorer での手動 CSV ダウンロードは継続的・自動的な転送にはならず要件を満たしません。稼働時間チェックは外部エンドポイントの可用性監視機能であり、ログの転送（エクスポート）とは無関係です。",
+    "reference": "https://cloud.google.com/logging/docs/export/configure_export_v2",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-008",
+    "category": "operate",
+    "subTopic": "リソースのラベルと管理",
+    "difficulty": "hard",
+    "tags": ["labels", "resource-management", "billing", "networking"],
+    "question": "複数チームがプロジェクトを共有しており、請求の内訳をチーム単位・環境（本番/検証）単位で分解できるようにリソースを整理したいです。ラベル（labels）に関する説明として正しいものはどれですか。",
+    "options": [
+      "ラベルは Compute Engine のファイアウォールルールを適用する対象を指定するためのものである",
+      "ラベルはリソースに 1 つしか付与できず、後から変更することはできない",
+      "ラベルを付けると自動的に IAM の権限がそのリソースに付与される",
+      "ラベルはキーと値のペアでリソースを整理する仕組みで、課金データのエクスポートと組み合わせるとコストをラベル別に分解できる"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "正解は「ラベルはキーと値のペアでリソースを整理する仕組みで、課金データのエクスポートと組み合わせるとコストをラベル別に分解できる」です。ラベルはプロジェクトや多くのリソースに付与できるキー/値のメタデータで、リソースの整理・フィルタリングや、請求データの内訳分析（チーム別・環境別のコスト分解）に利用できます。ファイアウォールルールの適用対象を指定するのはラベルではなくネットワークタグ（network tags）の役割なので誤りです。ラベルは複数付与でき、後から追加・更新・削除も可能なので「1 つしか付けられず変更不可」は誤りです。ラベルはメタデータであり、付与しても IAM の権限が自動的に付くことはないため、その記述も誤りです。",
+    "reference": "https://cloud.google.com/resource-manager/docs/creating-managing-labels",
+    "relatedMaterials": []
+  }
+]

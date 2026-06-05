@@ -1,1 +1,192 @@
-[]
+[
+  {
+    "id": "ace-deploy-001",
+    "category": "deploy-implement",
+    "subTopic": "Compute Engine インスタンスの作成",
+    "difficulty": "easy",
+    "tags": ["compute-engine", "vm", "gcloud"],
+    "question": "gcloud CLI を使って、デフォルト設定で新しい Compute Engine の VM インスタンスを 1 台作成したいです。最も適切なコマンドはどれですか？",
+    "options": [
+      "gcloud compute instances create my-vm --zone=asia-northeast1-a",
+      "gcloud compute vms add my-vm --region=asia-northeast1",
+      "gcloud compute instances deploy my-vm --location=asia-northeast1",
+      "gcloud compute create-instance my-vm --zone=asia-northeast1-a"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "VM インスタンスの作成は `gcloud compute instances create <名前>` 形式で、ゾーンリソースなので `--zone` を指定します。選択肢2は `vms add` というサブコマンド自体が存在せず、VM はリージョンではなくゾーンに作成されます。選択肢3の `instances deploy` というサブコマンドは存在しません。選択肢4は `create-instance` という語順が誤りで、正しくは `instances create` です。",
+    "reference": "https://cloud.google.com/compute/docs/instances/create-start-instance",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-002",
+    "category": "deploy-implement",
+    "subTopic": "Cloud Storage バケットとオブジェクト操作",
+    "difficulty": "easy",
+    "tags": ["cloud-storage", "gcloud", "bucket"],
+    "question": "ローカルにあるファイル report.pdf を、既存の Cloud Storage バケット gs://my-bucket にアップロードしたいです。最も適切なコマンドはどれですか？",
+    "options": [
+      "gcloud storage upload report.pdf --bucket=my-bucket",
+      "gcloud storage cp report.pdf gs://my-bucket/",
+      "gcloud storage mv gs://my-bucket/ report.pdf",
+      "gcloud storage put report.pdf gs://my-bucket/"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Cloud Storage へのアップロードは `gcloud storage cp <ローカルパス> gs://<バケット>/` を使います（選択肢2）。`cp` はローカルとバケット間のコピーに対応しています。選択肢1の `storage upload` サブコマンドは存在しません。選択肢3の `mv` は移動コマンドで、しかも引数の順序が逆です。選択肢4の `put` サブコマンドは存在しません。",
+    "reference": "https://cloud.google.com/storage/docs/creating-buckets",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-003",
+    "category": "deploy-implement",
+    "subTopic": "Cloud Run へのデプロイ",
+    "difficulty": "easy",
+    "tags": ["cloud-run", "container", "serverless"],
+    "question": "Artifact Registry に格納済みのコンテナイメージを、新しい Cloud Run サービスとしてデプロイしたいです。最も適切なコマンドはどれですか？",
+    "options": [
+      "gcloud run create my-service --container=app:latest",
+      "gcloud container run my-service --image=app:latest",
+      "gcloud run deploy my-service --image=REGION-docker.pkg.dev/PROJECT/REPO/app:latest --region=asia-northeast1",
+      "gcloud run services start my-service --image=app:latest"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "Cloud Run へのデプロイは `gcloud run deploy <サービス名> --image=<イメージURL>` を使い、デプロイ先の `--region` を指定します（選択肢3）。選択肢1の `run create` サブコマンドは存在しません（イメージ指定は `--image` であり `--container` でもありません）。選択肢2の `gcloud container run` というコマンドグループは存在しません。選択肢4の `run services start` は無効なサブコマンドです。",
+    "reference": "https://cloud.google.com/run/docs/deploying",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-004",
+    "category": "deploy-implement",
+    "subTopic": "インスタンステンプレートとマネージドインスタンスグループ(MIG)",
+    "difficulty": "medium",
+    "tags": ["instance-template", "mig", "compute-engine"],
+    "question": "既存のインスタンステンプレート web-template の起動スクリプトを変更し、そのテンプレートを使うマネージドインスタンスグループ(MIG)に反映させたいです。正しいアプローチはどれですか？",
+    "options": [
+      "gcloud compute instance-templates update web-template でテンプレートを直接編集する",
+      "MIG 内の各 VM に SSH で接続し、手動で起動スクリプトを書き換える",
+      "テンプレートを削除して同名で作り直せば、MIG が自動的に再読み込みする",
+      "テンプレートは作成後に変更できないため、新しいテンプレートを作成し、MIG をその新テンプレートに更新する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "インスタンステンプレートは作成後に変更（更新）できないイミュータブルなリソースです。設定を変えるには新しいテンプレートを作成し、MIG をその新テンプレートに切り替えてローリング更新します（選択肢4）。選択肢1の `instance-templates update` サブコマンドは存在しません（テンプレートは更新不可）。選択肢2の手動編集は MIG の管理対象（テンプレートで定義された構成）から外れ、再作成時に失われます。選択肢3の同名再作成では、MIG が参照するテンプレートを明示的に切り替えない限り自動反映はされません。",
+    "reference": "https://cloud.google.com/compute/docs/instance-templates",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-005",
+    "category": "deploy-implement",
+    "subTopic": "VPC・サブネット・ファイアウォールルール",
+    "difficulty": "medium",
+    "tags": ["vpc", "firewall", "networking"],
+    "question": "VPC ファイアウォールルールを作成する際に priority（優先度）を指定しなかった場合、そのルールに割り当てられるデフォルトの優先度はいくつですか？",
+    "options": [
+      "1000",
+      "0",
+      "65535",
+      "100"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "ファイアウォールルールで priority を省略すると、デフォルトで 1000 が割り当てられます。優先度は 0〜65535 の範囲で、数値が小さいほど優先されます。選択肢2の 0 は指定可能な最高優先度ですがデフォルト値ではありません。選択肢3の 65535 は指定可能な最低優先度であり、暗黙のルール（implied rules）に対応する値で、デフォルト値ではありません。選択肢4の 100 はデフォルト値ではありません。",
+    "reference": "https://cloud.google.com/vpc/docs/firewalls",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-006",
+    "category": "deploy-implement",
+    "subTopic": "GKE クラスタとワークロードのデプロイ",
+    "difficulty": "medium",
+    "tags": ["gke", "kubernetes", "kubectl"],
+    "question": "GKE クラスタにデプロイ済みの Deployment『frontend』を、外部のインターネットから HTTP でアクセスできるように公開したいです。最も適切な Kubernetes Service の type はどれですか？",
+    "options": [
+      "LoadBalancer",
+      "ClusterIP",
+      "NodePort のみ（追加設定なし）",
+      "ExternalName"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Service の type を LoadBalancer にすると、Google Cloud のロードバランサが自動でプロビジョニングされ、外部 IP を通じてインターネットからアクセスできます。選択肢2の ClusterIP はクラスタ内部からのみアクセス可能で外部公開できません。選択肢3の NodePort は各ノードの特定ポートを開きますが、ノード IP の管理やファイアウォール設定が別途必要で、外部公開の標準的な手段としては LoadBalancer が適切です。選択肢4の ExternalName は外部 DNS 名へのエイリアスを作るもので、クラスタ内ワークロードの公開には使いません。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/deploy-app-cluster",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-007",
+    "category": "deploy-implement",
+    "subTopic": "Cloud SQL インスタンスの作成",
+    "difficulty": "medium",
+    "tags": ["cloud-sql", "database", "deployment"],
+    "question": "Cloud SQL for MySQL インスタンスを新規作成・構成する方法として、Google Cloud が公式にサポートしているものを2つ選んでください。",
+    "options": [
+      "Google Cloud Console（ウェブ UI）から作成する",
+      "gcloud sql instances create コマンドで作成する",
+      "MySQL クライアントから CREATE INSTANCE 文を実行して作成する",
+      "BigQuery の SQL エディタから DDL で作成する"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "Cloud SQL インスタンスは、Google Cloud Console、gcloud CLI（`gcloud sql instances create`）、Terraform、REST API などの管理プレーンの手段で作成します（選択肢1・2が正しい）。選択肢3の `CREATE INSTANCE` は MySQL の標準 SQL 構文には存在せず、MySQL クライアントからインスタンス自体を作成することはできません（クライアントは作成済みインスタンス内のデータベース操作に使います）。選択肢4の BigQuery は Cloud SQL とは別サービスで、その DDL から Cloud SQL インスタンスは作成できません。",
+    "reference": "https://cloud.google.com/sql/docs/mysql/create-instance",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-008",
+    "category": "deploy-implement",
+    "subTopic": "App Engine(standard/flexible)",
+    "difficulty": "medium",
+    "tags": ["app-engine", "deployment", "gcloud"],
+    "question": "app.yaml を含むアプリケーションのソースコードを、App Engine standard 環境にデプロイしたいです。最も適切なコマンドはどれですか？",
+    "options": [
+      "gcloud app deploy",
+      "gcloud appengine push",
+      "gcloud app create --deploy",
+      "gcloud run deploy --platform=appengine"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "App Engine へのデプロイは、`app.yaml` があるディレクトリで `gcloud app deploy` を実行します（必要に応じて構成ファイルのパスを引数に指定）。選択肢2の `appengine push` というコマンドグループ・サブコマンドは存在しません。選択肢3の `gcloud app create` は App Engine アプリケーション（リージョン）の初期化に使うもので、コードのデプロイは行いません。選択肢4の `gcloud run deploy` は Cloud Run 用で、`--platform=appengine` という指定もありません。",
+    "reference": "https://cloud.google.com/appengine/docs/standard",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-009",
+    "category": "deploy-implement",
+    "subTopic": "Cloud Load Balancing",
+    "difficulty": "hard",
+    "tags": ["load-balancing", "networking", "http"],
+    "question": "複数のリージョンに配置したバックエンドへ、世界中のユーザーからの HTTP(S) トラフィックを単一のグローバル IP アドレスで受け、最も近いリージョンへ振り分けたいです。最も適切な Google Cloud のロードバランサはどれですか？",
+    "options": [
+      "グローバル外部アプリケーション ロードバランサ（global external Application Load Balancer）",
+      "リージョン内部パススルー ネットワーク ロードバランサ（regional internal passthrough Network Load Balancer）",
+      "リージョン外部パススルー ネットワーク ロードバランサ（regional external passthrough Network Load Balancer）",
+      "内部アプリケーション ロードバランサ（internal Application Load Balancer）"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "単一のグローバル IP で HTTP(S)（レイヤー7）トラフィックを受け、世界中の複数リージョンのバックエンドへ最寄りにルーティングするには、グローバル外部アプリケーション ロードバランサが適切です。Google Front End(GFE) 上で動作するグローバルなマネージドサービスです。選択肢2と4は『内部』であり、インターネット（外部）からのトラフィックを受けられません。選択肢3はパススルー（レイヤー4）かつリージョン単位で、グローバルな単一 IP での複数リージョン分散や HTTP(S) のレイヤー7ルーティングには適しません。",
+    "reference": "https://cloud.google.com/load-balancing/docs/https",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-010",
+    "category": "deploy-implement",
+    "subTopic": "インスタンステンプレートとマネージドインスタンスグループ(MIG)",
+    "difficulty": "hard",
+    "tags": ["mig", "autohealing", "high-availability"],
+    "question": "マネージドインスタンスグループ(MIG)を本番のステートレス Web フロントエンドで運用しています。可用性とスケーラビリティを高めるために MIG が提供する機能として正しいものを2つ選んでください。",
+    "options": [
+      "オートヒーリング（ヘルスチェック失敗時に VM を自動で再作成して復旧する）",
+      "オートスケーリング（負荷に応じて VM の数を自動で増減する）",
+      "VM のディスク内データを全インスタンス間でリアルタイム同期する分散ファイルシステム",
+      "各 VM に異なるマシンタイプ・OS を割り当てて1つの MIG 内で混在運用する"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "MIG はインスタンステンプレートに基づく同一構成の VM 群を管理し、オートヒーリング（アプリのヘルスチェック失敗時に VM を自動再作成）とオートスケーリング（負荷に応じた台数の自動増減）を提供します（選択肢1・2が正しい）。選択肢3のような全インスタンス間のディスクデータのリアルタイム同期は MIG の機能ではありません（共有ストレージが必要なら Filestore 等を別途使います）。選択肢4の異種混在は MIG ではなく『非マネージド インスタンスグループ(unmanaged instance group)』の特徴で、MIG は同一テンプレートに基づく均質な VM を前提とします。",
+    "reference": "https://cloud.google.com/compute/docs/instance-groups",
+    "relatedMaterials": []
+  }
+]

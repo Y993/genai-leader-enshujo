@@ -1,1 +1,135 @@
-[]
+[
+  {
+    "id": "ace-setup-001",
+    "category": "setup-environment",
+    "subTopic": "プロジェクトの作成と管理",
+    "difficulty": "easy",
+    "tags": ["project", "resource-manager", "project-id"],
+    "question": "Google Cloud プロジェクトを新規作成した後、そのプロジェクトを一意に識別する識別子で、作成後に変更できず、世界中で一意でなければならないものはどれですか？",
+    "options": [
+      "プロジェクト名",
+      "プロジェクト ID",
+      "プロジェクト番号は手動で設定する必要がある",
+      "課金アカウント ID"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "プロジェクト ID はグローバルに一意で、作成後は変更できないユーザー指定(または自動生成)の文字列です(選択肢2が正解)。プロジェクト名は人間が読むためのラベルで一意である必要はなく、いつでも変更できます(選択肢1は誤り)。プロジェクト番号は Google が自動採番する数値で、ユーザーが手動設定するものではありません(選択肢3は誤り)。課金アカウント ID はプロジェクトを識別する値ではなく、支払い情報をまとめる課金アカウントの識別子です(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/resource-manager/docs/creating-managing-projects",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-002",
+    "category": "setup-environment",
+    "subTopic": "Cloud Shell",
+    "difficulty": "easy",
+    "tags": ["cloud-shell", "gcloud", "home-directory"],
+    "question": "Cloud Shell に関する説明として正しいものはどれですか？",
+    "options": [
+      "起動するたびにローカル PC へ gcloud CLI をインストールする必要がある",
+      "ホームディレクトリの内容はセッション終了時にすべて削除される",
+      "gcloud CLI などのツールがあらかじめインストールされており、5 GB の永続的なホームディレクトリがセッション間で保持される",
+      "利用するには別途 Compute Engine の仮想マシンを自分で作成・課金する必要がある"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "Cloud Shell は gcloud CLI など多数のツールがプリインストールされたブラウザ上の環境で、5 GB の永続ディスクが $HOME としてセッション間で保持されます(選択肢3が正解)。クラウド上で動作するためローカルへのインストールは不要です(選択肢1は誤り)。一時的に割り当てられる VM は終了しますが、ホームディレクトリ(5 GB)は永続化されるため内容は保持されます(選択肢2は誤り)。基盤の VM は Google が自動的にプロビジョニングし、ユーザーが個別に VM を作成・課金する必要はありません(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/shell/docs/how-cloud-shell-works",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-003",
+    "category": "setup-environment",
+    "subTopic": "Cloud SDK・gcloud CLI のインストールと初期化(gcloud init)",
+    "difficulty": "medium",
+    "tags": ["gcloud", "cloud-sdk", "gcloud-init", "authorization"],
+    "question": "ローカルの作業マシンに gcloud CLI をインストールした直後、認証(アカウントの承認)・既定のプロジェクト・既定のリージョン/ゾーンをまとめて対話的に設定するために最初に実行すべきコマンドはどれですか？",
+    "options": [
+      "gcloud components install default",
+      "gcloud config configurations activate",
+      "gcloud projects create",
+      "gcloud init"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "gcloud init はユーザーアカウントの承認(認証)、構成の作成または選択、既定のプロジェクトや既定の Compute Engine リージョン/ゾーンの設定を対話的にまとめて行う初期化コマンドです(選択肢4が正解)。gcloud components install は追加コンポーネントを導入するコマンドで、`default` というコンポーネントを入れても初期化は行いません(選択肢1は誤り)。gcloud config configurations activate は既存の構成を切り替えるコマンドで、認証やプロジェクト設定を初めて行うものではありません(選択肢2は誤り)。gcloud projects create は新しいプロジェクトを作成するコマンドであり、CLI の初期化とは目的が異なります(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/sdk/docs/initializing",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-004",
+    "category": "setup-environment",
+    "subTopic": "課金アカウントと予算アラート",
+    "difficulty": "medium",
+    "tags": ["billing", "budget", "alert", "pubsub"],
+    "question": "Cloud Billing の予算(Budget)とアラートに関する説明として正しいものはどれですか？",
+    "options": [
+      "予算金額を超えると、対象プロジェクトのすべてのリソースが自動的に削除される",
+      "予算アラートは指定したしきい値に達したことを通知するだけで、支出やリソースの利用を自動的に停止・上限設定するものではない",
+      "予算金額に達すると、対象プロジェクトへの課金が自動的に停止され、それ以上の費用が発生しなくなる",
+      "予算アラートは前月の実績にのみ基づいて通知され、予測値に基づくしきい値は設定できない"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "予算は設定したしきい値(実際の費用または予測費用の割合・金額)に達したことを通知するだけで、それ自体が支出や使用量を上限設定・停止することはありません(選択肢2が正解)。予算超過でリソースが自動削除されることはなく、削除は別途の自動化(Pub/Sub 連携など)を自分で実装した場合に限られます(選択肢1は誤り)。予算は課金を自動的に止める仕組みではなく、通知のための機能です(選択肢3は誤り)。しきい値ルールは実際の費用だけでなく予測費用に対しても設定できます(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/billing/docs/how-to/budgets",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-005",
+    "category": "setup-environment",
+    "subTopic": "IAM の初期ユーザー・ロール付与",
+    "difficulty": "medium",
+    "tags": ["iam", "roles", "least-privilege", "predefined-role"],
+    "question": "新しいプロジェクトで、あるユーザーに Compute Engine のインスタンスを管理させたいと考えています。最小権限(least privilege)の原則に最も沿った IAM ロールの付与方法はどれですか？",
+    "options": [
+      "Compute Engine に必要な権限だけを含む事前定義ロール(例: Compute Instance Admin)を付与する",
+      "基本ロールの Owner を付与する",
+      "基本ロールの Editor をプロジェクト全体に付与する",
+      "組織レベルで Owner を付与する"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "最小権限の原則では、目的に必要な権限だけを含む事前定義ロール(またはカスタムロール)を付与することが推奨されます(選択肢1が正解)。基本ロールの Owner はプロジェクトの全リソースに対する広範な権限と IAM 管理権限まで含むため過剰です(選択肢2は誤り)。Editor も多数のサービスへの編集権限を与える広範な基本ロールであり、本番環境では推奨されません(選択肢3は誤り)。組織レベルの Owner は影響範囲が組織全体に及び、もっとも過剰な付与です(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/iam/docs/roles-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-006",
+    "category": "setup-environment",
+    "subTopic": "gcloud config と複数構成(configurations)",
+    "difficulty": "hard",
+    "tags": ["gcloud", "configurations", "config", "multiple-projects"],
+    "question": "1 台のマシンから、開発用と本番用の 2 つのプロジェクトを、それぞれ別のアカウント・既定リージョンで切り替えながら gcloud CLI を使いたいと考えています。gcloud CLI の構成(configurations)に関する説明として正しいものを2つ選んでください。",
+    "options": [
+      "`gcloud config configurations create <名前>` で名前付き構成を作成し、構成ごとにアカウントやプロジェクト、リージョンなどのプロパティを保持できる",
+      "`gcloud config configurations activate <名前>` で有効な構成を切り替えられ、その構成のプロパティが既定値として使われる",
+      "構成は 1 台のマシンにつき常に 1 つ(default)しか存在できず、複数のプロジェクト設定を保持することはできない",
+      "個々のコマンドで一時的に別の構成を使うことはできず、必ず一度 activate してからでないと実行できない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "gcloud の名前付き構成は `gcloud config configurations create` で作成でき、構成ごとにアカウント・プロジェクト・リージョン/ゾーンなどのプロパティを独立して保持できます(選択肢1は正しい)。`gcloud config configurations activate` で有効な構成を切り替えると、その構成のプロパティが既定値として使用されます(選択肢2は正しい)。構成は default 1 つに限られず、複数作成して使い分けられます(選択肢3は誤り)。`--configuration` フラグを使えば activate せずに個々のコマンドで一時的に別の構成を指定できます(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/sdk/docs/configurations",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-007",
+    "category": "setup-environment",
+    "subTopic": "リソース階層(組織・フォルダ・プロジェクト)",
+    "difficulty": "hard",
+    "tags": ["resource-hierarchy", "iam", "inheritance", "folder", "organization"],
+    "question": "複数の部門ごとにフォルダを分け、各フォルダの下に複数のプロジェクトを配置しています。あるフォルダに対してユーザーに閲覧者(Viewer)ロールを付与した場合の挙動として正しいものはどれですか？",
+    "options": [
+      "そのフォルダ配下のすべてのプロジェクトとフォルダにロールが継承され、ユーザーは配下リソースを閲覧できる",
+      "ロールはそのフォルダ自身のメタデータにのみ適用され、配下のプロジェクトには一切影響しない",
+      "下位のプロジェクトで付与されたロールが、上位のフォルダや組織へ自動的に伝播する",
+      "フォルダにはロールを付与できず、IAM ポリシーは個々のプロジェクトにしか設定できない"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Google Cloud のリソース階層では IAM ポリシーは上位から下位へ継承され、フォルダに付与したロールはその配下のすべてのフォルダとプロジェクトに継承されます(選択肢1が正解)。継承はフォルダ配下のリソースに及ぶため、フォルダ自身のメタデータだけに限定されることはありません(選択肢2は誤り)。継承は上位から下位への一方向であり、下位のプロジェクトの付与が上位のフォルダや組織へ伝播することはありません(選択肢3は誤り)。組織・フォルダ・プロジェクトの各階層レベルで IAM ポリシーを設定でき、フォルダにもロールを付与できます(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/resource-manager/docs/cloud-platform-resource-hierarchy",
+    "relatedMaterials": []
+  }
+]
