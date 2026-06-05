@@ -1,0 +1,55 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Quiz from '../../../components/Quiz.astro';
+import RelatedMaterials from '../../../components/RelatedMaterials.astro';
+import { EXAMS } from '../../../data/exams';
+import { questionsFor } from '../../../data/questions';
+import { withBase } from '../../../lib/url';
+
+export function getStaticPaths() {
+  return EXAMS.flatMap((exam) =>
+    exam.categories.map((cat) => ({
+      params: { exam: exam.slug, slug: cat.slug },
+      props: { exam, cat },
+    })),
+  );
+}
+
+const { exam, cat } = Astro.props;
+const questions = questionsFor(exam.slug, cat.slug);
+const title = `${cat.titleJa}の問題集`;
+const description = `${cat.titleJa}（${exam.titleJa}）の無料・日本語の練習問題${questions.length}問。即時に正誤と解説を確認できます。`;
+const path = `/${exam.slug}/categories/${cat.slug}/`;
+---
+<BaseLayout title={`${title}｜${exam.shortJa}`} description={description} path={path}>
+  <div class="quiz-page-head">
+    <h1 class="quiz-page-title">{title}</h1>
+    <span class="badge">{exam.shortJa}・出題比率 約{cat.weightPercent}%</span>
+  </div>
+
+  {questions.length > 0
+    ? <Quiz questions={questions} />
+    : <p class="quiz-empty">この分野の問題は準備中です。近日追加予定です。</p>}
+
+  <section class="quiz-about" aria-labelledby="about-heading">
+    <h2 id="about-heading" class="quiz-about__title">この分野について</h2>
+    <p>{cat.intro}</p>
+  </section>
+
+  <RelatedMaterials />
+
+  <p class="quiz-page-foot"><a href={withBase(`/${exam.slug}/`)}>← {exam.shortJa} トップにもどる</a></p>
+</BaseLayout>
+
+<script type="application/ld+json" set:html={JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'Quiz',
+  'name': title,
+  'about': { '@type': 'Thing', 'name': exam.titleJa },
+  'hasPart': questions.map((q) => ({
+    '@type': 'Question',
+    'eduQuestionType': 'Multiple choice',
+    'text': q.question,
+    'acceptedAnswer': { '@type': 'Answer', 'text': (Array.isArray(q.correct) ? q.correct : [q.correct]).map((i) => q.options[i]).join(' / ') },
+  })),
+})} />

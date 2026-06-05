@@ -616,6 +616,17 @@ p:last-child {
   margin-block-start: var(--space-8);
 }
 
+/* .quiz-empty — placeholder shown when a category has no questions yet */
+.quiz-empty {
+  margin-block: var(--space-8);
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--color-text-muted);
+  background: var(--bg-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
 /*
  * .quiz — outer wrapper for a single quiz session.
  * Rendered as a <section> or <div>.
