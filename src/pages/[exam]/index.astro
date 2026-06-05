@@ -1,0 +1,64 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { EXAMS } from '../../data/exams';
+import { questionsFor } from '../../data/questions';
+import { withBase } from '../../lib/url';
+
+export function getStaticPaths() {
+  return EXAMS.map((exam) => ({ params: { exam: exam.slug }, props: { exam } }));
+}
+
+const { exam } = Astro.props;
+const total = exam.categories.reduce((s, c) => s + questionsFor(exam.slug, c.slug).length, 0);
+const title = `${exam.titleJa} 無料問題集（日本語）`;
+---
+<BaseLayout title={`${title}｜${exam.shortJa}`} description={exam.description} path={`/${exam.slug}/`}>
+  <div class="page-hero">
+    <h1 class="page-title">{exam.shortJa}<br />無料 練習問題集</h1>
+    <p class="page-description">{exam.description}（全{total}問・登録不要）</p>
+  </div>
+
+  <section aria-labelledby="category-heading">
+    <h2 id="category-heading" style="font-size:var(--text-xl);font-weight:var(--weight-bold);margin-block:var(--space-8) var(--space-4);color:var(--color-grey-900);">
+      カテゴリから学習を始める
+    </h2>
+    <ul class="category-list">
+      {exam.categories.map((c) => (
+        <li>
+          <a href={withBase(`/${exam.slug}/categories/${c.slug}/`)} style="text-decoration:none;display:block;">
+            <div class="card card--hover">
+              <p class="cat-title">{c.titleJa}</p>
+              <p class="cat-meta">全{questionsFor(exam.slug, c.slug).length}問・出題比率{c.weightPercent}%</p>
+              <p class="cat-desc">{c.intro}</p>
+              <div class="cat-progress">
+                <div class="cat-progress__bar" data-bar-slug={c.slug} style="--pct: 0%"></div>
+              </div>
+              <p class="cat-meta" data-category-progress={c.slug} style="margin-block-start:var(--space-2);margin-block-end:0;">未着手</p>
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</BaseLayout>
+
+<script define:vars={{ examSlug: exam.slug }}>
+  import { loadProgress } from '../../lib/storage';
+  import { categoryStats } from '../../lib/progress';
+  import { questionsFor } from '../../data/questions';
+
+  const p = loadProgress();
+  document.querySelectorAll('[data-category-progress]').forEach((el) => {
+    const slug = el.dataset.categoryProgress;
+    const ids = questionsFor(examSlug, slug).map((q) => q.id);
+    const s = categoryStats(p, ids);
+    el.textContent =
+      s.answered > 0
+        ? `進捗 ${s.answered}/${s.total}・正答率 ${Math.round(s.rate * 100)}%`
+        : '未着手';
+    const bar = document.querySelector(`[data-bar-slug="${slug}"]`);
+    if (bar && s.total > 0) {
+      bar.style.setProperty('--pct', `${Math.round((s.answered / s.total) * 100)}%`);
+    }
+  });
+</script>
