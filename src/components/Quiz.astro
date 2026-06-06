@@ -1,10 +1,10 @@
 ---
 import type { Question } from '../lib/schema';
-export interface Props { questions: Question[] }
-const { questions } = Astro.props;
+export interface Props { questions: Question[]; initialFilter?: 'wrong' }
+const { questions, initialFilter } = Astro.props;
 const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
 ---
-<section class="quiz" data-quiz>
+<section class="quiz" data-quiz data-initial-filter={initialFilter}>
   <header class="quiz-head">
     <div class="quiz-progress" role="presentation">
       <span class="quiz-progress__bar" data-progress-bar></span>
@@ -58,7 +58,7 @@ const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
 <script>
   import { isCorrect } from '../lib/quiz';
   import { loadProgress, saveProgress } from '../lib/storage';
-  import { recordAnswer } from '../lib/progress';
+  import { recordAnswer, wrongIds as computeWrongIds } from '../lib/progress';
 
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -71,9 +71,22 @@ const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
     const multiBadge = root.querySelector('[data-multi-badge]') as HTMLElement;
 
     let progress = loadProgress();
-    // order = the item indices to play this pass (all first pass; only wrong ones on retry).
+    const initialFilter = (root as HTMLElement).dataset.initialFilter;
+    // order = the item indices to play this pass.
     let order: number[] = items.map((_, i) => i);
+    if (initialFilter === 'wrong') {
+      const wrongSet = new Set(
+        computeWrongIds(progress, items.map((it) => it.dataset.questionId as string)),
+      );
+      order = order.filter((i) => wrongSet.has(items[i].dataset.questionId as string));
+    }
     let pos = 0;
+    // hash deep-link: 指定の問題IDから開始（wrong モード時は無効）
+    if (initialFilter !== 'wrong' && location.hash.length > 1) {
+      const targetId = decodeURIComponent(location.hash.slice(1));
+      const idx = order.findIndex((i) => items[i].dataset.questionId === targetId);
+      if (idx >= 0) pos = idx;
+    }
     let correctCount = 0;
     let wrongIds: string[] = [];
 
@@ -209,6 +222,16 @@ const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
       }
     }
 
+    if (order.length === 0) {
+      items.forEach((it) => { it.hidden = true; });
+      const head = root.querySelector('.quiz-head') as HTMLElement | null;
+      if (head) head.hidden = true;
+      result.hidden = false;
+      result.innerHTML =
+        '<p class="quiz-result__label">間違いはありません🎉（全問正解、またはまだ回答していません）</p>';
+      return;
+    }
+    items.forEach((it, i) => { it.hidden = i !== order[pos]; });
     updateNav();
   });
 </script>
