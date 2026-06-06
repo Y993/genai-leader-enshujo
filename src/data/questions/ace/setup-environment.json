@@ -473,5 +473,328 @@
     "explanation": "新しい自己解決型(オンライン)の課金アカウントを作成する権限は Billing Account Creator(roles/billing.creator)で与えられ、これは組織レベルで付与します。このロールは既存の課金アカウントを管理する権限は含まないため、要件(作成だけを許可)に最も合致します(選択肢3が正解)。Billing Account Administrator は既存の課金アカウントの全社的な管理権限まで含むため、渡したくない権限まで与えてしまい過剰です(選択肢1は誤り)。Project Billing Manager はプロジェクトと課金アカウントのリンク変更を行うロールで、課金アカウントの新規作成権限ではありません(選択肢2は誤り)。Billing Account Viewer は閲覧のみで、新しい課金アカウントを作成できません(選択肢4は誤り)。",
     "reference": "https://cloud.google.com/billing/docs/how-to/billing-access",
     "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-026",
+    "category": "setup-environment",
+    "subTopic": "Cloud Shell の永続ディスクとエフェメラル VM",
+    "difficulty": "medium",
+    "tags": ["cloud-shell", "persistent-disk", "ephemeral-vm", "session-timeout"],
+    "question": "あるエンジニアが Cloud Shell で作業しています。(1) gcloud のスクリプトをホームディレクトリ配下に保存している、(2) 昼休みで操作を 1 時間以上放置した、(3) その間に裏で実行していたビルドプロセスがある、という状況です。Cloud Shell の特性を踏まえた挙動として正しいものはどれですか？",
+    "options": [
+      "VM もホームディレクトリの内容もすべて即座に削除されるため、保存したスクリプトもプロセスも完全に失われる",
+      "VM は破棄されないため裏のプロセスは動き続け、セッションは無期限に維持される",
+      "放置すると割り当てられている VM(インスタンス)は破棄されるため裏で実行中のプロセスは止まるが、ホームディレクトリ(5 GB の永続ディスク)に保存したスクリプトは次回セッションでも残っている",
+      "ホームディレクトリは揮発性のため保存したスクリプトは消えるが、VM は永続するためプロセスは動き続ける"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "Cloud Shell の基盤 VM はエフェメラル(一時的)で、一定時間(おおむね 1 時間)操作がないとセッションが終了し VM が破棄されます。そのため VM 上で動いていたプロセスは停止します。一方、$HOME にマウントされる 5 GB の永続ディスクはセッションをまたいで保持されるため、保存したスクリプトは次回も残ります(選択肢2が正解)。永続ディスクの内容は即座には削除されません(長期間=約120日アクセスしないと削除対象になりますが、1時間の放置では消えません)ので選択肢0は誤りです。VM はアイドル後に破棄されセッションも無期限ではないため、プロセスが動き続けることはありません(選択肢1は誤り)。永続するのは VM ではなくホームディレクトリ側であり、揮発するのは VM 側なので、選択肢3は永続/揮発の対象が逆で誤りです。",
+    "reference": "https://cloud.google.com/shell/docs/how-cloud-shell-works",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-027",
+    "category": "setup-environment",
+    "subTopic": "gcloud の出力整形・スクリプト化(--format/--filter/--quiet)",
+    "difficulty": "hard",
+    "tags": ["gcloud", "format", "filter", "quiet", "scripting", "automation"],
+    "question": "自動化スクリプト内で gcloud を使い、(1) 特定ゾーンの稼働中(RUNNING)の VM だけを対象にし、(2) その VM 名の一覧だけを後続処理に渡せる形で取得し、(3) 実行時に確認プロンプトで止まらないようにしたい、という要件があります。これらを満たす gcloud の使い方として正しいものを2つ選んでください。",
+    "options": [
+      "`--filter` で条件式(例: status=RUNNING)を指定して結果を絞り込み、`--format=\"value(name)\"` で VM 名だけを取り出して後続処理に渡しやすくする",
+      "破壊的なコマンドや対話的なコマンドで確認を求められないよう、`--quiet`(`-q`)を付けてプロンプトを抑止する",
+      "出力の解析にはコマンドの既定の人間向け表示やエラーメッセージ文字列をそのまま grep するのが、バージョン差異に強く最も確実である",
+      "条件で絞り込むには結果を一旦すべて取得してからクライアント側でしか行えず、gcloud 側のフラグでサーバーやレスポンスを絞ることはできない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "`--filter` は status=RUNNING のような式で結果を絞り込み、`--format=\"value(name)\"` は指定フィールド(ここでは name)だけを装飾なしで出力するため、後続処理にそのまま渡せます(選択肢1は正しい)。`--quiet`(`-q`)は対話的な確認プロンプトを抑止し、無人実行のスクリプトに適します(選択肢2は正しい)。公式ドキュメントは、既定の人間向け表示やエラーメッセージはバージョンで変わりうるため解析対象にせず、`--format`/`--filter` の構造化出力に依存することを推奨しています。よって既定表示やエラー文字列を grep するのは不適切です(選択肢3は誤り)。`--filter` を使えば gcloud 側で結果を絞り込めるため、クライアント側でしか絞れないというのは誤りです(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/sdk/docs/scripting-gcloud",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-028",
+    "category": "setup-environment",
+    "subTopic": "操作の監査(誰が何をしたか)とコンソール/モバイル",
+    "difficulty": "medium",
+    "tags": ["audit-logs", "admin-activity", "console", "mobile-app", "governance"],
+    "question": "セキュリティ担当者から「先週、誰がどの IAM ロールを変更し、どの VM を作成・削除したのかを後から正確に追跡したい」と相談されました。設定変更などの管理操作の記録を確認する手段として最も適切なものはどれですか？",
+    "options": [
+      "Cloud Monitoring の CPU・メモリ使用率のダッシュボードを確認する",
+      "課金レポートで先週の費用の増減を確認し、費用が増えたサービスから操作内容を推測する",
+      "Cloud Audit Logs の管理アクティビティ監査ログ(Admin Activity audit logs)を確認する。設定やメタデータを変更する操作が自動的に記録され、無効化できない",
+      "Cloud Console のモバイルアプリで現在のリソース一覧を表示し、現状から変更者を推測する"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "「誰が・いつ・どこで・何をしたか」という管理操作の記録は、Cloud Audit Logs の管理アクティビティ監査ログ(Admin Activity audit logs)で追跡できます。IAM の権限変更や VM の作成・削除のように構成・メタデータを変更する操作が自動的に記録され、このログは常に書き込まれ無効化できません(選択肢2が正解)。Cloud Monitoring の使用率ダッシュボードはパフォーマンス指標を見るもので、操作者の追跡には使えません(選択肢0は誤り)。課金レポートは費用の把握が目的で、操作者や操作内容の正確な追跡はできません(選択肢1は誤り)。モバイルアプリは現状確認や簡易管理には便利ですが、過去の変更者を記録・追跡する用途には監査ログが適切で、現状から推測するのは正確ではありません(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/logging/docs/audit",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-029",
+    "category": "setup-environment",
+    "subTopic": "デフォルト VPC と auto-mode / custom-mode の選択",
+    "difficulty": "hard",
+    "tags": ["vpc", "default-network", "auto-mode", "custom-mode", "subnet", "production"],
+    "question": "本番用の新規プロジェクトでネットワークを準備します。(1) 各サブネットの IP 範囲を自分たちで厳密に設計したい、(2) 将来 Google が新リージョンを追加しても勝手にサブネットが増えてほしくない、(3) 他ネットワークとの IP 重複を避けたい、という要件があります。最も適切な方針はどれですか？",
+    "options": [
+      "新規プロジェクトに自動作成されるデフォルトネットワーク(auto-mode)をそのまま使う。auto-mode は要件をすべて満たす",
+      "auto-mode の VPC を新規作成する。リージョンごとに自動でサブネットが作られ、IP 範囲も自動割り当てされるため設計が不要になる",
+      "デフォルトネットワークに依存せず、custom-mode の VPC を作成して必要なリージョンにサブネットと IP 範囲を手動で定義する",
+      "VPC ではなくレガシーネットワーク(legacy network)を新規作成し、単一のグローバル IP 範囲で運用する"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "IP 範囲を厳密に設計し、リージョン追加で勝手にサブネットが増えず、他ネットワークとの重複を避けたいという本番要件には、custom-mode の VPC が適しています。custom-mode ではサブネットと IP 範囲を必要なリージョンにだけ手動で定義でき、IP 重複の回避や他ネットワーク接続にも向きます(選択肢2が正解)。デフォルトネットワークは auto-mode で、各リージョンに自動でサブネットが作られ、新リージョン追加時にも自動でサブネットが増えるため、要件(2)に反します(選択肢0は誤り)。auto-mode を新規作成しても同様に自動割り当て・自動追加となり、厳密な設計という要件を満たしません(選択肢1は誤り)。レガシーネットワークは非推奨の古い方式で、リージョン別サブネットを持たず本番設計には不適切です(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/vpc/docs/vpc",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-030",
+    "category": "setup-environment",
+    "subTopic": "予算アラートのスコープと複数しきい値",
+    "difficulty": "hard",
+    "tags": ["billing", "budget", "scope", "threshold", "forecast", "folder"],
+    "question": "請求アカウント配下に複数のプロジェクトがあります。(1) 予算アラートの対象を「ある特定の 1 プロジェクト」だけに絞り、(2) 実際の費用が 50% と 90% に達したときに加えて、(3) このまま行くと期末に 100% を超えそうな段階でも通知したい、という要件があります。予算(Budget)の設定として正しいものはどれですか？",
+    "options": [
+      "予算のスコープは請求アカウント全体に固定されており、特定プロジェクトだけに絞ることはできない",
+      "予算のスコープで対象を特定プロジェクト(やフォルダ・ラベル等)に限定でき、しきい値ルールは複数設定できる。50%・90% は実際の費用に対するルール、期末超過の事前通知は予測(forecast)費用に対するルールとして設定する",
+      "1 つの予算に設定できるしきい値は 1 つだけのため、50%・90%・予測の 3 通知を出すには予算を 3 つ作るしかない",
+      "予測費用に対するしきい値ルールは設定できず、通知できるのは実際に費用が発生した後の実費しきい値だけである"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "予算はスコープで対象を請求アカウント全体だけでなく、特定のプロジェクト・フォルダ・サービス・ラベル等に絞り込めます。またしきい値ルールは複数設定でき、各ルールは「実際の費用(actual)」または「予測費用(forecasted)」のどちらに対するものか選べます。50%・90% を実費ルール、期末超過の事前通知を予測ルールとして 1 つの予算にまとめて設定できます(選択肢1が正解)。スコープは請求アカウント全体に固定ではなく絞り込めます(選択肢0は誤り)。1 つの予算に複数のしきい値ルールを設定できるため、予算を 3 つ作る必要はありません(選択肢2は誤り)。予測費用に対するしきい値も設定できるため、実費しきい値だけというのは誤りです(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/billing/docs/how-to/budgets",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-031",
+    "category": "setup-environment",
+    "subTopic": "請求データの BigQuery エクスポートの有効化",
+    "difficulty": "medium",
+    "tags": ["billing", "bigquery-export", "setup", "cost-analysis", "dataset"],
+    "question": "詳細な費用分析のために、Cloud Billing の課金データを BigQuery に継続的にエクスポートして SQL で分析できるようにしたいと考えています。セットアップ手順に関する説明として正しいものはどれですか？",
+    "options": [
+      "BigQuery のデータセットを用意し、Cloud Billing コンソールの「課金データのエクスポート(BigQuery export)」設定で対象データセットを指定して有効化する。有効化した時点以降のデータがエクスポートされる",
+      "課金データの BigQuery エクスポートを有効化すると、過去のすべての履歴データが自動的に BigQuery へさかのぼって(バックフィルされて)取り込まれる",
+      "エクスポートを使うには BigQuery ではなく必ず Cloud Storage バケットを指定する必要があり、BigQuery への直接エクスポートはできない",
+      "課金データのエクスポートは gcloud config の構成プロパティ(billing/export)を true にするだけで有効になり、データセットの作成は不要である"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "課金データの BigQuery エクスポートは、事前に BigQuery データセットを作成し、Cloud Billing コンソールのエクスポート設定で対象データセットを指定して有効化します。エクスポートは有効化以降のデータについて行われます(選択肢0が正解)。有効化しても過去の履歴は自動的にバックフィルされず、設定後のデータが対象です(選択肢1は誤り)。課金データの分析向けエクスポートの宛先は BigQuery データセットであり、Cloud Storage を必須とするのは誤りです(選択肢2は誤り)。エクスポートはコンソールの設定とデータセット作成が必要で、`gcloud config set billing/export true` のような構成プロパティで有効になるものではありません(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/billing/docs/how-to/export-data-bigquery-setup",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-032",
+    "category": "setup-environment",
+    "subTopic": "無料トライアルから有料課金へのアップグレード",
+    "difficulty": "medium",
+    "tags": ["free-trial", "always-free", "upgrade", "billing", "credits"],
+    "question": "無料トライアル($300 クレジット)で検証していたプロジェクトを、クレジット消費後もサービスを止めずに本番運用へ移行したいと考えています。無料トライアルから有料アカウントへのアップグレードに関する説明として正しいものはどれですか？",
+    "options": [
+      "アップグレードするには既存プロジェクトをすべて削除し、新しい課金アカウントとプロジェクトを一から作り直す必要がある",
+      "Console でアカウントを有料(フル)アカウントにアップグレードすると、残っている $300 クレジットは引き続き(当初の期間内で)使え、クレジットや Always Free 枠を超えた利用分が課金される。リソースは中断なく動き続ける",
+      "無料トライアルは一度開始すると有料アカウントへ変換することはできず、トライアル終了とともにアカウント自体が使えなくなる",
+      "アップグレードすると残っている無料クレジットは即座に失効し、過去にトライアル中に発生した全使用量にもさかのぼって課金される"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Console の「アップグレード」操作で無料トライアルから有料(フル)アカウントへ移行できます。アップグレード後も残っている $300 クレジットは当初の期間内で引き続き利用でき、クレジットや Always Free 枠を超えた分だけが課金されます。リソースは中断なく動き続けるため、本番移行に適しています(選択肢1が正解)。アップグレードは既存プロジェクトを保持したまま行え、作り直しは不要です(選択肢0は誤り)。トライアルは有料アカウントへアップグレードできるため、変換不可というのは誤りです(選択肢2は誤り)。アップグレードで残クレジットが即失効したり過去分にさかのぼって課金されることはなく、課金されるのはクレジット・無料枠超過分です(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/free/docs/free-cloud-features",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-033",
+    "category": "setup-environment",
+    "subTopic": "組織リソースの確立(Cloud Identity / Workspace 連携)",
+    "difficulty": "medium",
+    "tags": ["organization", "cloud-identity", "workspace", "org-node", "resource-hierarchy"],
+    "question": "これまで個人アカウントで作った単発プロジェクトを使ってきた企業が、リソース階層の最上位に組織(Organization)ノードを確立して一元的にガバナンスを効かせたいと考えています。組織リソースの確立に関する説明として正しいものはどれですか？",
+    "options": [
+      "組織ノードは `gcloud organizations create` コマンドで任意に新規作成でき、Cloud Identity や Workspace との連携は不要である",
+      "組織リソースはリソース階層の最上位ノードで、Cloud Identity または Google Workspace のアカウント(ドメイン)に関連付けて確立される。ドメインと紐付くと組織が利用可能になる",
+      "組織ノードはプロジェクトごとに 1 つ自動作成され、プロジェクト数だけ組織が存在することになる",
+      "組織を確立するには必ず有料の Google Workspace の契約が必須で、無料の Cloud Identity では組織を持てない"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "組織(Organization)リソースはリソース階層の最上位ノードで、Cloud Identity または Google Workspace のアカウント(ドメイン)に関連付けることで確立されます。ドメインに紐付くと組織が利用可能になり、配下にフォルダやプロジェクトを置いて一元管理できます(選択肢1が正解)。組織ノードは `gcloud organizations create` で任意に作るものではなく、Cloud Identity / Workspace との連携で生成されます(選択肢0は誤り)。組織はドメインに対して 1 つであり、プロジェクトごとに作られるものではありません(選択肢2は誤り)。組織の確立には無料の Cloud Identity でも可能で、有料 Workspace 契約は必須ではありません(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/resource-manager/docs/creating-managing-organization",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-034",
+    "category": "setup-environment",
+    "subTopic": "gcloud init と名前付き構成の作成・切替",
+    "difficulty": "medium",
+    "tags": ["gcloud-init", "configurations", "create", "activate", "cli-setup"],
+    "question": "1 台の端末で開発用と本番用のアカウント・プロジェクトを使い分けるため、新たにもう一つの作業環境を gcloud に追加したいと考えています。`gcloud init` と名前付き構成に関する説明として正しいものはどれですか？",
+    "options": [
+      "`gcloud init` はインストール直後の 1 回しか実行できず、2 つ目の構成は手動で設定ファイルを直接編集して作るしかない",
+      "新しい構成を作るには `gcloud config set configuration <名前>` を実行する必要があり、`gcloud config configurations create` というコマンドは存在しない",
+      "構成を切り替えるには毎回 `gcloud init` をやり直す必要があり、`gcloud config configurations activate <名前>` では切り替えられない",
+      "`gcloud init` を実行すると、既存構成がある場合はアクティブ構成の再初期化・別構成への切替・新規構成の作成のいずれかを選べる。新規作成を選ぶと認証とプロジェクト等を設定した新しい名前付き構成が作られる"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "`gcloud init` は、既存構成があるときに「アクティブ構成の再初期化」「別の既存構成への切替」「新しい構成の作成」のいずれかを選択できます。新規作成を選ぶと、認証(アカウント承認)・プロジェクト・既定リージョン/ゾーン等を設定した新しい名前付き構成が作られます(選択肢3が正解)。`gcloud init` は初回限定ではなく、後から複数回実行して構成を追加・再初期化できます(選択肢0は誤り)。名前付き構成の作成は `gcloud config configurations create <名前>` で行い、このコマンドは実在します(`gcloud config set configuration` という形ではありません)(選択肢1は誤り)。構成の切替は `gcloud config configurations activate <名前>` で行え、毎回 init をやり直す必要はありません(選択肢2は誤り)。",
+    "reference": "https://cloud.google.com/sdk/docs/initializing",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-035",
+    "category": "setup-environment",
+    "subTopic": "プロジェクトの lien(削除防止)と削除/復元",
+    "difficulty": "hard",
+    "tags": ["project-lien", "deletion-protection", "project-delete", "restore", "resource-manager"],
+    "question": "重要な本番プロジェクトを誤って削除されないように保護しつつ、万一削除された場合の復元可否も把握しておきたいと考えています。プロジェクトの lien(削除防止ロック)と削除・復元に関する説明として正しいものを2つ選んでください。",
+    "options": [
+      "プロジェクトに lien を設定すると、その lien を外すまでプロジェクトの削除がブロックされる(resourcemanager.projects.delete が制限される)",
+      "プロジェクトを削除すると即座に完全消去され、いかなる方法でも復元はできない",
+      "削除したプロジェクトは一定期間(おおむね 30 日間)は『削除保留』状態となり、その期間内であれば復元できる場合がある",
+      "lien はプロジェクトの削除だけでなく、プロジェクト内の個々の VM やバケットの削除もすべて自動的にブロックする"
+    ],
+    "isMultiple": true,
+    "correct": [0, 2],
+    "explanation": "プロジェクトの lien は、その lien を削除するまでプロジェクトの削除をブロックする仕組みで、内部的には resourcemanager.projects.delete を制限します。誤削除の防止に有効です(選択肢0は正しい)。プロジェクトを削除しても即時完全消去ではなく、一定期間(おおむね 30 日間)は削除保留状態となり、その期間内であれば復元できる場合があります(選択肢2は正しい)。よって「いかなる方法でも復元できない」は誤りです(選択肢1は誤り)。lien が制限するのはプロジェクト自体の削除であり、プロジェクト内の個々のリソース(VM やバケット)の削除を一律にブロックするものではありません(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/resource-manager/docs/project-liens",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-036",
+    "category": "setup-environment",
+    "subTopic": "Cloud Marketplace 展開の前提セットアップ",
+    "difficulty": "medium",
+    "tags": ["marketplace", "api-enablement", "iam-permissions", "deployment", "prerequisites"],
+    "question": "Cloud Marketplace からあるソリューション(VM ベースの製品)をプロジェクトへ展開しようとしています。スムーズに展開できるようにするための前提セットアップとして最も適切なものはどれですか？",
+    "options": [
+      "Marketplace の製品は権限や API の有効化に関係なく誰でも即座に展開できるため、特別な前提準備は一切不要である",
+      "展開先プロジェクトで請求(課金)が有効になっており、製品が必要とする API(例: Compute Engine API 等)を有効化でき、展開操作に必要な IAM 権限を持つアカウントで実行できるよう準備しておく",
+      "Marketplace 製品の展開には、必ず組織レベルの Owner 権限を全員に付与しておく必要がある",
+      "展開のたびに専用の課金アカウントを新規作成し、その製品だけを別の請求にする必要がある"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Cloud Marketplace のソリューションを展開するには、展開先プロジェクトで請求が有効であること、製品が依存する API(Compute Engine API など)を有効化できること、そして展開操作に必要な IAM 権限を持つアカウントで実行できることを前提として整えておく必要があります。展開時には必要な API が有効化され、リソースが作成されます(選択肢1が正解)。展開には課金有効化・API・適切な権限といった前提があるため、何の準備も不要というのは誤りです(選択肢0は誤り)。展開に組織レベルの Owner を全員へ付与する必要はなく、最小権限の観点からも不適切です(選択肢2は誤り)。製品ごとに専用の課金アカウントを新規作成する必要はなく、既存の課金アカウントで展開できます(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/marketplace/docs",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-037",
+    "category": "setup-environment",
+    "subTopic": "gcloud のリリースレベル(alpha/beta)コンポーネント",
+    "difficulty": "medium",
+    "tags": ["gcloud", "alpha", "beta", "release-level", "components", "stability"],
+    "question": "本番運用の自動化スクリプトで使うコマンドと、最新のプレビュー機能を試したい検証用コマンドを使い分けたいと考えています。gcloud の alpha / beta コンポーネント(リリースレベル)に関する説明として正しいものはどれですか？",
+    "options": [
+      "alpha / beta コンポーネントは既定ではインストールされず必要に応じて追加する。これらは安定版(GA)より変更・非互換のリスクが高いため、本番自動化には原則 GA コマンドを使い、新機能の検証に alpha/beta を使うのが妥当である",
+      "alpha と beta は安定版(GA)とまったく同じ安定性が保証されており、本番自動化でも安心してそのまま使ってよい",
+      "alpha / beta コマンドを使うには gcloud CLI 全体を alpha 版として再インストールする必要があり、コンポーネント単位では追加できない",
+      "alpha / beta コンポーネントは既定で常にインストール済みで、明示的に追加することはできない"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "gcloud の alpha / beta コンポーネントは既定ではインストールされず、必要なときに `gcloud components install` で追加します(該当コマンドを対話的に実行した際にインストールを促されることもあります)。これらは GA(一般提供)より仕様変更や非互換のリスクが高いため、安定性が重要な本番自動化には GA コマンドを使い、最新機能の検証に alpha/beta を使うのが妥当です(選択肢0が正解)。alpha/beta は GA と同等の安定性が保証されているわけではなく、本番でそのまま依存するのはリスクがあります(選択肢1は誤り)。alpha/beta はコンポーネント単位で追加でき、CLI 全体を alpha 版として再インストールする必要はありません(選択肢2は誤り)。alpha/beta は既定でインストール済みではなく、明示的に追加するものです(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/sdk/docs/components",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-038",
+    "category": "setup-environment",
+    "subTopic": "IAM のグループベース付与による初期アクセス設計",
+    "difficulty": "medium",
+    "tags": ["iam", "google-groups", "group-based-access", "membership", "scalability"],
+    "question": "新しいプロジェクト群の初期アクセス設計を行います。今後メンバーの入退社や異動が頻繁に発生する見込みで、(1) 同じ職務の人には同じ権限を与えたい、(2) 個々人へのロールの付け外しの運用負荷を抑えたい、(3) アクセスの棚卸しをしやすくしたい、という要件があります。最も適切な設計はどれですか？",
+    "options": [
+      "職務ごとに Google グループ(Cloud Identity 等で管理)を作り、グループに対して IAM ロールを付与する。個人はグループへの追加・削除でアクセスを制御し、ロールはグループ単位で棚卸しする",
+      "個々のユーザーに対して必要なロールを直接付与し、異動や退職のたびに 1 人ずつ手作業でロールを付け替える",
+      "全員に基本ロールの Editor を付与し、問題が起きた人だけ後から権限を絞る",
+      "共有のサービスアカウントを 1 つ作り、その鍵を職務ごとにメンバー間で共有して使い回す"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "職務ごとに Google グループを作り、IAM ロールをグループに付与する設計が最適です。各メンバーはグループに付与されたロールを継承するため、個人はグループへの追加・削除だけでアクセスを制御でき、入退社・異動の運用負荷が下がります。ロールはグループ単位で確認できるため棚卸しもしやすくなります(選択肢0が正解)。個々人へ直接付与して 1 人ずつ付け替える運用は人数が増えるほど煩雑で漏れも生じやすく、要件(2)(3)に反します(選択肢1は誤り)。全員に Editor を付与するのは最小権限の原則に反する過剰付与です(選択肢2は誤り)。人間が共有サービスアカウントの鍵を使い回すのはセキュリティのアンチパターンで、各人を個別に識別・監査できません(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/iam/docs/groups-in-cloud-console",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-039",
+    "category": "setup-environment",
+    "subTopic": "必須 API の一括有効化の自動化",
+    "difficulty": "easy",
+    "tags": ["gcloud", "services-enable", "api-enablement", "batch", "automation"],
+    "question": "新規プロジェクトのセットアップスクリプトで、Compute Engine API・Cloud Storage API・IAM API をまとめて 1 コマンドで有効化したいと考えています。最も適切な方法はどれですか？",
+    "options": [
+      "API は 1 コマンドにつき 1 つしか有効化できないため、サービスの数だけ `gcloud services enable` を別々に実行するしかない",
+      "`gcloud services enable --all` を実行して、利用可能なすべての API を一括で有効化する",
+      "複数 API を有効化するには `gcloud config set services/enabled` に API 名をカンマ区切りで設定する",
+      "`gcloud services enable compute.googleapis.com storage.googleapis.com iam.googleapis.com` のように、1 つの enable コマンドに複数のサービス名をスペース区切りで列挙する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "`gcloud services enable` は SERVICE 引数を複数受け取れる(SERVICE [SERVICE ...])ため、`gcloud services enable compute.googleapis.com storage.googleapis.com iam.googleapis.com` のように複数サービス名をスペース区切りで列挙して 1 コマンドでまとめて有効化できます。セットアップ自動化に適します(選択肢3が正解)。1 コマンドで 1 つしか有効化できないというのは誤りです(選択肢0は誤り)。`gcloud services enable --all` のような全 API 一括有効化のフラグはなく、必要な API を指定して有効化します(選択肢1は誤り)。API の有効化は services enable コマンドで行うものであり、`gcloud config set services/enabled` のような構成プロパティで行うものではありません(選択肢2は誤り)。",
+    "reference": "https://cloud.google.com/sdk/gcloud/reference/services/enable",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-040",
+    "category": "setup-environment",
+    "subTopic": "既定リージョン/ゾーンのプロパティ設定の意義",
+    "difficulty": "medium",
+    "tags": ["gcloud", "default-region", "default-zone", "compute-properties", "best-practice"],
+    "question": "チームの作業端末で gcloud の既定リージョン/ゾーン(compute/region・compute/zone)を設定する意義について、最も適切な説明はどれですか？",
+    "options": [
+      "既定リージョン/ゾーンを設定すると、すべてのリソースが物理的に必ずそのロケーションにロックされ、他リージョンには一切リソースを作れなくなる",
+      "既定リージョン/ゾーンは課金額を直接割り引くための設定であり、設定するほど料金が安くなる",
+      "既定リージョン/ゾーンを設定すると、Compute Engine などゾーン/リージョンを必要とするコマンドで毎回 --zone/--region を明示しなくてよくなり、指定漏れによる対話プロンプトや想定外のロケーションへの作成を防げる",
+      "既定リージョン/ゾーンを設定すると、既存のすべてのリソースが自動的にそのロケーションへ移動(マイグレーション)される"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "gcloud の既定リージョン/ゾーン(compute/region・compute/zone)を設定しておくと、ゾーン/リージョンが必要なコマンドで毎回フラグを明示しなくても既定値が使われます。これにより指定漏れによる対話プロンプトや、意図しないロケーションへのリソース作成を防げます(選択肢2が正解)。既定値はあくまでコマンド省略時に使われる値であり、リソースをそのロケーションに物理的にロックして他リージョンに作れなくするものではありません(--zone/--region で個別指定できます)ので選択肢0は誤りです。既定リージョン/ゾーンは料金割引の設定ではありません(選択肢1は誤り)。既定値を設定しても既存リソースが自動的に移動することはありません(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/sdk/gcloud/reference/config/set",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-041",
+    "category": "setup-environment",
+    "subTopic": "サービスアカウントの新規作成と用途別分離",
+    "difficulty": "medium",
+    "tags": ["service-account", "create", "dedicated", "least-privilege", "design"],
+    "question": "新しいシステムの初期設計で、複数のワークロード(アプリ A・バッチ B・監視 C)が Google Cloud リソースにアクセスします。サービスアカウントの初期設計として最も適切なものはどれですか？",
+    "options": [
+      "全ワークロードで 1 つの共有サービスアカウントを使い回し、そのアカウントに必要な権限をすべてまとめて付与する",
+      "デフォルトのサービスアカウントに Editor を付与して全ワークロードから共用し、個別作成は行わない",
+      "ワークロードごとに専用のサービスアカウントを作成(例: `gcloud iam service-accounts create app-a-sa`)し、それぞれに必要最小限の権限だけを付与して用途を分離する",
+      "サービスアカウントは作らず、開発者個人のユーザーアカウントの鍵を各ワークロードに埋め込んで使う"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "ベストプラクティスは、ワークロードごとに専用のサービスアカウントを作成し(例: `gcloud iam service-accounts create app-a-sa`)、それぞれに必要最小限の権限だけを付与して用途を分離することです。これにより監査(どのワークロードが何をしたか)、権限の最小化、漏えい時の影響範囲(ブラスト半径)の限定が実現します(選択肢2が正解)。1 つのサービスアカウントを使い回して権限をまとめて付与すると、過剰権限・監査困難・影響範囲拡大を招きます(選択肢0は誤り)。デフォルトのサービスアカウントに Editor を付与して共用するのは過剰権限であり、専用アカウントを使わない設計は推奨されません(選択肢1は誤り)。開発者個人のユーザー鍵をワークロードに埋め込むのはセキュリティのアンチパターンで、ワークロードにはサービスアカウントを使うべきです(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/iam/docs/best-practices-service-accounts",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-042",
+    "category": "setup-environment",
+    "subTopic": "App Engine アプリの初期化とリージョン固定",
+    "difficulty": "hard",
+    "tags": ["app-engine", "app-create", "region", "irreversible", "initialization"],
+    "question": "新規プロジェクトで App Engine を使い始めるため `gcloud app create` を実行しようとしています。(1) アプリのリージョンは後から変えられないこと、(2) 1 プロジェクトに作れる App Engine アプリの数、(3) リージョンの選び方、を踏まえた説明として正しいものはどれですか？",
+    "options": [
+      "`gcloud app create --region=REGION` でリージョンを指定してアプリを初期化する。App Engine アプリは 1 プロジェクトにつき 1 つで、いったん設定したリージョンは後から変更できないため、最初の選択が重要である",
+      "App Engine アプリのリージョンはいつでも `gcloud app update --region=...` で自由に変更できるため、最初の選択は気にしなくてよい",
+      "1 つのプロジェクトに複数の App Engine アプリを作成し、それぞれ別リージョンに配置できる",
+      "`gcloud app create` ではリージョンを指定できず、リージョンはアプリ作成後に必ず後から設定する必要がある"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "`gcloud app create --region=REGION` でリージョンを選択して App Engine アプリを初期化します。App Engine アプリは 1 プロジェクトにつき 1 つしか持てず、いったん設定したリージョン(ロケーション)は後から変更できません。そのため最初のリージョン選択が重要です(選択肢0が正解)。リージョンは作成後に変更できず、`gcloud app update` でリージョンを自由に変えることはできないため、最初の選択を気にしなくてよいというのは誤りです(選択肢1は誤り)。1 プロジェクトに複数の App Engine アプリを作って別リージョンに置くことはできません(選択肢2は誤り)。`gcloud app create` では --region でリージョンを指定でき(省略時は対話的に選択)、作成後に必ず後から設定するというのは誤りです(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/appengine/docs/standard/managing-projects-apps-billing",
+    "relatedMaterials": []
   }
 ]

@@ -435,5 +435,708 @@
     "explanation": "ステートフル MIG は、ステートフルポリシー（全 VM 共通の保持設定）や各インスタンス構成（per-instance config）を用いて、永続ディスク・インスタンス名・IP・メタデータなどを VM の再作成（オートヒーリング・更新）をまたいで保持できます（選択肢0）。選択肢1のステートレス MIG は VM を交換可能なものとして扱い、デフォルトでは状態（特に追加ディスクや名前）を保持しません。選択肢2は誤りで、MIG のステートフル機能を使えば自動化と状態保持を両立できます。選択肢3のサイズ固定はスケール台数を固定するだけで、各 VM の永続ディスクや識別子の保持を保証するものではありません。",
     "reference": "https://cloud.google.com/compute/docs/instance-groups/stateful-migs",
     "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-024",
+    "category": "deploy-implement",
+    "subTopic": "OS Login と SSH 鍵管理によるインスタンス接続",
+    "difficulty": "medium",
+    "tags": ["compute-engine", "os-login", "ssh", "iam"],
+    "question": "Compute Engine の Linux VM 群への SSH アクセスを管理しています。要件は (1) ユーザーごとの SSH 公開鍵をインスタンスのメタデータに個別配布する運用をやめる、(2) IAM の権限付与/剥奪に連動して SSH アクセスを即座に制御する、(3) プロジェクト全体に一括適用する、です。最も適切な方法はどれですか？",
+    "options": [
+      "各 VM の SSH キーをプロジェクトメタデータの ssh-keys に手動で追加し、退職者が出るたびに該当キーを削除する",
+      "プロジェクトメタデータに enable-oslogin=TRUE を設定して OS Login を有効化し、ユーザーに roles/compute.osLogin などの IAM ロールを付与して接続を制御する",
+      "各ユーザーに個別のサービスアカウントキー(JSON)を配布し、それを使って gcloud compute ssh で接続させる",
+      "VM ごとにローカル Linux ユーザーを作成し、各 VM の ~/.ssh/authorized_keys を直接編集して鍵を登録する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "OS Login は、Linux ユーザー ID を Google ID に紐づけ、SSH アクセスを IAM ロール（roles/compute.osLogin など）で制御する Google 推奨の方式です。enable-oslogin=TRUE をプロジェクト（またはインスタンス）メタデータに設定すると有効になり、IAM での権限剥奪が即座にアクセス拒否へ反映され、メタデータベースの SSH 鍵配布も不要になります。3要件すべてを満たします（選択肢2）。選択肢1のメタデータ鍵の手動管理は、まさに OS Login が置き換えようとしている運用で、即時のアクセス制御や一括管理ができず手間がかかります。選択肢3のサービスアカウントキー(JSON)の配布は鍵漏洩リスクが高く、対人 SSH の認証手段として推奨されません。選択肢4の各 VM の authorized_keys 直接編集は VM ごとに手作業が必要でスケールせず、IAM 連動もできません。",
+    "reference": "https://cloud.google.com/compute/docs/oslogin",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-025",
+    "category": "deploy-implement",
+    "subTopic": "カスタムイメージ/イメージファミリーからのインスタンスデプロイ",
+    "difficulty": "medium",
+    "tags": ["compute-engine", "custom-image", "image-family"],
+    "question": "アプリを構成済みのカスタムイメージを複数バージョン管理し、新しい VM を作成するときは常に『そのイメージファミリー内の最新版』が自動で使われるようにしたいです。要件を満たす最も適切な方法はどれですか？",
+    "options": [
+      "イメージを作成するたびに作成者が手作業で全 VM の起動ディスクを最新イメージに差し替える",
+      "カスタムイメージを同一イメージファミリーに登録し、VM 作成時に --image-family=<ファミリー名> と --image-project を指定する（ファミリーは非推奨化されていない最新イメージを指す）",
+      "VM 作成時に --image=<個別イメージ名> を毎回手動で書き換えて最新版を指定する",
+      "Cloud Storage にイメージファイルを置き、--source-uri でその URL を直接指定して VM を作成する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "イメージファミリーは複数のイメージバージョンをグループ化し、--image-family を指定すると『そのファミリーで最新かつ非推奨化されていないイメージ』が自動的に選択されます。新版を同じファミリーに追加するだけで、以後の VM 作成は自動で最新版を使うため要件に合致します（選択肢1）。選択肢0の手作業差し替えは自動化されず運用負荷が高くなります。選択肢2の --image による個別イメージ名指定は特定バージョンに固定され、最新版への自動追従ができません。選択肢3の --source-uri からの直接作成は通常の VM 作成フローではなく、ファミリーによる最新版選択の仕組みも使えません（カスタムイメージはまず images create で登録するのが標準です）。",
+    "reference": "https://cloud.google.com/compute/docs/images/create-custom",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-026",
+    "category": "deploy-implement",
+    "subTopic": "MIG のオートヒーリング(ヘルスチェック)構成",
+    "difficulty": "hard",
+    "tags": ["mig", "autohealing", "health-check"],
+    "question": "本番 Web フロントエンドの MIG にオートヒーリングを構成します。アプリのハングを検知して該当 VM だけを自動再作成させたいです。オートヒーリングの正しい構成・考慮事項を2つ選んでください。",
+    "options": [
+      "オートヒーリング用のヘルスチェックは、ロードバランシング用とは別に、アプリの応答性を確認する『アプリケーションベースのヘルスチェック』を MIG に設定する",
+      "VM 起動直後の誤検知を防ぐため、初期遅延（initial delay）を設定して起動完了までの不健全判定を無視させる",
+      "オートヒーリングを有効にするには、各 VM に外部 IP アドレスを割り当てることが必須である",
+      "ヘルスチェックのプローブを通すためのファイアウォール設定は不要で、Google のヘルスチェック用 IP 範囲(130.211.0.0/22, 35.191.0.0/16)からの通信は自動的に常時許可される"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "オートヒーリングは MIG にアプリケーションベースのヘルスチェックを設定し、アプリが応答しない VM を不健全と判断して再作成します。誤検知を避けるためロードバランシング用とは別の（より保守的な）ヘルスチェックを使うのが推奨で（選択肢0）、起動直後の誤判定を防ぐ初期遅延も重要です（選択肢1）。選択肢2の外部 IP はオートヒーリングの要件ではありません（プローブは Google のヘルスチェック範囲から行われます）。選択肢3は誤りで、ヘルスチェックのプローブ送信元 IP 範囲(130.211.0.0/22, 35.191.0.0/16)からの通信を通すファイアウォール許可ルールを明示的に作成する必要があります。",
+    "reference": "https://cloud.google.com/compute/docs/instance-groups/autohealing-instances-in-migs",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-027",
+    "category": "deploy-implement",
+    "subTopic": "MIG のローリングアップデート/カナリア(段階的ロールアウト)",
+    "difficulty": "hard",
+    "tags": ["mig", "rolling-update", "canary"],
+    "question": "稼働中の MIG に新しいインスタンステンプレート v2 を適用します。まず全体の一部（例: 3台中1台）だけを v2 にして問題がないか検証し、サービス無停止で段階適用したいです（カナリア）。最も適切なアプローチはどれですか？",
+    "options": [
+      "MIG を一旦削除して v2 のテンプレートで作り直す（再作成中はダウンタイムが発生する）",
+      "全 VM を同時に v2 へ置き換える set-instance-template を実行し、即座に全台を更新する",
+      "各 VM に SSH してアプリを手動でアップグレードし、テンプレートは v1 のまま据え置く",
+      "ローリング更新で2つのバージョン(v1/v2)を指定し、v2 の台数（例: --canary-version=...,target-size=1）と maxSurge/maxUnavailable を設定して段階的にロールアウトする"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "MIG のローリング更新では、1グループ内に2つのテンプレートバージョンを共存させ、新バージョン v2 を一部の台数（target-size）だけに適用するカナリア更新ができます。maxSurge（一時的に増やせる台数）や maxUnavailable（同時にオフラインにできる台数）で更新速度と可用性を制御し、無停止で段階適用します（選択肢3）。選択肢0の削除・再作成はダウンタイムが発生し段階適用にもなりません。選択肢1の全台同時置換はカナリア検証の段階性を満たしません。選択肢2の手動 SSH アップグレードは MIG の管理対象から外れ、VM 再作成時に失われるうえ再現性がありません。",
+    "reference": "https://cloud.google.com/compute/docs/instance-groups/rolling-out-updates-to-managed-instance-groups",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-028",
+    "category": "deploy-implement",
+    "subTopic": "リージョン MIG(複数ゾーン分散)のデプロイ",
+    "difficulty": "medium",
+    "tags": ["mig", "regional", "high-availability"],
+    "question": "単一ゾーンの障害が発生してもサービスを継続できるよう、VM を1つのリージョン内の複数ゾーンに自動分散する MIG をデプロイしたいです。最も適切な方法はどれですか？",
+    "options": [
+      "ゾーン MIG を3つ（各ゾーンに1つずつ）個別に作成し、運用者が手動で台数バランスを取り続ける",
+      "gcloud compute instance-groups managed create で --zone を1つだけ指定したゾーン MIG を作成する",
+      "gcloud compute instance-groups managed create で --region を指定してリージョン MIG を作成する（VM がリージョン内の複数ゾーンに自動分散される）",
+      "VM をリージョンに作成すれば自動で全ゾーンに複製されるため、MIG ではなく単体 VM をリージョン指定で作成する"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "リージョン MIG は --region を指定して作成し、VM をリージョン内の複数ゾーンへ自動的に均等分散します。これによりゾーン障害時も他ゾーンの VM でサービスを継続でき、可用性が高まります（選択肢2）。選択肢0の複数ゾーン MIG の手動運用は分散と再調整を自前で行う必要があり運用負荷が高く、リージョン MIG の自動分散の利点を得られません。選択肢1は --zone 指定のゾーン MIG で、単一ゾーンに集中するためゾーン障害に弱いです。選択肢3は誤りで、VM はゾーンリソースであり『リージョンに作成すれば全ゾーンへ自動複製』される仕組みはありません（複数ゾーン分散には MIG が必要です）。",
+    "reference": "https://cloud.google.com/compute/docs/instance-groups/distributing-instances-with-regional-instance-groups",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-029",
+    "category": "deploy-implement",
+    "subTopic": "インスタンスの起動/停止スケジュール(リソーススケジュールポリシー)",
+    "difficulty": "medium",
+    "tags": ["compute-engine", "resource-policy", "instance-schedule", "cost"],
+    "question": "開発用 VM 群を、平日の業務時間だけ稼働させてコストを削減したいです。毎朝自動で起動し、毎晩自動で停止する仕組みを、外部のスクリプトや Cloud Scheduler を自作せずに実現する最も適切な方法はどれですか？",
+    "options": [
+      "gcloud compute resource-policies create instance-schedule で起動/停止スケジュール（cron 式）を作成し、対象 VM にそのポリシーをアタッチする",
+      "各 VM の起動スクリプトに sleep と shutdown コマンドを書き込み、自前のタイマー処理で停止させる",
+      "gcloud compute instances stop を毎晩手動実行し、毎朝 gcloud compute instances start を手動実行する",
+      "VM の課金を止めるため、毎晩 VM を削除し、毎朝同じ構成で作り直すスクリプトを cron で回す"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "インスタンススケジュール（リソースポリシーの一種）は、gcloud compute resource-policies create instance-schedule で起動/停止の cron 式を定義し、同一リージョンの VM にアタッチすることで自動的に起動・停止を行います。外部の仕組みを自作せずコスト最適化できる標準機能です（選択肢0）。選択肢1の起動スクリプト＋sleep は不安定で起動タイミングの制御もできず推奨されません。選択肢2の手動実行は自動化の要件を満たしません。選択肢3の毎晩削除・毎朝再作成は過剰かつ危険で、永続ディスクや構成の取り扱いを誤るとデータ消失のリスクがあり、停止（stop）で十分な課金削減が得られます。",
+    "reference": "https://cloud.google.com/compute/docs/instances/schedule-instance-start-stop",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-030",
+    "category": "deploy-implement",
+    "subTopic": "共有VPCのサービスプロジェクトへのインスタンスデプロイ",
+    "difficulty": "hard",
+    "tags": ["shared-vpc", "networking", "iam"],
+    "question": "組織で共有 VPC を運用しています。ホストプロジェクトが共有するサブネットを使って、サービスプロジェクト側に Compute Engine VM をデプロイしたいです。デプロイを成功させるために必要な前提として最も適切なものはどれですか？",
+    "options": [
+      "サービスプロジェクトがホストプロジェクトの完全なオーナー(roles/owner)権限を持っていること",
+      "VM をデプロイするユーザー/サービスアカウントが、対象の共有サブネットに対する compute.networkUser 権限を持ち、作成する VM のゾーンがそのサブネットのリージョンに属していること",
+      "サービスプロジェクト内に同名のサブネットを別途複製してから VM を作成すること",
+      "ホストプロジェクトとサービスプロジェクトの間に VPC ピアリングを手動で構成すること"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "共有 VPC では、サービスプロジェクトの管理者/プリンシパルに対象の共有サブネットへの compute.networkUser 権限が付与されている必要があり、VM 作成時にはその共有サブネットを指定します。さらに VM のゾーンはサブネットのリージョンに属している必要があります（選択肢1）。選択肢0のホストプロジェクトのオーナー権限は不要かつ過剰（最小権限の原則に反する）で、必要なのはサブネットレベルの networkUser です。選択肢2のサブネット複製は不要で、共有 VPC はホストのサブネットをそのまま利用する仕組みです。選択肢3の VPC ピアリングは別の接続方式で、共有 VPC のサービスプロジェクトからの利用には不要です。",
+    "reference": "https://cloud.google.com/vpc/docs/provisioning-shared-vpc",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-031",
+    "category": "deploy-implement",
+    "subTopic": "Shielded VM / Confidential VM のデプロイ",
+    "difficulty": "medium",
+    "tags": ["shielded-vm", "confidential-vm", "security"],
+    "question": "セキュリティ要件として、VM の起動時にブートローダーやカーネルが改ざんされていないことを検証し、ルートキットやブートレベルのマルウェアから保護したいです（使用中メモリの暗号化までは今回は要件外）。最も適切な VM のデプロイ構成はどれですか？",
+    "options": [
+      "Confidential VM を有効にする（AMD SEV 等で使用中メモリを暗号化することがブート改ざん検知の手段になる）",
+      "通常の VM を作成し、ファイアウォールルールで SSH(22) を閉じればブート改ざんは防げる",
+      "VM の永続ディスクに顧客管理鍵(CMEK)を設定すれば、ブートローダーの改ざん検知が有効になる",
+      "Shielded VM を有効にして作成する（セキュアブート・vTPM・整合性モニタリングによりブートの完全性を検証する）"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "Shielded VM は、セキュアブート（署名済みコンポーネントのみで起動）・vTPM（measured boot）・整合性モニタリング（ベースラインとの差分検知）により、ブートローダーやカーネルの改ざん・ルートキットから VM を保護します。今回の『ブートの完全性検証』要件に最適です（選択肢3）。選択肢0の Confidential VM は『使用中(in-use)データのメモリ暗号化』が主目的で、今回要件外であるうえブート改ざん検知の主機能ではありません。選択肢1のファイアウォールでの SSH 遮断はネットワーク到達性の話で、ブートの完全性検証とは無関係です。選択肢2の CMEK はディスクの保存時暗号化の鍵管理であり、ブートローダーの改ざん検知機能ではありません。",
+    "reference": "https://cloud.google.com/compute/shielded-vm/docs/shielded-vm",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-032",
+    "category": "deploy-implement",
+    "subTopic": "GPU アクセラレータ付きインスタンスのデプロイ(イメージ/ドライバの考慮)",
+    "difficulty": "hard",
+    "tags": ["compute-engine", "gpu", "drivers"],
+    "question": "機械学習の学習ジョブ用に NVIDIA GPU を接続した Compute Engine インスタンスをデプロイします。GPU を実際に利用可能にするための正しい考慮事項を2つ選んでください。",
+    "options": [
+      "GPU をアプリから利用するには、インスタンス作成後に NVIDIA の GPU ドライバ（必要に応じて CUDA）をインストールする必要がある",
+      "ドライバのインストール手間を省くため、GPU ドライバがプリインストールされたイメージ（Deep Learning VM イメージ等）を使ってインスタンスを作成できる",
+      "GPU を接続すれば OS が自動でドライバを認識・有効化するため、ドライバのインストールは一切不要である",
+      "GPU は自動で全ゾーンに在庫があるため、ゾーンごとの GPU 提供状況や割り当て(quota)を確認する必要はない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "GPU を接続したインスタンスでは、アプリが GPU を使えるように NVIDIA ドライバ（および必要なら CUDA）のインストールが必要です（選択肢0）。手間を省くには、ドライバが事前導入された Deep Learning VM イメージなどを使ってインスタンスを作成できます（選択肢1）。選択肢2は誤りで、GPU を接続しただけではドライバは自動で入らず、インストールが必要です。選択肢3も誤りで、GPU はゾーンによって提供状況が異なり、GPU 割り当て(quota)の確認・申請も必要です。",
+    "reference": "https://cloud.google.com/compute/docs/gpus/install-drivers-gpu",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-033",
+    "category": "deploy-implement",
+    "subTopic": "静的内部IP/外部IPの予約とインスタンスへの割当",
+    "difficulty": "medium",
+    "tags": ["compute-engine", "static-ip", "networking"],
+    "question": "あるバックエンド VM に、再起動や再作成をまたいでも変わらない固定の『内部 IP アドレス』を割り当てたいです。最も適切な手順はどれですか？",
+    "options": [
+      "VM に外部 IP を予約して割り当てれば、内部 IP も自動的に固定される",
+      "VM を作成し直すたびに払い出されるエフェメラル内部 IP を、毎回アプリの設定ファイルに手書きで更新する",
+      "静的内部 IP アドレスを予約し、VM 作成時に --private-network-ip でその IP を指定する（または既存のエフェメラル内部 IP を静的に昇格する）",
+      "VM にエイリアス IP レンジを追加すれば、プライマリの内部 IP が固定される"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "固定の内部 IP を持たせるには、静的内部 IP アドレスを予約し、VM 作成時に --private-network-ip でその IP を指定します。既にエフェメラル内部 IP が割り当たっている場合は、それを静的に昇格(promote)することもできます（選択肢2）。選択肢0の外部 IP の予約は内部 IP を固定しません（内部と外部は別管理です）。選択肢1の毎回手書き更新は運用が破綻しやすく、そもそも『固定 IP の割り当て』という解決になっていません。選択肢3のエイリアス IP レンジは追加の IP レンジを VM に割り当てる機能で、プライマリ内部 IP を固定する仕組みではありません。",
+    "reference": "https://cloud.google.com/compute/docs/ip-addresses/reserve-static-internal-ip-address",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-034",
+    "category": "deploy-implement",
+    "subTopic": "追加永続ディスクの作成・フォーマット・マウント",
+    "difficulty": "medium",
+    "tags": ["persistent-disk", "compute-engine", "linux"],
+    "question": "Linux VM に新規に作成した空の追加永続ディスク（ブートディスクとは別のデータ用）をアタッチしました。このディスクに OS からデータを書き込めるようにするために、次に行うべき正しい操作はどれですか？",
+    "options": [
+      "アタッチした時点で自動的にフォーマット・マウントされるため、追加作業は不要ですぐ書き込める",
+      "VM 内で mkfs.ext4 等でファイルシステムを作成し、マウントポイントに mount し、再起動後も維持するため UUID で /etc/fstab に登録する",
+      "gcloud compute disks format コマンドを実行すれば、ディスクのフォーマットとマウントがまとめて完了する",
+      "新規の空ディスクはそのままアプリのデータ保存に使えるので、ファイルシステムを作らずにディレクトリとして書き込めばよい"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "新規作成した空の追加ディスクは、アタッチ後に OS 側で初期化が必要です。Linux では mkfs（例: mkfs.ext4）でファイルシステムを作成し、マウントポイントに mount し、再起動後も自動マウントされるよう UUID を使って /etc/fstab に登録します（選択肢1）。選択肢0は誤りで、アタッチだけでは自動フォーマット・マウントはされません。選択肢2の gcloud compute disks format というコマンドは存在せず、フォーマット/マウントは VM 内の OS コマンドで行います。選択肢3も誤りで、ファイルシステムを作らなければデータ用領域として利用できません。",
+    "reference": "https://cloud.google.com/compute/docs/disks/format-mount-disk-linux",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-035",
+    "category": "deploy-implement",
+    "subTopic": "named ports とMIG/バックエンドサービス連携",
+    "difficulty": "hard",
+    "tags": ["mig", "named-ports", "load-balancing", "backend-service"],
+    "question": "アプリは VM 内でポート 8080 で待ち受けています。この MIG をプロキシ型ロードバランサ（アプリケーション ロードバランサ）のバックエンドにし、バックエンドサービスから 8080 へ正しくトラフィックを転送させたいです。named ports の正しい構成はどれですか？",
+    "options": [
+      "named ports は不要で、バックエンドサービスは常に 80 番ポートへ自動転送するため追加設定はいらない",
+      "MIG に gcloud compute instance-groups managed set-named-ports で名前付きポート（例: http:8080）を設定し、バックエンドサービス側ではそのポート名(http)を --port-name で参照する",
+      "各 VM の OS 内でポート転送(iptables)を設定し、80→8080 へ転送すれば named ports は使わなくてよい",
+      "バックエンドサービスに直接ポート番号 8080 をハードコードし、MIG 側の named ports は設定しない"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "プロキシ型（アプリケーション）ロードバランサでインスタンスグループをバックエンドにする場合、まず MIG に名前付きポート（例: http:8080）を set-named-ports で設定し、バックエンドサービスではそのポート名(--port-name=http)を参照します。これによりプロキシは各グループの該当ポート（8080）へトラフィックを転送します（選択肢1）。選択肢0は誤りで、80 番に固定されるわけではなく named ports による指定が必要です。選択肢2の OS 内ポート転送は named ports の代替にならず、ロードバランサの正規の連携方法ではありません。選択肢3はバックエンドサービスにポート番号を直接持たせるとしていますが、インスタンスグループバックエンドではポート名(named port)で解決する仕組みであり、ポート番号は MIG 側の named port として定義します。",
+    "reference": "https://cloud.google.com/load-balancing/docs/backend-service",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-036",
+    "category": "deploy-implement",
+    "subTopic": "Spot/プリエンプティブルVMを用いたMIGのコスト最適化デプロイ",
+    "difficulty": "hard",
+    "tags": ["mig", "spot-vm", "cost-optimization"],
+    "question": "中断耐性のあるバッチ処理を MIG で大規模に動かし、コストを大幅に削減したいです。MIG で Spot VM を使ったコスト最適化デプロイの正しい方法はどれですか？",
+    "options": [
+      "MIG 作成後に各 VM へ個別に SSH してプロビジョニングモデルを SPOT に切り替える",
+      "MIG では Spot VM を使えないため、標準 VM の MIG を作り、夜間だけ手動でスケールダウンしてコストを抑える",
+      "インスタンステンプレートでプロビジョニングモデルを SPOT に設定し、そのテンプレートで MIG を作成/更新する（中断された VM は容量があれば MIG が自動で再作成する）",
+      "Spot VM は中断されると MIG が再作成しないため、コスト最適化と可用性の両立はできず、必ずオンデマンド VM を使う必要がある"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "MIG で Spot VM を使うには、インスタンステンプレートでプロビジョニングモデルを SPOT に設定し、そのテンプレートで MIG を作成/更新します。Spot VM は最大で大幅な割引が得られ、中断（プリエンプト）された VM は容量があれば MIG が自動で再作成するため、中断耐性のあるバッチ処理のコスト最適化に適します（選択肢2）。選択肢0の VM 個別 SSH での切り替えは不可で、プロビジョニングモデルはテンプレート（VM 作成時）に定義します。選択肢1は誤りで、MIG は Spot VM をサポートします。選択肢3も誤りで、Spot VM が中断されても容量があれば MIG が自動再作成するため、コスト最適化と一定の継続性を両立できます。",
+    "reference": "https://cloud.google.com/compute/docs/instances/spot",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-037",
+    "category": "deploy-implement",
+    "subTopic": "GKE Deployment と Service タイプによる公開",
+    "difficulty": "medium",
+    "tags": ["gke", "service", "clusterip", "nodeport"],
+    "question": "GKE Standard クラスタで、(1) 内部のフロントエンド Pod からのみアクセスされる backend Deployment と、(2) クラスタ内に閉じた安定した仮想 IP(VIP)・DNS 名で接続させたい、(3) インターネットや各ノードのポートには一切公開したくない、という要件があります。backend を公開する Service の type として最も適切なものはどれですか？",
+    "options": [
+      "type: LoadBalancer（外部ロードバランサが払い出され、安定したアクセスができるため）",
+      "type: NodePort（各ノードの 30000-32767 のポートで公開され、クラスタ内からも到達できるため）",
+      "type: ClusterIP（クラスタ内部だけで有効な安定した仮想 IP と DNS 名を提供し、外部やノードポートには公開しないため）",
+      "type: ExternalName（backend のサービス名を別の DNS 名へエイリアスし、内部通信を安定させるため）"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "ClusterIP はクラスタ内部からのみ到達できる安定した仮想 IP と DNS 名(<service>.<namespace>.svc.cluster.local)を提供し、外部やノードのポートには公開しません。3要件すべてに合致します（選択肢2）。選択肢0の LoadBalancer は外部ロードバランサと外部 IP を払い出すため、インターネットに公開したくないという要件に反します。選択肢1の NodePort は各ノードの 30000-32767 のポートを開いてしまい、ノードポートに公開したくないという要件に反します（しかも ClusterIP も内包します）。選択肢3の ExternalName は外部 DNS 名へのエイリアスを作る機能で、クラスタ内ワークロード(backend Pod)への安定接続を提供する手段ではありません。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/concepts/service",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-038",
+    "category": "deploy-implement",
+    "subTopic": "GKE Ingress による外部 HTTP(S) 公開",
+    "difficulty": "hard",
+    "tags": ["gke", "ingress", "http-load-balancing", "neg"],
+    "question": "GKE で稼働する2つの Deployment（/ は web、/api は api）を、単一の外部 IP の下でパスベースに振り分け、HTTP(S) でインターネット公開したいです。GKE が提供するマネージドな仕組みでこれを実現する最も適切な方法はどれですか？",
+    "options": [
+      "各 Deployment にそれぞれ type: LoadBalancer の Service を作り、2つの外部 IP をクライアント側で使い分ける",
+      "Ingress リソースを作成し、ホスト/パスのルーティングルールを定義する（GKE の Ingress コントローラが外部アプリケーション ロードバランサを自動的にプロビジョニングする）",
+      "type: NodePort の Service を作り、各ノードの外部 IP に対してクライアントがパスを指定してアクセスする",
+      "type: ClusterIP の Service を2つ作れば、GKE が自動的に外部 IP とパスルーティングを構成する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Ingress リソースにホスト/パスのルーティングルール（/ → web、/api → api）を定義すると、GKE の Ingress コントローラが外部アプリケーション ロードバランサ（レイヤー7）を自動でプロビジョニングし、単一の外部 IP でパスベースの振り分けを行います（選択肢1）。選択肢0の type: LoadBalancer を Service ごとに作る方法は、それぞれ別の外部 IP・L4 ロードバランサになり、単一 IP でのパスルーティングを満たしません。選択肢2の NodePort はノード IP/ポートを露出するだけでレイヤー7のパスルーティングを提供しません。選択肢3の ClusterIP は内部専用で外部 IP やパスルーティングを自動構成することはなく、要件を満たしません。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/concepts/ingress",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-039",
+    "category": "deploy-implement",
+    "subTopic": "GKE Horizontal Pod Autoscaler(HPA)の構成",
+    "difficulty": "medium",
+    "tags": ["gke", "hpa", "autoscaling", "kubectl"],
+    "question": "GKE 上の Deployment『web』に対し、CPU 使用率の平均が 60% を超えたら Pod を自動でスケールアウトし、最小 2・最大 10 レプリカの範囲で増減させたいです。Horizontal Pod Autoscaler を構成する最も適切な kubectl コマンドはどれですか？",
+    "options": [
+      "kubectl scale deployment web --replicas=2-10 --cpu-percent=60",
+      "kubectl autoscale deployment web --min=2 --max=10 --cpu-percent=60",
+      "kubectl autoscale deployment web --replicas=10 --target-cpu=60",
+      "kubectl set hpa web --min=2 --max=10 --metric=cpu=60"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "HPA は `kubectl autoscale deployment <名前> --min=<最小> --max=<最大> --cpu-percent=<目標CPU%>` で作成し、CPU 使用率に基づいて min〜max の範囲で Pod 数を自動増減させます（選択肢1）。選択肢0の `kubectl scale` はレプリカ数を手動の固定値に変更するコマンドで、自動スケールの設定ではなく `--replicas=2-10` のような範囲指定もできません。選択肢2は `kubectl autoscale` ですが、`--replicas`（固定値）や `--target-cpu` というフラグは無効で、正しくは `--min/--max/--cpu-percent` です。選択肢3の `kubectl set hpa` というサブコマンドは存在しません。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/how-to/horizontal-pod-autoscaling",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-040",
+    "category": "deploy-implement",
+    "subTopic": "GKE の ConfigMap / Secret のワークロードへの注入",
+    "difficulty": "hard",
+    "tags": ["gke", "configmap", "secret", "kubernetes"],
+    "question": "GKE のワークロードに設定値を渡す運用について、Kubernetes の ConfigMap と Secret の正しい使い分け・注入方法を2つ選んでください。",
+    "options": [
+      "機微でない設定値（例: 機能フラグや外部エンドポイント URL）は ConfigMap に格納し、Pod の環境変数(envFrom/valueFrom)やボリュームマウントとして注入できる",
+      "DB パスワードや API キーなどの機微情報は、平文の ConfigMap ではなく Secret に格納して Pod に注入するのが適切である",
+      "ConfigMap も Secret も Pod に注入する手段はボリュームマウントのみで、環境変数として渡すことはできない",
+      "Secret に格納した値は自動的にエンドツーエンドで暗号化され、参照する側に追加の IAM/RBAC 権限は一切不要になる"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "ConfigMap は機微でない設定（機能フラグ・URL など）をキー/バリューで保持し、Pod に環境変数（envFrom や valueFrom.configMapKeyRef）またはボリュームとしてマウントして注入できます（選択肢0）。DB パスワードや API キーなどの機微情報は、平文の ConfigMap ではなく Secret に格納するのが適切です（選択肢1）。選択肢2は誤りで、ConfigMap も Secret も環境変数としてもボリュームとしても注入できます。選択肢3も誤りで、Secret はデフォルトでは Base64 エンコードされるだけ（自動の堅牢な暗号化ではない）で、アクセスには適切な RBAC が必要であり『追加権限が一切不要』にはなりません。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/concepts/configmap",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-041",
+    "category": "deploy-implement",
+    "subTopic": "GKE Namespace と ResourceQuota / LimitRange",
+    "difficulty": "hard",
+    "tags": ["gke", "namespace", "resourcequota", "limitrange"],
+    "question": "1つの GKE クラスタを複数チームで共有しています。(1) チームごとに論理的に分離された作業空間を与え、(2) チーム単位で使える CPU/メモリの総量に上限を設け、(3) 個々の Pod/コンテナが requests/limits を未指定でも既定値が適用されるようにしたいです。最も適切な Kubernetes リソースの組み合わせはどれですか？",
+    "options": [
+      "チームごとに Namespace を作り、各 Namespace に ResourceQuota（総量上限）と LimitRange（コンテナ既定/上限）を設定する",
+      "チームごとに別々のクラスタを必ず新規作成し、Namespace・ResourceQuota は使わない",
+      "1つの default Namespace を全チームで共有し、HorizontalPodAutoscaler で総量を制限する",
+      "チームごとに Namespace を作るが、上限制御は NetworkPolicy で行い ResourceQuota は使わない"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Namespace はクラスタ内をチーム単位で論理分離する作業空間です。各 Namespace に ResourceQuota を設定すると、その Namespace で消費できる CPU/メモリ等の総量に上限を課せます。さらに LimitRange を設定すると、requests/limits を明示しない Pod/コンテナに既定値や上限/下限を適用できます。3要件すべてに合致します（選択肢0）。選択肢1のチームごとの新規クラスタは過剰で運用コストが高く、要件は単一クラスタの共有を前提にしています。選択肢2の HPA は Pod 数の自動スケール機能で、Namespace 単位のリソース総量上限の制御手段ではありません。選択肢3の NetworkPolicy は Pod 間の通信制御であり、CPU/メモリの総量制限には使えません。",
+    "reference": "https://cloud.google.com/kubernetes-engine/quotas",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-042",
+    "category": "deploy-implement",
+    "subTopic": "Cloud Run Jobs(バッチ/一回実行)のデプロイ",
+    "difficulty": "medium",
+    "tags": ["cloud-run", "jobs", "batch", "gcloud"],
+    "question": "夜間に一度だけ実行して完了したら終了する、HTTP リクエストを待ち受けないバッチ処理（データ集計）をコンテナで実行したいです。Cloud Run でこの要件に最も適したリソースとデプロイ方法はどれですか？",
+    "options": [
+      "Cloud Run サービスを作成し、最小インスタンスを 1 に固定して常時起動させ、内部のループでバッチを回す",
+      "Cloud Run サービスを作成し、外部から定期的に HTTP リクエストを送り続けてバッチを駆動する",
+      "Cloud Run ジョブはバッチ用途に対応していないため、Compute Engine VM を都度起動してスクリプトを実行する",
+      "Cloud Run ジョブを作成し（gcloud run jobs create）、タスクが処理を実行して完了すると終了する。必要なときに gcloud run jobs execute（またはスケジュール）で実行する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "Cloud Run ジョブ(jobs)は、HTTP リクエストを待ち受けず、タスクが処理を実行して完了すると終了する run-to-completion 型のバッチ向けリソースです。`gcloud run jobs create` で作成し、`gcloud run jobs execute`（または Cloud Scheduler 等によるスケジュール）で実行します（選択肢3）。選択肢0の『サービス＋最小インスタンス1で常時起動』はリクエスト駆動の常駐型で、一回実行のバッチには不適かつコスト効率も悪いです。選択肢1の HTTP を送り続ける方式も常駐サービス前提で、一回実行・自動終了という要件に合いません。選択肢2は誤りで、Cloud Run ジョブはまさにバッチ/一回実行のために用意された機能です。",
+    "reference": "https://cloud.google.com/run/docs/create-jobs",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-043",
+    "category": "deploy-implement",
+    "subTopic": "Cloud Run の concurrency と min/max インスタンス",
+    "difficulty": "hard",
+    "tags": ["cloud-run", "concurrency", "min-instances", "cold-start"],
+    "question": "Cloud Run サービスで、(1) レイテンシに敏感なため最初のリクエストのコールドスタートを避けたい、(2) 1 インスタンスが同時に処理するリクエスト数を抑えて 1 リクエストあたりの応答を安定させたい、(3) 想定外のスパイクで際限なくスケールしコストが暴騰するのを防ぎたい、という要件があります。最も適切な構成はどれですか？",
+    "options": [
+      "min-instances を 0 のまま、concurrency を最大の 1000 に上げ、max-instances は無制限にする",
+      "min-instances を 1 以上に設定し（コールドスタート緩和）、concurrency を低めに設定し（1 インスタンスあたりの同時リクエストを抑制）、max-instances に上限を設定する（コスト暴騰防止）",
+      "min-instances と max-instances を同じ大きな値に固定し、concurrency は既定の 80 のままにする",
+      "concurrency を 1 にし、min-instances・max-instances はどちらも設定しない（既定のオートスケールに任せる）"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "コールドスタートを避けるには min-instances を 1 以上にして常にウォームなインスタンスを保持します。1 インスタンスあたりの同時処理を抑えて応答を安定させるには concurrency（最大同時リクエスト数）を低めに設定します。スパイク時のコスト暴騰を防ぐには max-instances に上限を設けます。3要件すべてに対応します（選択肢1）。選択肢0は min-instances=0 のままでコールドスタートが残り、concurrency=1000・max 無制限はコスト暴騰と応答安定の要件に反します。選択肢2の『min=max を大きな値で固定』は常時その台数分の課金が発生し過剰で、応答安定のための concurrency 調整も行っていません。選択肢3は min/max 未設定でコールドスタート緩和もコスト上限も満たしません。",
+    "reference": "https://cloud.google.com/run/docs/about-concurrency",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-044",
+    "category": "deploy-implement",
+    "subTopic": "Cloud Run のサービス間認証(IAM invoker / ID トークン)",
+    "difficulty": "hard",
+    "tags": ["cloud-run", "iam", "invoker", "id-token"],
+    "question": "Cloud Run サービス A から Cloud Run サービス B を呼び出します。B はインターネットに公開せず、A からの呼び出しのみを許可したいです。Google 推奨のサービス間認証の構成として正しいものはどれですか？",
+    "options": [
+      "B で『未認証の呼び出しを許可』を有効化し、A 側で API キーをヘッダに付けて送る",
+      "B に対して allUsers へ roles/run.invoker を付与し、A からのみアクセスできるようにファイアウォールで送信元を絞る",
+      "B では未認証アクセスを許可せず、A のサービスアカウントに B への roles/run.invoker を付与し、A は B の URL を audience とする Google 署名付き ID トークンを Authorization: Bearer ヘッダに付けて呼び出す",
+      "A・B 双方にサービスアカウントキー(JSON)をコンテナに埋め込み、相互にそのキーで認証し合う"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "推奨方式は、B を未認証不可（非公開）にしたうえで、呼び出し元 A のサービスアカウントに B への roles/run.invoker（Cloud Run 起動元）を付与し、A が B の URL を audience とする Google 署名付き ID トークンを取得して Authorization: Bearer ヘッダに付与して呼び出す方法です（選択肢2）。選択肢0の未認証許可＋API キーは、B を実質公開してしまい『A からのみ許可』を満たせません（API キーは ID 認証の代替にもなりません）。選択肢1の allUsers への invoker 付与は B を全員に公開することと同義で、ファイアウォールでの送信元制御に頼るのは Cloud Run の標準的な呼び出し制御ではなく不適切です。選択肢3のサービスアカウントキーの埋め込みはキー漏洩リスクが高く、Cloud Run 上では避けるべきアンチパターンです。",
+    "reference": "https://cloud.google.com/run/docs/authenticating/service-to-service",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-045",
+    "category": "deploy-implement",
+    "subTopic": "Cloud Functions(第2世代)のデプロイとトリガー種別",
+    "difficulty": "medium",
+    "tags": ["cloud-functions", "eventarc", "pubsub", "trigger"],
+    "question": "Cloud Functions（第2世代）を、Cloud Storage バケットに新しいオブジェクトがアップロードされたときに自動実行させたいです。トリガーの構成として最も適切なものはどれですか？",
+    "options": [
+      "--trigger-http を指定して HTTP 関数としてデプロイし、オブジェクト作成時に自分で関数の URL を叩く処理を別途用意する",
+      "--trigger-topic で関係のない Pub/Sub トピックを指定すれば、Cloud Storage の変更が自動的にそのトピックへ流れてトリガーされる",
+      "Cloud Functions 第2世代は Cloud Storage イベントに対応していないため、第1世代でしか実装できない",
+      "Eventarc 経由の Cloud Storage イベント（オブジェクトのファイナライズ/作成）をトリガーに指定して関数をデプロイする"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "Cloud Functions 第2世代は Eventarc を介して多様なイベントソースをトリガーにでき、Cloud Storage のオブジェクト作成（ファイナライズ）イベントもその一つです。バケットのイベントを Eventarc トリガーとして関数に紐づければ、アップロード時に自動実行されます（選択肢3）。選択肢0の HTTP トリガー＋自前で URL を叩く方式は、イベント駆動の自動実行という要件に対し余計な仕組みが必要で不適切です。選択肢1は誤りで、無関係な Pub/Sub トピックに Cloud Storage の変更が自動で流れることはなく、Storage イベントは Eventarc（または通知設定）経由で連携します。選択肢2は誤りで、第2世代は Eventarc 経由で Cloud Storage イベントに対応しています。",
+    "reference": "https://cloud.google.com/functions/docs/calling",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-046",
+    "category": "deploy-implement",
+    "subTopic": "Artifact Registry へのコンテナイメージ push と参照",
+    "difficulty": "medium",
+    "tags": ["artifact-registry", "docker", "image", "gke"],
+    "question": "ローカルでビルドした Docker イメージ app を、Artifact Registry の Docker リポジトリ（リージョン asia-northeast1、プロジェクト my-proj、リポジトリ my-repo）へ push する正しい手順はどれですか？",
+    "options": [
+      "gcloud auth configure-docker asia-northeast1-docker.pkg.dev で認証を構成し、イメージに asia-northeast1-docker.pkg.dev/my-proj/my-repo/app:v1 とタグ付けして docker push する",
+      "docker push gcr.io/my-repo/app:v1 を実行すれば、Artifact Registry に自動的に保存される",
+      "gcloud artifacts images upload app:v1 --repository=my-repo を実行してアップロードする",
+      "イメージを Cloud Storage バケットに gcloud storage cp でコピーすれば、Artifact Registry から参照できる"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Artifact Registry の Docker リポジトリへ push するには、まず `gcloud auth configure-docker <LOCATION>-docker.pkg.dev` で Docker の認証ヘルパーを構成し、イメージを `LOCATION-docker.pkg.dev/PROJECT/REPOSITORY/IMAGE:TAG` 形式（例: asia-northeast1-docker.pkg.dev/my-proj/my-repo/app:v1）でタグ付けして `docker push` します（選択肢0）。選択肢1の gcr.io は旧 Container Registry のホスト形式で、Artifact Registry のリポジトリ（…-docker.pkg.dev）とは異なり、これだけで自動保存はされません。選択肢2の `gcloud artifacts images upload` というサブコマンドは存在しません（push は docker クライアントで行います）。選択肢3はコンテナイメージを Cloud Storage に置いてもコンテナレジストリとして参照できず、誤りです。",
+    "reference": "https://cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-047",
+    "category": "deploy-implement",
+    "subTopic": "Cloud Build による CI/CD",
+    "difficulty": "medium",
+    "tags": ["cloud-build", "ci-cd", "artifact-registry", "cloudbuild-yaml"],
+    "question": "ソースをコミットしたら、コンテナイメージをビルドして Artifact Registry に push し、続けて Cloud Run へデプロイする一連の CI/CD を Google Cloud のマネージドサービスで構成したいです。最も適切な方法はどれですか？",
+    "options": [
+      "各開発者のローカル PC で docker build と gcloud run deploy を手動実行する手順書を配布し、リリースのたびに各自が実行する",
+      "cloudbuild.yaml にビルド→Artifact Registry への push→Cloud Run へのデプロイのステップを定義し、Cloud Build のトリガー（リポジトリへの push を契機）で自動実行する",
+      "Cloud Scheduler だけを構成し、毎時 gcloud builds submit が無くてもイメージが自動でビルド・デプロイされるようにする",
+      "Compute Engine VM を1台常駐させ、cron で git pull とビルドを回す自前の CI サーバーを構築・運用する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Cloud Build は各ステップを順に実行するマネージドな CI/CD サービスです。cloudbuild.yaml に『イメージのビルド → Artifact Registry への push → Cloud Run へのデプロイ』をステップとして定義し、Cloud Build トリガー（リポジトリへの push を契機）で自動実行すれば、コミットからデプロイまでを自動化できます（選択肢1）。選択肢0の各自手動実行は自動化・再現性・一貫性のいずれも満たしません。選択肢2は誤りで、Cloud Scheduler はジョブのスケジュール起動を行うだけで、ビルド定義やトリガーが無ければビルド・デプロイは実行されません。選択肢3の自前 CI サーバーは、マネージドな Cloud Build を使う要件に反し運用負荷が高くなります。",
+    "reference": "https://cloud.google.com/build/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-048",
+    "category": "deploy-implement",
+    "subTopic": "GKE Deployment のローリングアップデート/ロールバック",
+    "difficulty": "hard",
+    "tags": ["gke", "rolling-update", "rollback", "kubectl-rollout"],
+    "question": "GKE 上の Deployment『web』のイメージを v1 から v2 に無停止で更新しました。しかし更新後に不具合が判明し、直前の正常なリビジョン(v1)へ素早く戻したいです。デフォルトの RollingUpdate 戦略の挙動と、ロールバック方法の正しい記述を2つ選んでください。",
+    "options": [
+      "デフォルトの RollingUpdate 戦略では、新しい Pod を段階的に立ち上げつつ古い Pod を順次終了させるため、更新中もダウンタイムを避けられる",
+      "直前のリビジョンへ戻すには kubectl rollout undo deployment/web を実行する（リビジョン履歴から1つ前へロールバックされる）",
+      "デフォルトの Recreate 戦略では、全ての古い Pod を先に削除してから新しい Pod を作成するため、ロールバックは不要で常に無停止になる",
+      "一度ロールアウトした Deployment は履歴を持たないため、ロールバックするには手動で v1 のマニフェストを再 apply する以外に方法はない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "Deployment のデフォルト戦略は RollingUpdate で、新しい Pod を段階的に作成しつつ古い Pod を順次終了させる（maxSurge/maxUnavailable で速度・可用性を制御）ため、更新中もダウンタイムを避けられます（選択肢0）。直前のリビジョンへ戻すには `kubectl rollout undo deployment/web` を使い、Deployment が保持するリビジョン履歴から1つ前へロールバックします（選択肢1）。選択肢2は誤りで、Recreate は全 Pod を一旦停止してから新規作成するためダウンタイムが発生し、デフォルトでもありません。選択肢3も誤りで、Deployment はリビジョン履歴を保持しており、rollout undo で容易にロールバックできます（手動再 apply に限られません）。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/how-to/updating-apps",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-049",
+    "category": "deploy-implement",
+    "subTopic": "bq コマンドによる BigQuery データセット/テーブル作成・データロード",
+    "difficulty": "medium",
+    "tags": ["bigquery", "bq", "data-load"],
+    "question": "分析基盤の構築で、(1) ロケーションを asia-northeast1 とする新しい BigQuery データセット sales を作成し、(2) その中に Cloud Storage 上の CSV (gs://raw/orders.csv) をスキーマ自動検出で新規テーブル orders としてロードしたいです。bq コマンドの正しい組み合わせはどれですか？",
+    "options": [
+      "bq mk --location=asia-northeast1 --dataset sales のあと、bq load --autodetect --source_format=CSV sales.orders gs://raw/orders.csv",
+      "bq create-dataset --region=asia-northeast1 sales のあと、bq import --format=CSV sales.orders gs://raw/orders.csv",
+      "gcloud bigquery datasets create sales --location=asia-northeast1 のあと、gcloud bigquery load sales.orders gs://raw/orders.csv",
+      "bq mk --location=asia-northeast1 --dataset sales のあと、bq cp --source_format=CSV gs://raw/orders.csv sales.orders"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "BigQuery のデータセット作成は `bq mk --dataset`（ロケーションは `--location`）で行い、データのロードは `bq load` を使います。CSV のスキーマを自動推定するには `--autodetect`、形式指定は `--source_format=CSV` で、引数は `データセット.テーブル ソースURI` の順です（選択肢1）。選択肢2の `bq create-dataset` / `bq import` というサブコマンドは存在せず、ロケーション指定も `--region` ではなく `--location` です。選択肢3の `gcloud bigquery` というコマンドグループは存在せず、BigQuery は `bq` ツールで操作します。選択肢4の `bq cp` はテーブル間コピー用のコマンドで、Cloud Storage の CSV からのロードには使えません（ロードは `bq load`）。",
+    "reference": "https://cloud.google.com/bigquery/docs/datasets",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-050",
+    "category": "deploy-implement",
+    "subTopic": "gcloud storage / gsutil による大量データ転送(並列・再開・rsync)",
+    "difficulty": "easy",
+    "tags": ["cloud-storage", "gcloud-storage", "rsync", "data-transfer"],
+    "question": "ローカルの大規模ディレクトリ ./data（サブフォルダ多数・数百 GB）を Cloud Storage の gs://archive/data に転送し、以後は差分だけを効率よく同期し続けたいです。サブフォルダも含めて再帰的に同期する最も適切なコマンドはどれですか？",
+    "options": [
+      "gcloud storage cp ./data gs://archive/data を毎回実行し、すでに存在するファイルも含めて毎回すべて再アップロードする",
+      "gcloud storage rsync --recursive ./data gs://archive/data を実行し、差分のあるオブジェクトだけを同期する",
+      "gcloud storage mv --recursive ./data gs://archive/data を実行して、ローカルからクラウドへ移動する",
+      "gcloud storage sync ./data gs://archive/data を実行する（--recursive は不要で自動的にサブフォルダも含まれる）"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "ソースとデスティネーションの差分だけを同期するには `gcloud storage rsync` を使い、サブフォルダも含めるには `--recursive` を付けます（選択肢1）。rsync は既存と同一のオブジェクトをスキップするため、繰り返し同期する大量データ転送で効率的です。選択肢0の `cp` を毎回全件実行する方法は差分同期にならず、毎回全データを転送して非効率です。選択肢2の `mv` は移動コマンドで、転送後にローカルのファイルが削除されてしまい『同期し続ける』要件に反します。選択肢3の `gcloud storage sync` というサブコマンドは存在しません（同期は `rsync`）。",
+    "reference": "https://cloud.google.com/sdk/gcloud/reference/storage/rsync",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-051",
+    "category": "deploy-implement",
+    "subTopic": "Cloud SQL のデータインポート/エクスポート(SQLダンプ/CSV・バケット経由)",
+    "difficulty": "hard",
+    "tags": ["cloud-sql", "import-export", "cloud-storage", "iam"],
+    "question": "既存の Cloud SQL for MySQL インスタンス prod-db のデータを SQL ダンプとして Cloud Storage にエクスポートします。エクスポートを成功させるために必要な前提・手順として正しい記述を2つ選んでください。",
+    "options": [
+      "エクスポート先は Cloud Storage バケットで、エクスポートには gcloud sql export sql prod-db gs://backups/dump.sql --database=app を使う",
+      "Cloud SQL インスタンスのサービスアカウントに、対象バケットへの書き込み権限(roles/storage.objectAdmin など)を付与しておく必要がある",
+      "エクスポート先はローカルディスクのみで、gcloud sql export を実行するとローカルにダンプファイルが直接ダウンロードされる",
+      "エクスポートには MySQL クライアントから mysqldump を実行する以外の方法はなく、Cloud SQL の管理 API ではエクスポートできない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "Cloud SQL のエクスポートは `gcloud sql export sql <インスタンス> gs://<バケット>/<ファイル> --database=<DB>` で SQL ダンプを Cloud Storage バケットに出力します（選択肢0）。その際、Cloud SQL インスタンスのサービスアカウントが対象バケットへ書き込めるよう、storage.objectAdmin 等の権限を事前に付与しておく必要があります（選択肢1）。選択肢2は誤りで、エクスポート先は Cloud Storage バケットであり、ローカルディスクへ直接ダウンロードする仕組みではありません（必要ならバケットから別途取得します）。選択肢3も誤りで、Cloud SQL は gcloud / Console / 管理 API でのエクスポートに対応しており、mysqldump だけが手段ではありません。",
+    "reference": "https://cloud.google.com/sql/docs/mysql/import-export/import-export-sql",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-052",
+    "category": "deploy-implement",
+    "subTopic": "Firestore のデプロイとモード選択(Native/Datastore)",
+    "difficulty": "medium",
+    "tags": ["firestore", "datastore", "database-mode"],
+    "question": "新規のモバイル/ウェブアプリ向けに、リアルタイム同期・オフライン対応・モバイル/ウェブ用クライアント SDK が使えるドキュメント指向データベースを Firestore でデプロイします。新規アプリで Google が推奨するモードと、その制約に関する正しい記述はどれですか？",
+    "options": [
+      "Datastore モードを選ぶべきで、これは新規のモバイル/ウェブアプリ向けにリアルタイム同期とモバイル SDK を提供する推奨モードである",
+      "モードはあとからいつでも Native と Datastore の間で自由に何度でも切り替えられるので、最初はどちらを選んでも問題ない",
+      "Native モードを選ぶべきで、新規アプリには Native モードが推奨され、モバイル/ウェブ SDK・リアルタイムリスナー・オフライン対応を備える",
+      "Native モードと Datastore モードはどちらも同一プロジェクトの同一データベースで同時に併用できる"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "Firestore には Native モードと Datastore モードがあり、新規のモバイル/ウェブアプリには Native モードが推奨されます。Native モードはモバイル/ウェブ用クライアント SDK、リアルタイムリスナー、オフライン対応などを提供します（選択肢2）。選択肢0は説明が逆で、リアルタイム同期やモバイル SDK は Native モードの特徴であり、Datastore モードは既存の Datastore API に依存するアプリ向けです。選択肢1は誤りで、データベースのモードは作成時に選択し、データが入った後の自由な相互切り替えはできません。選択肢3も誤りで、1 つのデータベースはいずれか一方のモードで動作し、両モードを同時併用することはできません。",
+    "reference": "https://cloud.google.com/firestore/docs/firestore-or-datastore",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-053",
+    "category": "deploy-implement",
+    "subTopic": "Pub/Sub トピック/サブスクリプション(pull/push)の作成",
+    "difficulty": "medium",
+    "tags": ["pubsub", "topic", "subscription", "gcloud"],
+    "question": "Pub/Sub でイベント配信基盤を構築します。トピック orders を作成し、メッセージを HTTPS エンドポイント https://app.example.com/push に Pub/Sub 側からプッシュ配信するサブスクリプション orders-sub を作りたいです。正しいコマンドの組み合わせはどれですか？",
+    "options": [
+      "gcloud pubsub topics create orders のあと、gcloud pubsub subscriptions create orders-sub --topic=orders --pull-endpoint=https://app.example.com/push",
+      "gcloud pubsub create-topic orders のあと、gcloud pubsub create-subscription orders-sub --topic=orders --push-endpoint=https://app.example.com/push",
+      "gcloud pubsub topics create orders のあと、gcloud pubsub subscriptions create orders-sub --topic=orders --push-endpoint=https://app.example.com/push",
+      "gcloud pubsub topics add orders のあと、gcloud pubsub subscriptions add orders-sub --topic=orders --type=push"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "トピック作成は `gcloud pubsub topics create <名前>`、サブスクリプション作成は `gcloud pubsub subscriptions create <名前> --topic=<トピック>` です。プッシュ配信にするには `--push-endpoint=<HTTPS URL>` を指定します（選択肢2）。`--push-endpoint` を省略するとデフォルトでプル型サブスクリプションになります。選択肢0は `--pull-endpoint` という存在しないフラグを使っています（プルにはエンドポイント指定が不要で、プッシュは `--push-endpoint`）。選択肢1の `gcloud pubsub create-topic` / `create-subscription` という語順のサブコマンドは存在しません（正しくは `topics create` / `subscriptions create`）。選択肢3の `topics add` / `subscriptions add` というサブコマンドは存在しません。",
+    "reference": "https://cloud.google.com/pubsub/docs/subscriber",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-054",
+    "category": "deploy-implement",
+    "subTopic": "Bigtable インスタンス/テーブルのデプロイ(cbt)",
+    "difficulty": "hard",
+    "tags": ["bigtable", "cbt", "nosql"],
+    "question": "Cloud Bigtable を使う準備として、cbt CLI でテーブルと列ファミリーを作成します。プロジェクトとインスタンス ID を毎回コマンドに書かずに済むよう設定したうえで、テーブル sensors と列ファミリー data を作るには、どの手順が正しいですか？",
+    "options": [
+      "~/.cbtrc に project と instance を記述してから、cbt createtable sensors と cbt createfamily sensors data を実行する",
+      "gcloud bigtable tables create sensors --family=data を実行する（cbt は不要で、テーブルと列ファミリーが同時に作成される）",
+      "cbt mk-table sensors のあと cbt add-family sensors data を実行する（.cbtrc は使えないため毎回 -project と -instance を渡す）",
+      "bq mk --table sensors を実行し、列ファミリー data は BigQuery のスキーマ定義として指定する"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "cbt CLI はプロジェクト/インスタンス ID を `~/.cbtrc` 構成ファイルに記述しておくと、各コマンドで毎回指定する必要がなくなります。テーブル作成は `cbt createtable <テーブル>`、列ファミリー追加は `cbt createfamily <テーブル> <ファミリー>` です（選択肢0）。選択肢1の `gcloud bigtable tables create` はテーブル作成自体は可能ですが、`--family` で列ファミリーを同時作成するこの形は cbt の手順を置き換える正しい記述ではなく（列ファミリーは別途設定が必要）、設問が問う cbt での標準手順と合致しません。選択肢2の `cbt mk-table` / `cbt add-family` というサブコマンド名は誤りで、`.cbtrc` も利用可能です。選択肢3の `bq mk` は BigQuery 用のコマンドで、Bigtable のテーブル/列ファミリーは作成できません（別サービスです）。",
+    "reference": "https://cloud.google.com/bigtable/docs/cbt-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-055",
+    "category": "deploy-implement",
+    "subTopic": "Dataflow テンプレートジョブの実行(デプロイ)",
+    "difficulty": "medium",
+    "tags": ["dataflow", "templates", "etl", "gcloud"],
+    "question": "コードを書かずに、Google 提供の Dataflow テンプレート(例: Cloud Storage Text to BigQuery)を使ってバッチの ETL ジョブを実行(デプロイ)したいです。最も適切な方法はどれですか？",
+    "options": [
+      "gcloud dataflow jobs run my-job --gcs-location=gs://dataflow-templates-REGION/latest/GCS_Text_to_BigQuery --parameters=... でテンプレートからジョブを起動する",
+      "Dataflow はテンプレート実行に対応しておらず、必ず Apache Beam の SDK で自前パイプラインを書いてコンパイルする必要がある",
+      "gcloud dataflow templates create my-job を実行すれば、Google 提供テンプレートが自動で選ばれてジョブが開始される",
+      "BigQuery の bq query にテンプレート名を渡すと、Dataflow ジョブとして実行される"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Google 提供の Dataflow テンプレートは、`gcloud dataflow jobs run <ジョブ名> --gcs-location=<テンプレートのGCSパス> --parameters=<入出力等>` でジョブとして起動(デプロイ)できます。コードを書かずに ETL を実行できるのが利点です(選択肢0)。選択肢1は誤りで、Dataflow は Google 提供テンプレートやカスタムテンプレートからの実行に対応しており、必ずしも SDK での自前実装は不要です。選択肢2の `gcloud dataflow templates create` はソースから新しいテンプレートを作成(ステージング)するコマンドで、テンプレート名を渡して自動選択する仕組みではありません(実行は `jobs run`)。選択肢3の `bq query` は BigQuery のクエリ実行用で、Dataflow ジョブは起動できません。",
+    "reference": "https://cloud.google.com/dataflow/docs/templates/provided-templates",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-056",
+    "category": "deploy-implement",
+    "subTopic": "VPC ピアリングの構成(双方向必要・推移しない)",
+    "difficulty": "hard",
+    "tags": ["vpc-peering", "networking", "non-transitive"],
+    "question": "VPC ネットワーク net-a と net-b を VPC Network Peering で接続しました。さらに net-b と net-c も別途ピアリングしています。VPC Network Peering の特性に関する正しい記述を2つ選んでください。",
+    "options": [
+      "ピアリングは推移的ではないため、net-a と net-c は直接ピアリングしない限り相互に通信できない",
+      "ピアリング接続を確立するには、各 VPC 側でそれぞれ相手向けのピアリングを構成する(双方向の設定が必要)必要がある",
+      "片方の VPC で1回ピアリングを作成すれば、相手側の設定は不要で自動的に双方向接続が完了する",
+      "ピアリングは推移的なので、net-a → net-b → net-c の経路で net-a から net-c へ自動的に到達できる"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "VPC Network Peering は推移的ではありません。net-a↔net-b と net-b↔net-c がそれぞれピアリングされていても、net-a と net-c は直接ピアリングしない限り通信できません(選択肢0)。また、ピアリングはアクティブ化のために双方の VPC でそれぞれ相手向けのピアリング設定を作成する必要があります(選択肢1)。選択肢2は誤りで、片側だけの設定ではピアリングは確立されず、両側で構成が揃って初めて有効になります。選択肢3は誤りで、ピアリングは推移しないため net-b を経由した net-a→net-c の自動到達はできません。",
+    "reference": "https://cloud.google.com/vpc/docs/vpc-peering",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-057",
+    "category": "deploy-implement",
+    "subTopic": "Cloud DNS マネージドゾーンとレコードセットの作成",
+    "difficulty": "medium",
+    "tags": ["cloud-dns", "managed-zone", "record-set"],
+    "question": "ドメイン example.com のパブリック DNS を Cloud DNS で管理します。マネージドゾーンを作成し、www.example.com を IP 203.0.113.10 に解決する A レコードを追加したいです。正しい手順はどれですか？",
+    "options": [
+      "gcloud compute addresses create でゾーンを作成し、gcloud compute dns add-record www.example.com A 203.0.113.10 でレコードを追加する",
+      "gcloud dns zones add でゾーンを作成し、gcloud dns records add www.example.com --type=A --value=203.0.113.10 でレコードを追加する",
+      "マネージドゾーンの作成だけでよく、A レコードはゾーン作成時に自動生成されるため別途追加は不要である",
+      "gcloud dns managed-zones create でゾーンを作成し、gcloud dns record-sets create www.example.com. --type=A --ttl=300 --rrdatas=203.0.113.10 --zone=<ゾーン名> でレコードを追加する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "Cloud DNS では `gcloud dns managed-zones create` でマネージドゾーンを作成し、`gcloud dns record-sets create <名前> --type=A --ttl=<秒> --rrdatas=<IP> --zone=<ゾーン名>` でレコードセットを追加します(選択肢3)。選択肢0の `gcloud compute addresses` は静的 IP 予約のコマンドで DNS ゾーン作成ではなく、`gcloud compute dns add-record` というコマンドも存在しません。選択肢1の `gcloud dns zones add` / `gcloud dns records add` というサブコマンドは存在しません(正しくは `managed-zones create` / `record-sets create`)。選択肢2は誤りで、A レコードは自動生成されず、明示的に作成する必要があります(ゾーン作成時に自動作成されるのは NS と SOA レコードのみ)。",
+    "reference": "https://cloud.google.com/dns/docs/records",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-058",
+    "category": "deploy-implement",
+    "subTopic": "Cloud Marketplace からのソリューションデプロイ",
+    "difficulty": "easy",
+    "tags": ["marketplace", "deployment", "solution"],
+    "question": "サードパーティ製の VM ベースのソフトウェア(例: 特定の WordPress スタック)を、構成済みのソリューションとして手早く Google Cloud にデプロイしたいです。最も適切な方法はどれですか？",
+    "options": [
+      "Compute Engine で空の VM を作成し、OS インストールからミドルウェアの設定まですべて手作業で構築する以外に方法はない",
+      "Google Cloud Marketplace で目的のソリューションを選び、表示される構成画面に従って起動(デプロイ)する",
+      "Cloud Storage に WordPress の zip をアップロードすれば、Marketplace が自動的に VM 化してデプロイしてくれる",
+      "App Engine に gcloud app deploy すれば Marketplace のソリューションが自動で展開される"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Google Cloud Marketplace では、ベンダーが事前構成したソフトウェアソリューション(VM ベースのスタック等)をカタログから選び、画面の構成項目を設定して起動するだけでデプロイできます(選択肢1)。これにより手動構築の手間を省けます。選択肢0は誤りで、Marketplace を使えば手作業フルビルドは不要です。選択肢2は誤りで、Cloud Storage への zip アップロードでソリューションが自動 VM 化される仕組みはありません(Marketplace のデプロイは製品リスティングから行います)。選択肢3も誤りで、`gcloud app deploy` は App Engine への自前アプリのデプロイ用であり、Marketplace ソリューションの展開とは無関係です。",
+    "reference": "https://cloud.google.com/marketplace/docs/deploy-through-CLI",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-059",
+    "category": "deploy-implement",
+    "subTopic": "Cloud Deployment Manager / Infrastructure Manager によるIaC",
+    "difficulty": "medium",
+    "tags": ["deployment-manager", "iac", "infrastructure-manager", "yaml"],
+    "question": "Google Cloud ネイティブの宣言的 IaC で、YAML 構成ファイルに複数リソースの望ましい状態を定義してデプロイ単位として管理したいと考えています。Cloud Deployment Manager に関する正しい記述はどれですか？",
+    "options": [
+      "Deployment Manager は HCL(.tf)形式の構成ファイルだけを受け付け、YAML は使用できない",
+      "Deployment Manager は YAML の構成ファイルでリソースを宣言的に定義する Google Cloud ネイティブの IaC サービスだが、現在はサポート終了が予定されており、新規には Infrastructure Manager や Terraform への移行が推奨される",
+      "Deployment Manager は gcloud コマンドを順番に実行するだけの命令的(imperative)ツールであり、宣言的な構成ファイルは扱えない",
+      "Deployment Manager のデプロイは作成のみ可能で、構成ファイルを更新して既存デプロイに差分適用(更新)することはできない"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Cloud Deployment Manager は、YAML の構成ファイルに Google Cloud リソースの望ましい状態を宣言的に記述してデプロイ単位で管理する、Google Cloud ネイティブの IaC サービスです。ただし現在はサポート終了が予定されており、新規利用には Infrastructure Manager や Terraform への移行が推奨されています(選択肢1)。選択肢0は誤りで、Deployment Manager の構成ファイルは YAML(テンプレートは Jinja/Python)であり HCL ではありません(HCL は Terraform)。選択肢2は誤りで、Deployment Manager は宣言的な構成ファイルを扱うツールです(命令的に gcloud を並べるのとは異なります)。選択肢3も誤りで、構成ファイルを更新して既存デプロイへ差分適用(更新)できます。",
+    "reference": "https://cloud.google.com/deployment-manager/docs/configuration/create-basic-configuration",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-deploy-060",
+    "category": "deploy-implement",
+    "subTopic": "Terraform の state 管理(GCSリモートバックエンド)",
+    "difficulty": "hard",
+    "tags": ["terraform", "remote-state", "gcs-backend", "iac"],
+    "question": "チームで Terraform を運用しています。state ファイルをローカルに置くと、メンバー間で state が共有されず、同時実行による競合や破損のリスクがあります。これを解決するため、state を安全に共有・ロックできるリモートバックエンドを構成したいです。Google Cloud で最も適切な方法はどれですか？",
+    "options": [
+      "各メンバーが自分の terraform.tfstate をローカルに保持し、変更後に Git にコミットして手動でマージし続ける",
+      "state を一切保存しない設定にして、apply のたびに既存リソースをすべて作り直すことで競合を避ける",
+      "Cloud Storage バケットを用意し、terraform ブロックに backend \"gcs\" { bucket = \"...\" } を設定して state をリモート保存する(GCS バックエンドは state のロックにも対応する)",
+      "BigQuery のテーブルに state を JSON として書き込み、クエリで各メンバーが参照・更新する"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "Terraform の state をチームで安全に共有するには、Cloud Storage(GCS)をリモートバックエンドに使うのが Google Cloud での標準です。`terraform { backend \"gcs\" { bucket = \"...\" } }` を設定して `terraform init` で初期化すると state がバケットに保存され、GCS バックエンドは state のロックにも対応するため同時実行による競合・破損を防げます(選択肢2)。選択肢0のローカル state + 手動マージは、state が機密情報を含むうえバイナリ的に手動マージは破綻しやすく、ロックも効かないため推奨されません。選択肢1の『state を保存しない』は Terraform の差分管理の前提を壊し、毎回の再作成は危険で現実的でありません。選択肢3の BigQuery への保存は Terraform のバックエンドとして対応しておらず、ロックや整合性も担保されません。",
+    "reference": "https://cloud.google.com/docs/terraform/resource-management/store-state",
+    "relatedMaterials": []
   }
 ]

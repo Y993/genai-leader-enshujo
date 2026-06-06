@@ -340,5 +340,594 @@
     "explanation": "Workload Identity Federation は、AWS・Azure・OIDC/SAML などの外部 ID プロバイダと連携し、サービスアカウントキーを配布せずに外部ワークロードへ Google Cloud リソースへのアクセスを許可します（選択肢1）。また、データアクセス監査ログを含む非公開ログの閲覧には roles/logging.privateLogViewer などの適切なロールが必要で、roles/editor では閲覧できません（選択肢3）。選択肢0は誤りで、キー配布はむしろ漏えいリスクがあり、Workload Identity Federation のようなキーレス連携が推奨されます。選択肢2も誤りで、データアクセス監査ログは（BigQuery 等を除き）既定で無効で明示的に有効化が必要であり、常時有効・無効化不可なのは管理アクティビティ監査ログの方です。",
     "reference": "https://cloud.google.com/logging/docs/audit/configure-data-access",
     "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-019",
+    "category": "access-security",
+    "subTopic": "IAM ポリシー構造（メンバー/ロール/バインディング）と get/set-iam-policy",
+    "difficulty": "medium",
+    "tags": ["iam", "allow-policy", "binding", "get-iam-policy", "set-iam-policy"],
+    "question": "IAM の許可（allow）ポリシーの構造と、それを取得・変更する gcloud 操作に関する説明として正しいものはどれですか？",
+    "options": [
+      "許可ポリシーは 1 つのバインディングに 1 人のプリンシパルしか書けず、複数人に同じロールを与えるには別々のバインディングを作る必要がある",
+      "バインディングはロール・条件と、それを付与する複数のプリンシパル（member）の集合を結びつけたもので、ポリシーはバインディングの集合である",
+      "ポリシーには etag が含まれており、これは課金 ID を表すため set-iam-policy 時には毎回新しい値を生成して上書きする",
+      "set-iam-policy は単一のバインディングを追記するコマンドで、既存のポリシー全体には影響しない"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "許可ポリシーは role binding（バインディング）の集合で、各バインディングは 1 つのロール（と任意の条件）に対して 1 人以上のプリンシパル（member）を結び付けます（選択肢1）。選択肢0は誤りで、1 つのバインディングの members には複数のプリンシパルを列挙できます。選択肢2は誤りで、etag は同時更新による上書き衝突を防ぐための並行制御用の値であり、課金 ID ではありません。読み取り（get-iam-policy）で得た etag をそのまま付けて set-iam-policy することで、他者の変更を意図せず壊さないようにします。選択肢3も誤りで、set-iam-policy はファイルで与えたポリシー全体を置き換えるコマンドです。1 件だけ追記したい場合は add-iam-policy-binding を使います。",
+    "reference": "https://cloud.google.com/iam/docs/policies",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-020",
+    "category": "access-security",
+    "subTopic": "allUsers / allAuthenticatedUsers と公開アクセスの制御・誤公開防止",
+    "difficulty": "hard",
+    "tags": ["iam", "allUsers", "allAuthenticatedUsers", "public-access", "domain-restricted-sharing"],
+    "question": "Cloud Storage バケットの公開（パブリックアクセス）に関する説明として正しいものを2つ選んでください。",
+    "options": [
+      "allAuthenticatedUsers にロールを付与すると、社内ユーザーだけに公開され、Google アカウントを持つ外部の第三者には公開されない",
+      "allUsers にロールを付与すると、認証なしでインターネット上の誰でもアクセスできる、完全な匿名公開になる",
+      "組織ポリシーの constraints/iam.allowedPolicyMemberDomains（ドメイン制限共有）を使うと、allUsers / allAuthenticatedUsers への付与を含む組織外プリンシパルへの公開を未然に防げる",
+      "バケットの公開防止（Public Access Prevention）を有効にしても、allUsers への objectViewer 付与は許可されたままになる"
+    ],
+    "isMultiple": true,
+    "correct": [1, 2],
+    "explanation": "allUsers は認証の有無に関係なくインターネット上の誰でも（匿名で）を表す特別なプリンシパルで、これにロールを付与すると完全な匿名公開になります（選択肢1）。誤公開を組織的に防ぐには、組織ポリシーのドメイン制限共有（constraints/iam.allowedPolicyMemberDomains）で許可するプリンシパルのドメインを限定し、allUsers / allAuthenticatedUsers などの組織外プリンシパルへの付与をブロックできます（選択肢2）。選択肢0は誤りで、allAuthenticatedUsers は『Google アカウント等で認証された任意のユーザー』を意味し、社内に限定されず外部の第三者も含むため公開範囲は非常に広くなります。選択肢3も誤りで、Public Access Prevention（公開アクセスの防止）を有効にすると allUsers / allAuthenticatedUsers への付与による公開が禁止されます。",
+    "reference": "https://cloud.google.com/storage/docs/access-control/making-data-public",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-021",
+    "category": "access-security",
+    "subTopic": "IAM Deny（拒否）ポリシー",
+    "difficulty": "hard",
+    "tags": ["iam", "deny-policy", "guardrails", "denied-principals", "exception-principals"],
+    "question": "ある開発者グループは roles/owner を継承しているが、組織のセキュリティ方針として『特定の高リスク権限（例: iam.serviceAccountKeys.create）だけは、たとえオーナーであっても誰も使えないようにする。ただしセキュリティ管理者グループは例外的に使える』を一元的に強制したいとします。最も適切な方法はどれですか？",
+    "options": [
+      "IAM 拒否（deny）ポリシーを作成し、deniedPrincipals に全員を、deniedPermissions に対象権限を指定したうえで、exceptionPrincipals にセキュリティ管理者グループを設定する",
+      "開発者グループから roles/owner を剥奪し、必要な権限だけを事前定義ロールで付け直す",
+      "対象権限を含むカスタムロールを作成し、開発者グループにそのカスタムロールを付与する",
+      "IAM Conditions を使い、開発者グループの roles/owner に『対象権限を使えない』という条件式を付与する"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "IAM 拒否ポリシーは許可ポリシーより先に評価され、deniedPrincipals に挙げたプリンシパルが deniedPermissions の権限を使うことを、付与済みロール（オーナーを含む）に関わらずブロックします。exceptionPrincipals に挙げたプリンシパルはその拒否から除外されるため、『全員拒否＋管理者だけ例外』というガードレールを直接表現できます（選択肢0）。選択肢1の roles/owner 剥奪は影響が大きく、対象の 1 権限だけを止めたいという要件に対して粗すぎ、しかも継承元での再付与を防げません。選択肢2のカスタムロール作成は権限を『与える』方向の操作で、すでに継承しているオーナー権限による実行を止められません。選択肢3の IAM Conditions は許可バインディングを条件付きにする仕組みで、特定の権限だけを禁止する（差し引く）用途には使えず、別経路で継承した広い権限も止められません。",
+    "reference": "https://cloud.google.com/iam/docs/deny-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-022",
+    "category": "access-security",
+    "subTopic": "ロール付与の階層と継承（継承権限は下位で減算不可・有効権限の合算）",
+    "difficulty": "hard",
+    "tags": ["iam", "resource-hierarchy", "inheritance", "effective-policy", "least-privilege"],
+    "question": "あるユーザーは組織レベルで roles/editor を継承しています。運用チームから『このユーザーがプロジェクト X では閲覧（viewer）相当しか持てないようにしたい』と相談されました。プロジェクト X の許可（allow）ポリシーだけで実現できる事柄として正しいものはどれですか？",
+    "options": [
+      "プロジェクト X でこのユーザーに roles/viewer を付与すれば、組織レベルの roles/editor が上書きされ、X では閲覧だけに制限できる",
+      "有効な権限は『リソース自身＋祖先』の許可ポリシーの和集合になるため、X の許可ポリシーで roles/editor を減算することはできず、X でも editor 権限が有効なままになる",
+      "プロジェクト X で当該ユーザーへのバインディングをすべて削除すれば、継承した roles/editor も消える",
+      "下位（X）のポリシーは上位（組織）より優先されるため、X で何も付与しなければ自動的に閲覧だけになる"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "あるリソースで有効な権限は、そのリソース自身の許可ポリシーと、すべての祖先（組織・フォルダ）から継承した許可ポリシーの和集合です。許可ポリシーは権限を『足す』ことしかできず、下位リソースで継承した権限を減算・上書きすることはできません。よって組織レベルの roles/editor はプロジェクト X でも有効なまま残ります（選択肢1）。選択肢0は誤りで、X で roles/viewer を足しても editor が消えるわけではなく、両者の和になるだけです。選択肢2も誤りで、X 上のバインディングを消しても組織から継承した付与は X 側の操作では消えません。選択肢3も誤りで、継承は上位から下位へ流れ、下位が上位を優先・打ち消すことはありません。継承した権限を減らしたい場合は、上位の付与自体を見直すか、IAM 拒否ポリシーでガードレールを設けます。",
+    "reference": "https://cloud.google.com/iam/docs/resource-hierarchy-access-control",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-023",
+    "category": "access-security",
+    "subTopic": "事前定義ロールの粒度と検索（gcloud iam roles describe / 適切なロール選定）",
+    "difficulty": "medium",
+    "tags": ["iam", "predefined-roles", "gcloud", "roles-describe", "least-privilege"],
+    "question": "ある担当者に Pub/Sub のトピックへメッセージを発行（publish）させたいが、サブスクリプションの管理やトピックの削除はさせたくありません。どの事前定義ロールが要件に合うかを確かめるため、ロールに含まれる権限を CLI で確認したいとき、最も適切な組み合わせはどれですか？",
+    "options": [
+      "roles/pubsub.admin を付与しておけば publish できる。確認は不要",
+      "roles/pubsub.editor を付与する。gcloud iam roles list で全権限が見られる",
+      "roles/pubsub.publisher を選び、gcloud iam roles describe roles/pubsub.publisher で含まれる権限（pubsub.topics.publish 等）を確認してから付与する",
+      "基本ロール roles/editor を付与し、Pub/Sub だけに効くよう IAM が自動で絞り込む"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "発行のみが必要なら、その用途に絞られた事前定義ロール roles/pubsub.publisher が最小権限に最も近く、gcloud iam roles describe roles/pubsub.publisher でそのロールに含まれる個々の権限（pubsub.topics.publish など）を確認してから付与するのが適切です（選択肢2）。roles/pubsub.admin（選択肢0）はトピック/サブスクリプションの作成・削除や IAM 変更まで可能で過剰です。roles/pubsub.editor（選択肢1）も発行以外の編集権限を含み過剰で、加えて特定ロールの権限を見るには describe を使います（list は確認したいロールの権限一覧そのものを返しません）。roles/editor（選択肢3）は基本ロールで Pub/Sub に自動で絞り込まれることはなく、プロジェクト全体に広い権限を与えてしまいます。",
+    "reference": "https://cloud.google.com/iam/docs/understanding-roles",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-024",
+    "category": "access-security",
+    "subTopic": "サービスアカウントの種類（ユーザー管理/Google管理/デフォルト）の違い",
+    "difficulty": "medium",
+    "tags": ["service-account", "default-sa", "service-agent", "google-managed"],
+    "question": "サービスアカウントの種類に関する説明として正しいものはどれですか？",
+    "options": [
+      "デフォルトサービスアカウントは Google が完全に管理する『サービスエージェント』であり、利用者は無効化も削除もできない",
+      "サービスエージェント（Google 管理のサービスアカウント）は、Google Cloud サービスが利用者リソースを操作するために Google が作成・管理するもので、通常プロジェクトの SA 一覧には表示されない",
+      "ユーザー管理サービスアカウントは Google が自動で作成するため、利用者が新規に作成することはできない",
+      "Compute Engine のデフォルトサービスアカウントは Google 管理のサービスエージェントなので、付与されたロールを利用者が変更することはできない"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "サービスエージェント（Google 管理のサービスアカウント）は、各 Google Cloud サービスが利用者のリソースを操作するために Google が作成・管理する SA で、通常はプロジェクトのサービスアカウント一覧には表示されず、IAM ポリシーや監査ログに現れます（選択肢1）。選択肢0は誤りで、デフォルトサービスアカウントは『ユーザー管理 SA』の一種で、利用者が無効化・削除できます（サービスエージェントではありません）。選択肢2も誤りで、ユーザー管理 SA は利用者が任意に作成・管理できます（その一部が自動作成されるデフォルト SA）。選択肢3も誤りで、Compute Engine のデフォルト SA はユーザー管理 SA であり、付与されたロール（例: 既定の Editor）を利用者が見直し・変更できます。",
+    "reference": "https://cloud.google.com/iam/docs/service-account-types",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-025",
+    "category": "access-security",
+    "subTopic": "デフォルトSAの広すぎる権限と是正（自動ロール付与の無効化）",
+    "difficulty": "medium",
+    "tags": ["service-account", "default-sa", "editor-role", "least-privilege", "organization-policy"],
+    "question": "新しいプロジェクトを多数作成して運用しています。Compute Engine のデフォルトサービスアカウントが既定で広い権限を持つことを問題視し、(1) 今後作成されるプロジェクトのデフォルト SA に強い権限が自動で付かないようにし、(2) 各ワークロードには用途に絞った SA を割り当てたい。最も適切な対応はどれですか？",
+    "options": [
+      "組織ポリシー iam.automaticIamGrantsForDefaultServiceAccounts を有効化してデフォルト SA への自動付与を無効化し、各ワークロード用に最小権限の専用 SA を作成してアタッチする",
+      "デフォルトサービスアカウントを削除し、すべてのワークロードに roles/owner を持つ単一の共有 SA を使わせる",
+      "デフォルト SA に付いている権限は変更できないため、各 VM の OS 側のファイアウォールで API 通信を遮断する",
+      "デフォルト SA に roles/owner を追加で付与し、IAM Conditions で時間制限をかける"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "デフォルト SA は既定で Editor 相当の広い権限を持ちがちで、これを是正するには組織ポリシー iam.automaticIamGrantsForDefaultServiceAccounts を有効化して新規プロジェクトでの自動ロール付与を止め、加えてワークロードごとに最小権限の専用 SA を作ってアタッチするのがベストプラクティスです（選択肢0）。選択肢1は逆効果で、roles/owner を持つ単一 SA を共有すると権限が最大化し、影響範囲の分離もできず最小権限に反します。選択肢2は誤りで、デフォルト SA のロールは利用者が変更可能ですし、OS 側で API を塞ぐのは運用を壊す不適切な回避策です。選択肢3も誤りで、roles/owner の追加付与は権限過多そのもので、時間制限を付けても根本的な過剰権限は解消されません。",
+    "reference": "https://cloud.google.com/iam/docs/best-practices-service-accounts",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-026",
+    "category": "access-security",
+    "subTopic": "SAをリソースとして見るIAMとアイデンティティとして見るIAMの区別",
+    "difficulty": "hard",
+    "tags": ["service-account", "iam", "serviceAccountUser", "actAs", "identity-vs-resource"],
+    "question": "サービスアカウントに関わる 2 種類の IAM（『誰がその SA を使えるか＝SA をリソースとして見る IAM』と『その SA が何にアクセスできるか＝SA をアイデンティティとして見る IAM』）について、正しい説明を2つ選んでください。",
+    "options": [
+      "ある SA を VM にアタッチして起動するには、その SA に対して roles/iam.serviceAccountUser を付与された人がいる必要がある（SA をリソースとして見る IAM）",
+      "アタッチした SA が Cloud Storage を読めるようにするには、その SA 自身（アイデンティティ）に roles/storage.objectViewer を付与する（SA をアイデンティティとして見る IAM）",
+      "SA に roles/iam.serviceAccountUser を付与すれば、その SA はあらゆる Google Cloud リソースにアクセスできるようになる",
+      "SA に対して roles/storage.objectViewer を付与すると、その SA を使える人間ユーザーの一覧を制御できる"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "サービスアカウントには 2 つの視点の IAM があります。1 つは『SA をリソースとして見る IAM』で、SA に対して roles/iam.serviceAccountUser（actAs 権限）を持つプリンシパルだけが、その SA を VM などにアタッチして起動できます（選択肢0）。もう 1 つは『SA をアイデンティティとして見る IAM』で、その SA が他リソース（例: Cloud Storage）へアクセスするには、SA 自身をプリンシパルとしてロール（roles/storage.objectViewer 等）を付与します（選択肢1）。選択肢2は誤りで、serviceAccountUser は『その SA を使える人』を決めるだけで、SA のアクセス先を広げるものではありません。選択肢3も誤りで、SA に storage.objectViewer を付けるのはアイデンティティ側（アクセス先）の設定で、誰がその SA を使えるかの制御ではありません。",
+    "reference": "https://cloud.google.com/iam/docs/service-account-permissions",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-027",
+    "category": "access-security",
+    "subTopic": "SAキーのローテーション/有効期限管理と漏洩時の対応",
+    "difficulty": "medium",
+    "tags": ["service-account", "service-account-key", "rotation", "incident-response", "keyless"],
+    "question": "ユーザー管理サービスアカウントの鍵（JSON キー）が誤って公開リポジトリにコミットされ、漏えいした疑いがあります。被害を最小化しつつ恒久対策も行う対応として、最も適切なものはどれですか？",
+    "options": [
+      "鍵は既定で有効期限が来れば自動的に失効するので、期限切れまで待てばよい",
+      "漏えいした鍵を無効化または削除して即座に失効させ、必要に応じて新しい鍵へローテーションし、恒久対策として可能な箇所はキーレス（Workload Identity / impersonation / アタッチ SA）へ移行する",
+      "その SA のメールアドレスを変更すれば、古い鍵は使えなくなる",
+      "漏えいした鍵はそのまま残し、SA に IAM 拒否ポリシーを付けて読み取りだけ許可する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "鍵漏えい時はまず漏えいした鍵を無効化または削除して即座に失効させ（被害の遮断）、必要なら新しい鍵を作成してローテーションし、恒久対策として可能な箇所はサービスアカウントキー自体を使わないキーレス方式（Workload Identity / impersonation による短期認証情報 / リソースへの SA アタッチ）へ移行します（選択肢1）。選択肢0は誤りで、ユーザー管理 SA の鍵は既定で有効期限がなく、放置すれば漏えいした鍵は使われ続けます。選択肢2は誤りで、SA のメールアドレスは変更できず、また鍵の失効手段にもなりません。選択肢3も誤りで、漏えい鍵を残したままにするのは危険であり、拒否ポリシーで一部許可する発想は被害遮断になりません。",
+    "reference": "https://cloud.google.com/iam/docs/keys-create-delete",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-028",
+    "category": "access-security",
+    "subTopic": "組織ポリシーによるSAキー作成禁止（disableServiceAccountKeyCreation）",
+    "difficulty": "medium",
+    "tags": ["organization-policy", "service-account-key", "constraints", "governance", "keyless"],
+    "question": "セキュリティ方針として、組織全体で『ユーザー管理サービスアカウントの外部キー（JSON キー）を新規に作成できないようにし、各チームにはキーレスの認証方式を使わせたい』とします。最も適切な手段はどれですか？",
+    "options": [
+      "各プロジェクトのオーナーに『キーを作らないでください』と口頭で周知する",
+      "すべての SA から roles/iam.serviceAccountKeyAdmin を剥奪する（ただし新規付与は禁止しない）",
+      "Secret Manager にすべての SA キーを保存することを必須化する",
+      "組織ポリシーで constraints/iam.disableServiceAccountKeyCreation を有効化し、配下のプロジェクトで新規 SA キー作成をブロックする"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "組織ポリシーの制約 constraints/iam.disableServiceAccountKeyCreation を有効化すると、配下のプロジェクトで新しいユーザー管理 SA キー（および Cloud Storage HMAC キー）の作成が一元的にブロックされ、キーレス方式の利用を促せます（選択肢3）。選択肢0の口頭周知は強制力がなく、ガバナンスとして不十分です。選択肢1のロール剥奪は抜け道（再付与や別ロール経由）が残り、組織横断で確実に止められないうえ、構成の制限は IAM ではなく組織ポリシーで行うのが適切です。選択肢2の Secret Manager 保存はキーの管理場所の話で、キー作成そのものを禁止する施策ではありません。",
+    "reference": "https://cloud.google.com/resource-manager/docs/organization-policy/restricting-service-accounts",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-029",
+    "category": "access-security",
+    "subTopic": "短期（有効期限付き）認証情報の発行（IAM Credentials API / print-access-token）",
+    "difficulty": "medium",
+    "tags": ["short-lived-credentials", "iam-credentials-api", "access-token", "impersonation", "gcloud"],
+    "question": "CI/CD ジョブから、本番用 SA build-sa@example.iam.gserviceaccount.com の権限で一時的に API を呼びたいとします。長期の SA キーを配布せず、必要なときだけ短期のアクセストークンを取得して使う方法として最も適切なものはどれですか？",
+    "options": [
+      "build-sa の JSON キーを CI のシークレットに保存し、毎回そのキーで認証する",
+      "build-sa に roles/owner を付与し、CI から直接ログインさせる",
+      "呼び出し元に build-sa への roles/iam.serviceAccountTokenCreator を付与し、gcloud auth print-access-token --impersonate-service-account=build-sa@... 等で IAM Credentials API から短期アクセストークンを取得して使う",
+      "build-sa の API キーを発行し、トークンの代わりにそれを使う"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "短期認証情報の発行は IAM Credentials API（generateAccessToken）で行い、呼び出し元に対象 SA への roles/iam.serviceAccountTokenCreator を付与しておくと、gcloud auth print-access-token --impersonate-service-account=... 等で有効期限付きのアクセストークン（既定 1 時間）を取得できます。長期キーの配布が不要で漏えいリスクを抑えられます（選択肢2）。選択肢0は長期キーを配布・保存しており、漏えい時の被害が大きく方針に反します。選択肢1は roles/owner という過剰権限で、最小権限にも短期認証にも反します。選択肢3の API キーは一部 API の識別子であって認証・認可の主体（ID）にはならず、SA の権限での実行には使えません。",
+    "reference": "https://cloud.google.com/iam/docs/create-short-lived-credentials-direct",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-030",
+    "category": "access-security",
+    "subTopic": "impersonation 権限（serviceAccountTokenCreator）と委譲チェーンの設計",
+    "difficulty": "hard",
+    "tags": ["service-account", "impersonation", "serviceAccountTokenCreator", "delegation-chain", "least-privilege"],
+    "question": "委譲（delegation）の設計について考えます。ユーザー alice が SA-A になりすまし、さらに SA-A が SA-B になりすまして SA-B の権限で操作する、という委譲チェーンを構成したいとします。必要なロールの付与として正しいものはどれですか？",
+    "options": [
+      "alice に組織レベルで roles/iam.serviceAccountTokenCreator を 1 回付与すれば、チェーン全体が自動的に成立する",
+      "alice に SA-A への roles/iam.serviceAccountTokenCreator を、SA-A に SA-B への roles/iam.serviceAccountTokenCreator を、それぞれ付与する（各ホップごとに対象 SA へ付与）",
+      "alice に SA-B への roles/iam.serviceAccountUser を付与すれば、SA-A を介さずに SA-B になりすませる",
+      "SA-B に SA-A への roles/iam.serviceAccountTokenCreator を付与すれば、alice は SA-B になりすませる"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "なりすまし（impersonation）は『なりすます側』が『なりすまされる側の SA』に対して roles/iam.serviceAccountTokenCreator を持つことで成立します。委譲チェーンでは各ホップごとにこの関係が必要で、alice→SA-A のために alice に SA-A への tokenCreator を、SA-A→SA-B のために SA-A に SA-B への tokenCreator を付与します（選択肢1）。選択肢0は誤りで、組織レベルに 1 回付けるのは最小権限に反するうえ、設問が問う『各ホップに必要な対象 SA への付与』という設計の理解として不適切です（広すぎる付与は避けるべき）。選択肢2は誤りで、serviceAccountUser は SA をリソースにアタッチして使う権限であり、トークン発行によるなりすまし（短期認証情報の取得）には tokenCreator が必要です。選択肢3は付与の向きが逆で、SA-B に SA-A への権限を与えても alice が SA-B になりすませるようにはなりません。",
+    "reference": "https://cloud.google.com/iam/docs/service-account-permissions",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-031",
+    "category": "access-security",
+    "subTopic": "ランタイムSAのアタッチ（VM/Cloud Run/GKE）と最小権限",
+    "difficulty": "medium",
+    "tags": ["service-account", "cloud-run", "runtime-identity", "attach", "least-privilege"],
+    "question": "Cloud Run サービスから BigQuery のデータを読み取らせたいとします。最小権限のベストプラクティスに沿った、ランタイム（実行時）の ID 構成として最も適切なものはどれですか？",
+    "options": [
+      "Cloud Run の既定（デフォルトの Compute Engine SA）をそのまま使い、追加設定はしない",
+      "サービスアカウントキーを Cloud Run の環境変数に入れ、コードからそのキーで認証する",
+      "Cloud Run のデフォルト SA に roles/owner を付与してあらゆる API を呼べるようにする",
+      "用途に絞った専用 SA を作成し、roles/bigquery.dataViewer 等の最小ロールを付与して、その SA を Cloud Run サービスのランタイム ID としてアタッチする"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "Cloud Run などのワークロードには、用途に絞った専用 SA を作成して必要最小限のロール（例: BigQuery 読み取りなら roles/bigquery.dataViewer）だけを付与し、その SA をサービスのランタイム ID としてアタッチするのがベストプラクティスです。実行時はメタデータサーバー経由で短期トークンを取得でき、キー配布は不要です（選択肢3）。選択肢0のデフォルト SA をそのまま使う方法は、デフォルト SA が広い権限を持ちがちで最小権限に反します。選択肢1のキーを環境変数に入れる方法は漏えいリスクが高く、キーレスにできる場面では推奨されません。選択肢2の roles/owner 付与は権限過多そのものです。",
+    "reference": "https://cloud.google.com/run/docs/securing/service-identity",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-032",
+    "category": "access-security",
+    "subTopic": "Policy Troubleshooter / Policy Analyzer による有効権限の調査",
+    "difficulty": "medium",
+    "tags": ["policy-troubleshooter", "policy-analyzer", "policy-intelligence", "effective-access", "iam"],
+    "question": "IAM の有効な権限（effective access）を調査するツールについて、正しい説明を2つ選んでください。",
+    "options": [
+      "Policy Troubleshooter は『特定のプリンシパルが、特定のリソースに対して、特定の権限を持っているか』を判定し、許可/拒否の理由（どのバインディングが効いたか等）を示す",
+      "Policy Analyzer は『どのプリンシパルが、どのリソースに、どんなアクセスを持つか』を、リソース階層の継承も踏まえて一覧・検索できる",
+      "Policy Troubleshooter は IAM ポリシーを自動的に書き換えて、不足している権限を付与してくれる",
+      "Policy Analyzer は監査ログを無効化する設定ツールであり、権限の分析機能は持たない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "Policy Troubleshooter は『あるプリンシパルが、あるリソースに対して、ある権限を持つか』というピンポイントの判定を行い、許可ポリシー・拒否ポリシー等を評価して許可/拒否の理由（どのバインディングや継承が効いたか）を示します（選択肢0）。Policy Analyzer は『どのプリンシパルがどのリソースにどんなアクセスを持つか』を、階層の継承も踏まえて探索・一覧できる分析ツールです（選択肢1）。選択肢2は誤りで、Policy Troubleshooter は診断ツールであり、ポリシーを自動で書き換えて権限を付与する機能はありません。選択肢3も誤りで、Policy Analyzer は監査ログを無効化する設定ツールではなく、アクセス分析を行うツールです。",
+    "reference": "https://cloud.google.com/policy-intelligence/docs/policy-analyzer-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-033",
+    "category": "access-security",
+    "subTopic": "プリンシパル種別（ユーザー/グループ/ドメイン/SA/allUsers）の理解",
+    "difficulty": "easy",
+    "tags": ["iam", "principal", "member", "identifiers", "google-workspace"],
+    "question": "IAM の許可ポリシーで使えるプリンシパル（member）の指定に関する説明として正しいものはどれですか？",
+    "options": [
+      "ロールを付与できるのは個々のユーザー（user:）だけで、グループやサービスアカウントには付与できない",
+      "domain: 接頭辞を使うと、Google Workspace / Cloud Identity の特定ドメインに属するすべてのアカウントへまとめてロールを付与できる",
+      "group: で指定できるのは Google グループだけでなく、任意の外部メーリングリストでもよい",
+      "serviceAccount: で指定したプリンシパルは、人間ユーザーがログインに使うためのものである"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "domain: 接頭辞は Google Workspace / Cloud Identity の特定ドメイン（例: domain:example.com）を表し、そのドメインに属する全アカウントへまとめてロールを付与できます（選択肢1）。選択肢0は誤りで、ロールは user: のほか group:（Google グループ）、serviceAccount:（サービスアカウント）、domain:、allUsers / allAuthenticatedUsers など多様なプリンシパルに付与できます。選択肢2は誤りで、group: で指定できるのは Google グループ（Google が認識するグループのメールアドレス）であり、無関係な任意の外部メーリングリストではありません。選択肢3も誤りで、serviceAccount: はワークロードの ID であって、人間がログインに使うものではありません。",
+    "reference": "https://cloud.google.com/iam/docs/principal-identifiers",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-034",
+    "category": "access-security",
+    "subTopic": "グループベースのIAM管理のベストプラクティス（個人付与の回避）",
+    "difficulty": "medium",
+    "tags": ["iam", "groups", "best-practices", "least-privilege", "access-management"],
+    "question": "頻繁にメンバーが入れ替わる開発チームに対し、複数のロール（複数プロジェクトにまたがる）をまとめて運用したいとします。アクセス管理を簡潔・安全に保つ Google 推奨のアプローチはどれですか？",
+    "options": [
+      "Google グループを作成してそのグループにロールを付与し、メンバーの増減はグループの所属で管理する（個人への直接付与を避ける）",
+      "メンバー全員に個別に同じロールを付与し、入退社のたびに各プロジェクトのポリシーを 1 件ずつ更新する",
+      "チーム全員が同じサービスアカウントキーを共有し、それで作業する",
+      "とりあえず開発チーム全員に roles/editor をプロジェクトへ個別付与しておく"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Google は、可能な限り個々のユーザーではなくグループにロールを付与することを推奨しています。グループにロールを付け、メンバーの増減はグループ所属で管理すれば、入退社や異動のたびに各プロジェクトの許可ポリシーを個別に書き換える必要がなくなり、付与の一貫性と監査性も高まります（選択肢0）。選択肢1は個人付与で、メンバー変更のたびに多数のポリシー更新が必要になり、漏れ・ミスの温床になります。選択肢2はキー共有で、責任追跡（誰が操作したか）が不能になり漏えいリスクも高く、重大なアンチパターンです。選択肢3は基本ロール roles/editor の広範な権限を全員に与えるもので、最小権限にもグループ管理にも反します。",
+    "reference": "https://cloud.google.com/iam/docs/using-iam-securely",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-035",
+    "category": "access-security",
+    "subTopic": "Cloud Audit Logs の4種別（管理アクティビティ/データアクセス/システムイベント/ポリシー拒否）の特性",
+    "difficulty": "medium",
+    "tags": ["audit-logs", "admin-activity", "data-access", "system-event", "policy-denied"],
+    "question": "Cloud Audit Logs の4種別について、それぞれが記録する内容の組み合わせとして正しいものはどれですか？",
+    "options": [
+      "システムイベント監査ログは、ユーザーが構成を変更する API 呼び出しを記録する",
+      "管理アクティビティ監査ログは、リソースの構成やメタデータを変更するユーザー起点の操作を記録し、システムイベント監査ログは、ユーザー操作によらず Google Cloud のシステムが構成を変更したイベント（例: オートスケーリング）を記録する",
+      "データアクセス監査ログは、Google Cloud のシステムが自動的に行う構成変更だけを記録する",
+      "ポリシー拒否監査ログは、リソースのデータの読み取り（read）操作を記録する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "管理アクティビティ監査ログはリソースの構成・メタデータを変更するユーザー起点の操作を記録し、システムイベント監査ログはユーザー操作によらず Google Cloud のシステムが構成を変更したイベント（オートスケーリングなど）を記録します（選択肢1）。選択肢0は誤りで、ユーザー起点の構成変更を記録するのは管理アクティビティ監査ログであり、システムイベント監査ログではありません。選択肢2は誤りで、システムによる自動構成変更を記録するのはシステムイベント監査ログで、データアクセス監査ログはデータの読み書きや構成・メタデータの読み取りを記録します。選択肢3も誤りで、ポリシー拒否監査ログはセキュリティポリシー違反でアクセスが拒否された事象を記録するものであり、データの read 操作を記録するのはデータアクセス監査ログです。",
+    "reference": "https://cloud.google.com/logging/docs/audit",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-036",
+    "category": "access-security",
+    "subTopic": "データアクセス監査ログの有効化と特定プリンシパルの除外設定",
+    "difficulty": "medium",
+    "tags": ["audit-logs", "data-access", "exempted-principals", "iam-policy", "configuration"],
+    "question": "あるプロジェクトで Cloud Storage のデータアクセス監査ログ（DATA_READ / DATA_WRITE）を有効にしたいと考えています。ただし、大量のバッチ処理を実行する特定のサービスアカウント batch-sa@example.iam.gserviceaccount.com については、そのアクセスをログに記録したくありません。最も適切な構成はどれですか？",
+    "options": [
+      "データアクセス監査ログは既定で有効なので何もしなくてよいが、特定プリンシパルの除外はできない",
+      "対象サービスについてデータアクセス監査ログ（DATA_READ/DATA_WRITE）を有効化し、IAM ポリシーの auditConfigs で exemptedMembers にそのサービスアカウントを指定して記録から除外する",
+      "そのサービスアカウントから roles/storage.objectViewer を剥奪すれば、ログにも記録されなくなる",
+      "ログシンクの除外フィルタは使えないため、生成後に手動でログを削除する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "データアクセス監査ログは（BigQuery 等を除き）既定で無効なので、対象サービスについて DATA_READ/DATA_WRITE を有効化します。特定プリンシパルを記録対象から外すには、IAM ポリシーの auditConfigs で exemptedMembers（除外プリンシパル）にそのサービスアカウントを指定します（選択肢1）。選択肢0は誤りで、データアクセス監査ログは既定で無効ですし、exemptedMembers による特定プリンシパルの除外は可能です。選択肢2は誤りで、ロールを剥奪するとそのサービスアカウントの正当な処理自体ができなくなり、要件（記録だけを止める）を満たしません。選択肢3も誤りで、記録自体を生成しない除外設定（exemptedMembers）が用意されており、生成後の手動削除は不適切な運用です。",
+    "reference": "https://cloud.google.com/logging/docs/audit/configure-data-access",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-037",
+    "category": "access-security",
+    "subTopic": "監査ログの集約と SIEM へのエクスポート（集約シンク）とアクセス制御",
+    "difficulty": "hard",
+    "tags": ["audit-logs", "aggregated-sink", "log-export", "siem", "log-router"],
+    "question": "組織全体（全プロジェクト）のデータアクセス監査ログを 1 か所に集約し、外部 SIEM へ取り込めるようにしたいと考えています。要件は (1) 新規プロジェクトを含む組織配下のすべてのプロジェクトのログを漏れなく集める (2) リアルタイムに SIEM へ取り込めるストリーミング先へ送る (3) 集約用シンクを各プロジェクトに個別作成しなくて済むようにする、です。適切な構成を2つ選んでください。",
+    "options": [
+      "組織レベルで集約シンク（aggregated sink）を作成し、includeChildren を有効にして配下の全プロジェクトのログを 1 つのシンクでまとめて収集する",
+      "シンクの宛先（destination）を Pub/Sub トピックにして、SIEM がそのトピックを購読してリアルタイムに取り込めるようにする",
+      "各プロジェクトに同じフィルタのシンクを 1 つずつ手作業で作成し、新規プロジェクト作成のたびに追加していく",
+      "監査ログは Cloud Storage バケットにしかエクスポートできないため、SIEM 連携には日次のバッチ取り込みしか選べない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "組織（またはフォルダ）レベルの集約シンクを includeChildren 付きで作成すると、配下の全プロジェクト（新規を含む）のログを 1 つのシンクでまとめて収集できます（選択肢0）。シンクの宛先を Pub/Sub トピックにすれば、外部 SIEM がトピックを購読してログをほぼリアルタイムに取り込めます（選択肢1）。選択肢2は誤りで、プロジェクトごとに手作業でシンクを作る方式は新規プロジェクトで漏れが生じやすく、集約シンクを使う要件（個別作成の回避）に反します。選択肢3も誤りで、ログの宛先は Cloud Storage に限らず、Pub/Sub・BigQuery・Logging バケットなどを選べ、Pub/Sub 経由でリアルタイム取り込みが可能です。",
+    "reference": "https://cloud.google.com/logging/docs/export/aggregated_sinks",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-038",
+    "category": "access-security",
+    "subTopic": "Cloud KMS の鍵ローテーションとキーリング/鍵バージョン管理",
+    "difficulty": "medium",
+    "tags": ["kms", "key-rotation", "key-version", "primary-version", "encryption"],
+    "question": "Cloud KMS の対称鍵について、コンプライアンス要件に合わせて 90 日ごとに自動で鍵をローテーションする運用を行います。自動ローテーションの挙動として正しいものはどれですか？",
+    "options": [
+      "ローテーション期間を設定すると、新しい鍵バージョンが自動生成されてプライマリ（暗号化に使われる）バージョンになり、以前のバージョンは復号のために有効なまま残る",
+      "ローテーションすると、既存の鍵バージョンで暗号化されていたデータも自動的に新しいバージョンで再暗号化される",
+      "自動ローテーションを設定すると、古い鍵バージョンは即座に破棄され、それで暗号化したデータは復号できなくなる",
+      "対称鍵・非対称鍵のいずれも、まったく同じ方法で自動ローテーションが行える"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "対称鍵にローテーション期間を設定すると、Cloud KMS が新しい鍵バージョンを自動生成し、それを暗号化に使うプライマリバージョンにします。以前のバージョンは、それで暗号化された既存データを復号できるよう有効なまま残ります（選択肢0）。選択肢1は誤りで、ローテーションは過去データを自動で再暗号化しません（再暗号化は必要に応じて別途行う）。選択肢2も誤りで、古いバージョンが即座に破棄されることはなく、勝手に破棄すれば既存データが復号不能になります。選択肢3も誤りで、非対称鍵は自動ローテーションに対応しておらず、手動でのバージョン作成・公開鍵の再配布が必要です。",
+    "reference": "https://cloud.google.com/kms/docs/key-rotation",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-039",
+    "category": "access-security",
+    "subTopic": "サービス横断の CMEK 適用（GCS / BigQuery / Persistent Disk）",
+    "difficulty": "hard",
+    "tags": ["cmek", "kms", "cloud-storage", "bigquery", "persistent-disk", "service-agent"],
+    "question": "同一の Cloud KMS 鍵を使って、Cloud Storage バケット・BigQuery データセット・Compute Engine の永続ディスクを CMEK で保護したいとします。複数サービスへ横断的に CMEK を適用する際の正しい考え方はどれですか？",
+    "options": [
+      "CMEK は Cloud Storage でしか使えないため、BigQuery と永続ディスクは Google 管理の鍵のままにするしかない",
+      "各サービスは鍵を使うために自分自身の IAM ユーザーアカウントが必要で、ユーザーに roles/owner を付与すれば暗号化できる",
+      "対応サービスは CMEK 連携をサポートしており、各サービスのサービスエージェント（サービス アカウント）に対象鍵への roles/cloudkms.cryptoKeyEncrypterDecrypter を付与したうえで、リソース作成時にその鍵を指定する",
+      "CMEK 鍵は対象リソースと必ず別リージョンに作成しなければ暗号化できない"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "Cloud Storage・BigQuery・Compute Engine の永続ディスクはいずれも CMEK 連携に対応しており、各サービスのサービスエージェントに対象 KMS 鍵への roles/cloudkms.cryptoKeyEncrypterDecrypter を付与し、リソース作成時にその鍵を指定することで横断的に CMEK を適用できます（選択肢2）。選択肢0は誤りで、CMEK は多数のサービス（BigQuery や永続ディスクを含む）でサポートされています。選択肢1は誤りで、鍵を使うのは人間のユーザーアカウントではなく各サービスのサービスエージェントであり、roles/owner 付与は暗号化の仕組みではありません。選択肢3も誤りで、一般に CMEK 鍵は保護するリソースと同じロケーション（リージョン）に置く必要があり、別リージョン必須という決まりはありません。",
+    "reference": "https://cloud.google.com/kms/docs/cmek",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-040",
+    "category": "access-security",
+    "subTopic": "Identity-Aware Proxy（IAP）によるアプリ/TCP（SSH・RDP）アクセス制御",
+    "difficulty": "hard",
+    "tags": ["iap", "tcp-forwarding", "ssh", "rdp", "context-aware", "zero-trust"],
+    "question": "外部 IP を持たない Compute Engine VM 群に対して、(1) 管理者が VPN なしで SSH/RDP 接続できるようにし (2) 接続できるユーザーと対象 VM を IAM で細かく制御し (3) Web アプリへのアクセスも ID と IAM ロールに基づいて認可したい、という要件があります。Identity-Aware Proxy（IAP）の使い方として正しいものを2つ選んでください。",
+    "options": [
+      "IAP の TCP 転送を使い、roles/iap.tunnelResourceAccessor を付与したユーザーだけが、外部 IP のない VM へ SSH/RDP のトンネルを確立できるようにする（IAP 範囲の 35.235.240.0/20 からの ingress を許可するファイアウォールも必要）",
+      "IAP で保護した Web アプリ（HTTPS）に対し、roles/iap.httpsResourceAccessor などの IAM ロールで誰がアクセスできるかを認可し、ネットワーク層のファイアウォール頼みをやめてアプリ層のアクセス制御に移行する",
+      "IAP を使うには各 VM に外部 IP を割り当て、VM の OS にログインエージェントを常駐させる必要がある",
+      "IAP は Web アプリの認可専用で、SSH や RDP のような TCP 接続の制御には一切使えない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "IAP の TCP 転送を使うと、外部 IP を持たない VM に対しても、roles/iap.tunnelResourceAccessor（IAP で保護されたトンネル ユーザー）を持つプリンシパルだけが SSH/RDP のトンネルを確立でき、接続元 IAP 範囲 35.235.240.0/20 からの ingress を許可するファイアウォールを併せて設定します（選択肢0）。また IAP で保護した Web アプリには roles/iap.httpsResourceAccessor などで ID/IAM ベースの認可を行い、ネットワーク層中心からアプリ層のアクセス制御へ移行できます（選択肢1）。選択肢2は誤りで、IAP はむしろ外部 IP を不要にする仕組みで、外部 IP 付与は前提ではありません。選択肢3も誤りで、IAP は TCP 転送により SSH/RDP などの TCP 接続の制御にも使えます。",
+    "reference": "https://cloud.google.com/iap/docs/using-tcp-forwarding",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-041",
+    "category": "access-security",
+    "subTopic": "Cloud Armor のセキュリティポリシー（WAF / IP 許可・拒否 / レート制限）",
+    "difficulty": "medium",
+    "tags": ["cloud-armor", "waf", "rate-limiting", "ddos", "load-balancer"],
+    "question": "グローバル外部 Application Load Balancer の背後にある Web アプリを保護したいとします。要件は (1) 特定の悪意ある IP レンジをブロック (2) SQL インジェクションや XSS を検出・遮断 (3) 単一クライアントからの過剰なリクエストをしきい値でレート制限する、です。最も適切なサービスはどれですか？",
+    "options": [
+      "VPC ファイアウォールルールで L7 の WAF 検査とレート制限を構成する",
+      "Cloud CDN を有効にして、キャッシュ機能で SQL インジェクションとレート超過を遮断する",
+      "Cloud NAT を構成して、送信元 IP のブロックと WAF を実現する",
+      "Cloud Armor のセキュリティポリシーを Application Load Balancer のバックエンドサービスに割り当て、IP 許可/拒否ルール、OWASP ベースの事前構成 WAF ルール、レート制限ルールを設定する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "Cloud Armor のセキュリティポリシーを外部 Application Load Balancer のバックエンドサービスに割り当てると、IP アドレス/CIDR の許可・拒否、OWASP Core Rule Set ベースの事前構成 WAF ルール（SQLi/XSS 等の検出）、クライアント単位のレート制限を Google のエッジで適用でき、3 要件すべてを満たします（選択肢3）。選択肢0は誤りで、VPC ファイアウォールは L3/L4 中心で、WAF 検査やレート制限のような L7 のアプリ防御は提供しません。選択肢1は誤りで、Cloud CDN は配信高速化・キャッシュの仕組みであり WAF やレート制限のセキュリティ機能ではありません。選択肢2も誤りで、Cloud NAT は外向き通信の NAT 機能であり、受信トラフィックの WAF/IP 制御を行うものではありません。",
+    "reference": "https://cloud.google.com/armor/docs/security-policy-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-042",
+    "category": "access-security",
+    "subTopic": "組織ポリシーの具体的制約（ドメイン制限 / 外部 IP 無効化 / リソースロケーション）",
+    "difficulty": "hard",
+    "tags": ["organization-policy", "constraints", "domain-restricted-sharing", "resource-locations", "vm-external-ip"],
+    "question": "新しく発足した部門のフォルダに対し、(1) 自社の Cloud Identity ドメインに属するプリンシパルにだけ IAM ロールを付与できるようにする (2) このフォルダ配下では新しいリソースを EU リージョンにのみ作成できるようにする、という 2 つのガバナンス要件を組織ポリシーで実現したいとします。使用すべき制約の組み合わせはどれですか？",
+    "options": [
+      "(1) constraints/iam.allowedPolicyMemberDomains（ドメイン制限共有）と (2) constraints/gcp.resourceLocations（リソースロケーションの制限）",
+      "(1) constraints/compute.vmExternalIpAccess と (2) constraints/iam.disableServiceAccountKeyCreation",
+      "(1) constraints/gcp.resourceLocations と (2) constraints/compute.vmExternalIpAccess",
+      "(1) roles/resourcemanager.organizationAdmin の付与と (2) VPC ファイアウォールの地域制限ルール"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "ドメイン制限共有 constraints/iam.allowedPolicyMemberDomains は、IAM ロールを付与できるプリンシパルを許可リストのドメイン（Cloud Identity/Workspace のカスタマー ID）に属するものへ限定し、外部や allUsers などへの付与を防ぎます。リソースロケーションの制限 constraints/gcp.resourceLocations は、新規リソースを作成できるロケーションを EU 等に限定します。両者の組み合わせが要件に合致します（選択肢0）。選択肢1は外部 IP 制御と SA キー作成禁止で、ドメイン制限やロケーション制限の要件に合いません。選択肢2はロケーション制限は合っていますが、(1) に外部 IP 制御を使っており、IAM 付与先のドメイン制限になっていません。選択肢3はロールの付与とファイアウォールで、いずれも『構成の制限』を行う組織ポリシー制約ではなく、要件を満たせません。",
+    "reference": "https://cloud.google.com/resource-manager/docs/organization-policy/org-policy-constraints",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-043",
+    "category": "access-security",
+    "subTopic": "BeyondCorp Enterprise / コンテキストアウェア アクセス（アクセスレベル）",
+    "difficulty": "medium",
+    "tags": ["beyondcorp", "context-aware-access", "access-levels", "access-context-manager", "zero-trust"],
+    "question": "ゼロトラストの方針として、社内アプリへのアクセスを『ネットワークの場所（社内かどうか）』だけでなく、接続元 IP レンジ・デバイスの状態・ユーザー ID・地理的位置などの属性に基づいて許可したいとします。これらの属性条件（信頼の層）を定義してアクセス制御に使う仕組みはどれですか？",
+    "options": [
+      "Cloud Armor の事前構成 WAF ルールだけでデバイスや地理的位置に基づく制御を行う",
+      "VPC ファイアウォールルールの送信元タグでデバイスの状態を判定する",
+      "Access Context Manager でアクセスレベル（access level）を定義し、IP・デバイス・ID・地理的位置などの属性に基づくコンテキストアウェア アクセスを構成する（BeyondCorp Enterprise の中核）",
+      "Cloud KMS の鍵アクセス制御でユーザーの地理的位置を判定する"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "Access Context Manager で『アクセスレベル』を定義すると、接続元 IP レンジ・デバイスの状態（Endpoint Verification）・ユーザー/サービスアカウントの ID・地理的位置などの属性に基づく、属性ベースのコンテキストアウェア アクセスを構成できます。これは BeyondCorp Enterprise のゼロトラスト アクセス制御の中核で、ネットワークの場所だけに依存しない認可を実現します（選択肢2）。選択肢0は誤りで、Cloud Armor は L7 のエッジ防御（WAF/レート制限等）であり、アクセスレベルによる ID/デバイス条件の信頼判定を担うものではありません。選択肢1は誤りで、VPC ファイアウォールの送信元タグはネットワーク制御用で、デバイスの状態を判定できません。選択肢3も誤りで、Cloud KMS は鍵管理であり、ユーザーの地理的位置を判定する仕組みではありません。",
+    "reference": "https://cloud.google.com/access-context-manager/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-044",
+    "category": "access-security",
+    "subTopic": "Binary Authorization（GKE のコンテナ署名検証の強制）",
+    "difficulty": "medium",
+    "tags": ["binary-authorization", "gke", "container", "attestation", "supply-chain"],
+    "question": "GKE クラスタにデプロイされるコンテナイメージを、信頼できるパイプラインでビルド・署名されたものだけに限定し、未署名や不正なイメージのデプロイをデプロイ時に拒否したいとします。最も適切なサービスはどれですか？",
+    "options": [
+      "Artifact Registry の脆弱性スキャンを有効にすれば、未署名イメージのデプロイは自動的に拒否される",
+      "Binary Authorization でデプロイ ポリシーを構成し、必要なアテステーション（署名）を持つイメージだけが GKE にデプロイされるよう強制する",
+      "Pod Security Standards（PodSecurity アドミッション）で、署名のないコンテナの実行を禁止する",
+      "Cloud Armor のセキュリティポリシーで、未署名コンテナへのトラフィックをブロックする"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Binary Authorization は、GKE（や Cloud Run）でデプロイ ポリシーを定義し、信頼できるアテスター（署名者）が発行したアテステーションを持つイメージだけがデプロイされるようデプロイ時に強制する、ソフトウェア サプライチェーン セキュリティの仕組みです（選択肢1）。選択肢0は誤りで、Artifact Registry の脆弱性スキャンは既知の脆弱性の検出を行うもので、署名（アテステーション）の有無に基づくデプロイ拒否を強制する機能ではありません。選択肢2は誤りで、Pod Security Standards は特権昇格やホスト名前空間などの Pod のセキュリティ設定を制約するもので、イメージの署名検証を行いません。選択肢3も誤りで、Cloud Armor は受信 HTTP(S) トラフィックのエッジ防御であり、コンテナイメージの署名検証とは無関係です。",
+    "reference": "https://cloud.google.com/binary-authorization/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-045",
+    "category": "access-security",
+    "subTopic": "Security Command Center による脆弱性・脅威・設定ミスの検出",
+    "difficulty": "medium",
+    "tags": ["security-command-center", "scc", "security-health-analytics", "event-threat-detection", "misconfiguration"],
+    "question": "組織全体のセキュリティ態勢を一元的に把握したいとします。Security Command Center（SCC）が提供する検出について、正しい説明を2つ選んでください。",
+    "options": [
+      "Security Health Analytics は、公開された Cloud Storage バケットや過度に広い IAM 付与といった設定ミス（misconfiguration）や脆弱性を検出する",
+      "Event Threat Detection は、監査ログ等を解析してマルウェア・暗号通貨マイニング・不審な挙動などの脅威（threat）を検出する",
+      "SCC はコスト最適化の推奨（マシンタイプのサイズ調整）を主目的としたサービスで、セキュリティ検出は行わない",
+      "SCC は IAM ポリシーを自動的に書き換えて、検出した設定ミスをすべて無断で修正する"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "Security Command Center の Security Health Analytics は、公開バケットや過度に広い IAM 付与などの設定ミス・脆弱性を検出します（選択肢0）。Event Threat Detection は監査ログ等を解析してマルウェア・暗号通貨マイニング・不審な挙動などの脅威を検出します（選択肢1）。選択肢2は誤りで、SCC はセキュリティと脅威・設定ミスの検出基盤であり、コスト最適化を主目的とするものではありません（サイズ調整の推奨は Recommender 等の領域）。選択肢3も誤りで、SCC は検出・可視化と是正のガイドを提供しますが、IAM ポリシーを無断で自動書き換えして修正するものではありません。",
+    "reference": "https://cloud.google.com/security-command-center/docs/security-command-center-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-046",
+    "category": "access-security",
+    "subTopic": "VPC Service Controls の境界とイングレス/エグレス ルール設計",
+    "difficulty": "hard",
+    "tags": ["vpc-service-controls", "ingress-rule", "egress-rule", "service-perimeter", "data-exfiltration"],
+    "question": "BigQuery を含むサービス境界（service perimeter）を作成し、原則として境界をまたぐアクセスを遮断しています。ここで、境界外にある特定のパートナー プロジェクトのサービスアカウントから、境界内の BigQuery への参照クエリだけを例外的に許可したいとします。最小限の例外で実現する適切な方法はどれですか？",
+    "options": [
+      "イングレス ルール（ingress rule）を追加し、許可するソース（パートナーの ID/プロジェクト）と、境界内でアクセス可能なサービス/メソッド（BigQuery の参照）を明示的に指定する",
+      "境界全体を削除して制限を解除し、IAM だけでアクセスを管理する",
+      "エグレス ルール（egress rule）を追加して、境界内から境界外への持ち出しをすべて許可する",
+      "パートナーのサービスアカウントに roles/owner を付与すれば、VPC Service Controls の境界は自動的に無視される"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "境界外から境界内のリソースへアクセスさせたい場合は、イングレス ルールを追加し、許可するソース（パートナーの ID やプロジェクト等）と、境界内でアクセス可能なサービス/メソッド（BigQuery の参照など）を明示的に指定します。これにより最小限の例外だけを開けつつ、それ以外の境界遮断は維持できます（選択肢0）。選択肢1は境界そのものを削除しており、多層防御を失うため不適切です。選択肢2はエグレス（境界内→外）の話で方向が逆なうえ全許可は過剰で、今回の『外→内』の参照許可には合いません。選択肢3は誤りで、IAM ロールを強くしても VPC Service Controls の境界は無視されず、境界は IAM とは独立した層として機能します。",
+    "reference": "https://cloud.google.com/vpc-service-controls/docs/ingress-egress-rules",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-047",
+    "category": "access-security",
+    "subTopic": "Secret Manager のバージョン管理 / ローテーションとアクセス制御",
+    "difficulty": "medium",
+    "tags": ["secret-manager", "secret-version", "rotation", "latest-alias", "pub-sub"],
+    "question": "Secret Manager で管理しているデータベース パスワードを定期的にローテーションしつつ、アプリは中断なく最新の値を取得できるようにしたいとします。Secret Manager のバージョン管理とローテーションに関する説明として正しいものはどれですか？",
+    "options": [
+      "シークレットは更新するたびに新しいバージョンが作成され、過去バージョンは履歴として残る。アプリは特定バージョン番号か latest エイリアスを指定してアクセスでき、不要になった古いバージョンは無効化（disable）/破棄（destroy）できる",
+      "シークレットの値はバージョン管理されず、更新すると以前の値は即座に上書き・消失する",
+      "ローテーション スケジュールを設定すると、Secret Manager が新しい秘密の値を自動生成して書き込み、外部システム側のパスワードまで自動で変更してくれる",
+      "シークレットの値を取得するには、必ずプロジェクトの roles/owner が必要で、きめ細かなアクセス制御はできない"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Secret Manager ではシークレットを更新するたびに新しいバージョンが作成され、過去バージョンは履歴として残ります。アプリは特定のバージョン番号か latest エイリアスで値を取得でき、不要になった古いバージョンは無効化（disable）や破棄（destroy）が可能です（選択肢0）。選択肢1は誤りで、Secret Manager は値をバージョン管理し、更新で過去値が即消えるわけではありません。選択肢2は誤りで、ローテーション スケジュールは Pub/Sub 通知のタイミングを提供するもので、新しい値の生成や外部システムのパスワード変更は利用者側（例: Cloud Run 関数）で実装する必要があります。選択肢3も誤りで、アクセスは roles/secretmanager.secretAccessor などの IAM ロールできめ細かく制御でき、roles/owner は不要です。",
+    "reference": "https://cloud.google.com/secret-manager/docs/rotation-recommendations",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-048",
+    "category": "access-security",
+    "subTopic": "階層型ファイアウォール ポリシー（組織/フォルダ）によるネットワーク セキュリティ",
+    "difficulty": "medium",
+    "tags": ["hierarchical-firewall", "firewall-policy", "organization", "folder", "network-security"],
+    "question": "複数のフォルダ・プロジェクト・VPC ネットワークにまたがって、組織共通のネットワーク セキュリティのベースライン（例: 特定の管理用 IP レンジからの SSH のみ許可し、それ以外の SSH を拒否）を一元的に強制したいとします。各プロジェクトの VPC ファイアウォールルールに依存せず、上位から共通ルールを適用する最も適切な方法はどれですか？",
+    "options": [
+      "各プロジェクトの担当者に、同じ VPC ファイアウォールルールを手作業で作成・維持してもらう",
+      "組織またはフォルダ レベルで階層型ファイアウォール ポリシーを作成・関連付けし、配下の VPC ネットワークに共通ルールを適用する（個々の VPC ファイアウォールルールより上位で評価される）",
+      "Cloud Armor のセキュリティポリシーを各 VPC に割り当てて、VM 間の SSH を制御する",
+      "組織ポリシーの制約 constraints/compute.vmExternalIpAccess を使って SSH を制御する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "階層型ファイアウォール ポリシーは、組織やフォルダのレベルでルールをまとめたポリシーを作成し、配下の多数の VPC ネットワーク/プロジェクトに共通のルールを適用できます。これらは個々の VPC ファイアウォールルールより上位で評価され、組織共通のベースラインを一元的に強制できます（選択肢1）。選択肢0は各担当者の手作業に依存し、抜け漏れや不整合が起きやすく一元管理になりません。選択肢2は誤りで、Cloud Armor はロードバランサ前段で受信 HTTP(S) を防御する仕組みで、VM 間の SSH 制御を行うものではありません。選択肢3も誤りで、compute.vmExternalIpAccess は外部 IP の付与可否を制御する組織ポリシーであり、SSH のフィルタリングを行うものではありません。",
+    "reference": "https://cloud.google.com/firewall/docs/firewall-policies-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-sec-049",
+    "category": "access-security",
+    "subTopic": "Sensitive Data Protection（Cloud DLP）による機密データの検出・マスキング",
+    "difficulty": "medium",
+    "tags": ["sensitive-data-protection", "cloud-dlp", "de-identification", "masking", "infotype"],
+    "question": "BigQuery や Cloud Storage に保存しているデータの中に、クレジットカード番号やメールアドレスなどの機密情報（PII）が含まれていないかをスキャンして分類し、見つかった機密情報をマスキングやトークン化で匿名化（de-identify）したいとします。最も適切なサービスはどれですか？",
+    "options": [
+      "Cloud KMS の CMEK でデータを暗号化すれば、PII の検出と項目単位のマスキングも自動的に行われる",
+      "VPC Service Controls の境界を作成すれば、PII を自動検出してマスキングできる",
+      "Cloud Logging のログ除外フィルタで PII を検出してトークン化する",
+      "Sensitive Data Protection（Cloud DLP）を使い、infoType による機密情報の検査・分類と、マスキング・トークン化・秘匿化などの匿名化（de-identification）を行う"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "Sensitive Data Protection（旧 Cloud DLP）は、BigQuery・Cloud Storage・Datastore などのデータを infoType（クレジットカード番号やメールアドレス等の種類）で検査・分類し、マスキング・トークン化（仮名化）・秘匿化（redaction）・バケット化などの変換でデータを匿名化（de-identify）できます（選択肢3）。選択肢0は誤りで、CMEK はデータ全体の暗号化であり、特定の PII を検出して項目単位でマスキングする機能はありません。選択肢1は誤りで、VPC Service Controls は持ち出し防止の境界であり、PII の検出・マスキングは行いません。選択肢2も誤りで、ログ除外フィルタはログのルーティング制御であり、機密データの検出・トークン化を行うサービスではありません。",
+    "reference": "https://cloud.google.com/sensitive-data-protection/docs/sensitive-data-protection-overview",
+    "relatedMaterials": []
   }
 ]

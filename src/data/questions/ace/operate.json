@@ -340,5 +340,575 @@
     "explanation": "正解は、複数の指標をウィジェットとして配置したカスタムダッシュボードを作成する、です。Cloud Monitoring のカスタムダッシュボードでは、折れ線グラフ・積み上げエリア・テーブル・ゲージ・スコアカードなどのウィジェットを用いて、異なるソースの指標（標準指標やカスタム指標）を同じ画面に並べて継続的に監視できます。Logs Explorer のクエリを毎回手入力する方法はログ閲覧向けで、複数指標を一画面で常時監視する用途には適しません。予算とアラートはコスト通知が目的で、指標の可視化ダッシュボードではありません。Cloud Trace のトレースリストはレイテンシ分析用であり、各種指標をまとめて監視する画面ではありません。",
     "reference": "https://cloud.google.com/monitoring/dashboards",
     "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-019",
+    "category": "operate",
+    "subTopic": "インスタンスの開始/停止/リセットとシリアルコンソールログ確認",
+    "difficulty": "medium",
+    "tags": ["compute-engine", "serial-console", "reset", "troubleshooting"],
+    "question": "本番の Compute Engine VM が OS のブート途中でハングし、SSH でも接続できません。要件は次の通りです。(1) OS のブート過程で何が起きているかをログとして確認する (2) ディスク上のデータは保持したまま OS を再起動させて復旧を試みる。最も適切な操作の組み合わせはどれですか。",
+    "options": [
+      "VM を delete してから同じブートディスクで再作成し、起動後に dmesg を確認する",
+      "VM のマシンタイプを大きくしてから停止せずにそのまま放置して自然回復を待つ",
+      "シリアルポート出力（serial port output）を確認してブートの状況を調べ、必要に応じて reset でゲスト OS を再起動する",
+      "ブートディスクのスナップショットを取得し、スナップショットのログから OS の状態を読み取る"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "正解は、シリアルポート出力を確認してブート状況を調べ、必要に応じて reset でゲスト OS を再起動する、です。シリアルポート出力（シリアルコンソール）はクラッシュ・ブート失敗・起動/シャットダウン時のトラブルシューティングに有用で、コンソール・gcloud（get-serial-port-output）・REST から確認できます。reset は VM の電源は維持したままゲスト OS を再起動する操作で、ディスクのデータを保持したまま OS の復旧を試せます。VM を delete して再作成する案は、データ保持はできても過剰でブート過程のログ確認という要件に直接答えていません。マシンタイプを大きくしても OS のブートハングは解消せず、放置で自然回復もしません。スナップショットはディスクのバックアップであり、そこから OS のブートログを読み取ることはできません。",
+    "reference": "https://cloud.google.com/compute/docs/instances/viewing-serial-port-output",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-020",
+    "category": "operate",
+    "subTopic": "スナップショットからのディスク/インスタンス復元手順",
+    "difficulty": "medium",
+    "tags": ["compute-engine", "snapshot", "restore", "disk"],
+    "question": "誤操作でアプリ用のデータディスク（ゾーン永続ディスク）の内容が破損しました。前日のスナップショットは取得済みです。要件は次の通りです。(1) スナップショット時点の状態にデータを復元する (2) 復元したディスクを既存の VM に接続して使う。スナップショットからの復元（restore）手順として正しいものはどれですか。",
+    "options": [
+      "スナップショットを直接 VM にマウントすればよく、新しいディスクを作成する必要はない",
+      "スナップショットを source-snapshot に指定して新しい永続ディスクを作成し（サイズは元と同等以上）、その新ディスクを VM に attach する",
+      "スナップショットをそのまま編集して破損部分だけを上書き保存する",
+      "スナップショットからは VM 全体しか復元できず、個別ディスクの復元はできない"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "正解は、スナップショットを source-snapshot に指定して新しい永続ディスクを作成（サイズは元のソースディスク以上）し、その新ディスクを VM に attach する、です。スナップショットからの復元は「新しいディスクをスナップショットを元に作成する」操作であり、コンソールではディスク作成時にソースとしてスナップショットを選び、gcloud では gcloud compute disks create --source-snapshot を使います。新ディスクはソースディスク以上のサイズが必要です。スナップショットを直接マウントすることはできず、必ずディスクを介します。スナップショットはイミュータブルなバックアップであり、その場で編集・上書きはできません。スナップショットからは個別の永続ディスクを復元でき、「VM 全体しか復元できない」は誤りです（VM 全体の復元はマシンイメージの役割）。",
+    "reference": "https://cloud.google.com/compute/docs/disks/restore-snapshot",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-021",
+    "category": "operate",
+    "subTopic": "マシンイメージ(machine image)による完全バックアップと復元",
+    "difficulty": "hard",
+    "tags": ["compute-engine", "machine-image", "backup", "restore"],
+    "question": "複数のデータディスクを持つ単一の重要 VM を、構成・メタデータ・全ディスクのデータをまとめて 1 つのリソースとしてバックアップし、必要時にその VM を丸ごと復元（新しい VM として再作成）できるようにしたいです。マシンイメージ（machine image）について正しい説明を 2 つ選んでください。",
+    "options": [
+      "マシンイメージは VM の構成・メタデータ・権限・複数ディスクのデータをまとめて保存でき、クラッシュ整合性のあるバックアップを取得できる",
+      "マシンイメージはメモリの内容や Local SSD のデータも含めて完全に保存する",
+      "マシンイメージから新しい VM インスタンスを作成して、VM を丸ごと復元できる",
+      "マシンイメージは単一ディスクのバックアップ専用で、複数ディスクを持つ VM には使えない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 2],
+    "explanation": "正解は選択肢1と3です。マシンイメージは VM の全構成・メタデータ・権限・複数ディスクのデータを 1 つのリソースに保存でき、ディスク間でクラッシュ整合性のあるバックアップを取得できます（選択肢1）。またマシンイメージから新しい VM インスタンスを作成でき、VM を丸ごと復元・クローンする用途に最適です（選択肢3）。一方、マシンイメージはメモリの内容や Local SSD のデータ、インスタンス名・IP などのインスタンス固有属性は保存しないため、選択肢2は誤りです。マシンイメージはむしろ複数ディスクをまとめてバックアップするのに適した機能で、「単一ディスク専用」とする選択肢4は誤りです（単一ディスクのバックアップはスナップショットの役割）。",
+    "reference": "https://cloud.google.com/compute/docs/machine-images",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-022",
+    "category": "operate",
+    "subTopic": "MIG の手動サイズ変更とインスタンスの再作成/更新",
+    "difficulty": "hard",
+    "tags": ["compute-engine", "mig", "resize", "recreate"],
+    "question": "オートスケーリングを使っていないマネージドインスタンスグループ（MIG）を運用しています。要件は次の通りです。(1) 一時的な負荷増に備えて VM の台数を 3 台から 6 台へ手動で増やす (2) 先ほど更新した新しいインスタンステンプレートの内容を、既存の稼働中 VM にも反映させる。最も適切な操作の組み合わせはどれですか。",
+    "options": [
+      "gcloud compute instance-groups managed resize で --size=6 にすれば、既存 VM も自動的に新テンプレートで作り直される",
+      "gcloud compute instance-groups managed resize で --size=6 にして台数を増やし、既存 VM へテンプレートを反映するには recreate-instances（または update）で対象 VM を作り直す",
+      "MIG を一度削除して新テンプレートで作り直すのが唯一の方法である",
+      "オートスケーラーの最小台数を 6 に上げれば、テンプレート更新も同時に全 VM へ反映される"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "正解は、resize --size=6 で台数を増やし、既存 VM へテンプレートを反映するには recreate-instances（または update）で対象 VM を作り直す、です。resize は MIG のターゲットサイズを手動で設定する操作で、増やした分の新 VM は現在のテンプレートで作成されますが、既存の稼働中 VM は以前のテンプレートのまま残ります。新テンプレートを既存 VM に反映するには、recreate-instances で対象 VM を作り直す（またはローリング更新 update を行う）必要があります。したがって「resize だけで既存 VM も自動的に作り直される」は誤りです。MIG を削除して作り直すのは過剰で、唯一の方法でもありません。オートスケーラーの最小台数の調整は台数制御の話で、テンプレートの反映（再作成）とは別操作です。",
+    "reference": "https://cloud.google.com/compute/docs/instance-groups/add-remove-vms-in-mig",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-023",
+    "category": "operate",
+    "subTopic": "GKE クラスタ自動スケーラの運用とノード使用率の確認",
+    "difficulty": "medium",
+    "tags": ["gke", "cluster-autoscaler", "node-utilization", "scheduling"],
+    "question": "GKE Standard クラスタでクラスタオートスケーラーを有効にしています。新たにデプロイした Pod が Pending のままノードが追加されず、別の時間帯にはノードがなかなか縮小されません。クラスタオートスケーラーの挙動として正しい説明はどれですか。",
+    "options": [
+      "クラスタオートスケーラーはノードの実際の CPU 使用率（actual utilization）を直接見てノードを増減する",
+      "クラスタオートスケーラーはノードプールの max を超えても必要なだけノードを無制限に追加できる",
+      "Pod が requests 不足で詰まっている場合でも、オートスケーラーが requests を自動修正してくれる",
+      "クラスタオートスケーラーは Pod の requests（リソース要求）に基づき、スケジュールできない Pod があると max までノードを追加し、より少ないノードで全 Pod が収まる場合にノードを削除する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "正解は選択肢4です。クラスタオートスケーラーは Pod の requests（リソース要求）に基づいて判断し、どのノードにもスケジュールできない Pending Pod があるとノードプールの max まで増やし、より少ないノードでも全 Pod がスケジュール可能なら使用率の低いノードを削除します。スケールの判断基準は実際の使用率（actual utilization）ではなく requests である点が重要で、選択肢1は誤りです。追加はノードプールの max が上限で、無制限ではないため選択肢2も誤りです。requests が小さすぎて起きる詰まりをオートスケーラーが自動修正することはなく（requests の適正化は VPA などの役割）、選択肢3も誤りです。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-autoscaler",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-024",
+    "category": "operate",
+    "subTopic": "GKE ワークロードのリソース(requests/limits)変更と Pod 再スケジュール",
+    "difficulty": "medium",
+    "tags": ["gke", "requests-limits", "deployment", "rescheduling"],
+    "question": "GKE で稼働中の Deployment のコンテナが OOM（メモリ不足）で頻繁に再起動しています。メモリの requests と limits を引き上げて安定させたいです。Deployment のコンテナリソースを変更したときの挙動として正しいものはどれですか。",
+    "options": [
+      "requests/limits は Pod 作成後は一切変更できず、Deployment を削除して作り直すしかない",
+      "requests/limits の変更はノードの再起動が必須で、ノードプールを手動でリセットしないと反映されない",
+      "Deployment のマニフェストで requests/limits を更新すると、Deployment が新しい設定で Pod を再作成（ローリング更新で再スケジュール）し、新しい requests に基づいてノードへ配置される",
+      "limits だけ上げれば requests は不要で、スケジューリングには影響しない"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "正解は選択肢3です。Deployment のマニフェストで Pod テンプレートの requests/limits を更新すると、Deployment コントローラがローリング更新で Pod を新しい設定の Pod に置き換え（再作成）、新しい requests に基づいてノードへ再スケジュールします。requests/limits は Pod テンプレートを更新すれば反映でき、Deployment ごと削除して作り直す必要はないため選択肢1は誤りです。反映に伴うのは Pod の置き換えであって、ノードの再起動やノードプールの手動リセットは不要なので選択肢2も誤りです。requests はスケジューリング（ノード配置）とクラスタオートスケーラーの判断に使われる重要な値であり、「requests は不要で影響しない」とする選択肢4は誤りです。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/how-to/vertical-pod-autoscaling",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-025",
+    "category": "operate",
+    "subTopic": "Cloud Run のトラフィック分割とロールバック(リビジョン運用)",
+    "difficulty": "medium",
+    "tags": ["cloud-run", "traffic-splitting", "rollback", "revisions"],
+    "question": "Cloud Run サービスに新リビジョンをデプロイしました。要件は次の通りです。(1) まず新リビジョンに 10% だけトラフィックを流して様子を見る (2) 問題が判明したら速やかに以前の安定リビジョンへ戻す。最も適切な運用はどれですか。",
+    "options": [
+      "新リビジョンのデプロイは常に即座に 100% へ切り替わるため、トラフィック分割や段階的な確認はできない",
+      "リビジョン間でトラフィックを割合指定して分割し、新リビジョンに 10% を割り当てて検証、問題時は以前のリビジョンに 100% を割り当ててロールバックする",
+      "ロールバックするにはサービスを削除して以前のコンテナイメージから作り直すしかない",
+      "トラフィック分割は VPC コネクタを設定しないと利用できない"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "正解は選択肢2です。Cloud Run では複数のリビジョン間でトラフィックを割合（パーセンテージ）指定で分割でき、新リビジョンに 10% を割り当てて段階的に検証（カナリア/段階的ロールアウト）できます。問題が見つかった場合は、以前の安定リビジョンのトラフィックを 100% に設定すればロールバックできます。デプロイ時に必ず即 100% へ切り替わるわけではなく、トラフィックを管理できるため選択肢1は誤りです。ロールバックはトラフィック割合の変更で実現でき、サービス削除や再作成は不要なので選択肢3も誤りです。トラフィック分割はリビジョン管理の標準機能で、VPC コネクタの有無とは無関係なため選択肢4も誤りです。",
+    "reference": "https://cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-026",
+    "category": "operate",
+    "subTopic": "Cloud Run のスケーリングパラメータ変更と VPC コネクタ接続",
+    "difficulty": "hard",
+    "tags": ["cloud-run", "max-instances", "vpc-connector", "scaling"],
+    "question": "Cloud Run サービスが、VPC 内のプライベート IP を持つ Cloud SQL/内部 API へ接続して動作します。要件は次の通りです。(1) バックエンド DB の接続数を保護するため、過剰なスケールアウトを抑制したい (2) サービスから VPC 内のプライベートリソースへ到達できるようにしたい。構成すべきものを 2 つ選んでください。",
+    "options": [
+      "最大インスタンス数（max instances）を適切な値に設定してスケールアウトの上限を制限する",
+      "サービスを必ずパブリック IP 経由でインターネットに出してから VPC に戻す経路を設定する",
+      "Serverless VPC Access コネクタを構成し、サービスをそのコネクタに接続して VPC 内のプライベートリソースへ到達できるようにする",
+      "稼働時間チェックを Cloud SQL に向けて設定すれば、自動的に VPC 接続が確立される"
+    ],
+    "isMultiple": true,
+    "correct": [0, 2],
+    "explanation": "正解は選択肢1と3です。最大インスタンス数（max instances）はサービスのスケールアウトの上限を制限する設定で、バックエンド DB への接続数を保護したい場合などに有効です（選択肢1）。VPC 内のプライベート IP リソースへ到達するには Serverless VPC Access コネクタを構成し、Cloud Run サービスをそのコネクタに接続します（選択肢3）。プライベートリソースへの到達のために、わざわざパブリック IP でインターネットへ出す必要はなく、コネクタ経由で内部到達できるため選択肢2は誤りです。稼働時間チェックは外部エンドポイントの可用性監視機能であり、VPC 接続を確立する仕組みではないため選択肢4も誤りです。",
+    "reference": "https://cloud.google.com/run/docs/configuring/vpc-connectors",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-027",
+    "category": "operate",
+    "subTopic": "Cloud Storage のライフサイクルルールと保持(retention)ポリシー運用",
+    "difficulty": "hard",
+    "tags": ["cloud-storage", "lifecycle", "retention-policy", "governance"],
+    "question": "Cloud Storage バケットで次の運用をしたいです。(1) 作成から 365 日経過したオブジェクトは自動的に削除する (2) コンプライアンス上、オブジェクトは作成から 90 日間は誰も削除・上書きできないようにする。これらを実現する組み合わせとして正しいものはどれですか。",
+    "options": [
+      "オブジェクトライフサイクル管理の Delete アクションも保持ポリシーも、どちらか一方しか同じバケットには設定できない",
+      "保持ポリシー（retention policy）を 365 日に設定すれば、90 日経過後に自動削除も同時に行われる",
+      "ライフサイクル管理の Delete アクションだけを設定すれば、削除・上書きの禁止（90 日保持）も自動的に達成される",
+      "Age 365 日を条件とするライフサイクルの Delete ルールで自動削除を行い、別途 90 日の保持ポリシー（retention policy）で保持期間中の削除・上書きを禁止する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "正解は選択肢4です。自動削除は、Age（作成からの経過日数）を条件としたオブジェクトライフサイクル管理の Delete アクションで実現します。一方、一定期間オブジェクトを削除・上書きさせないガバナンスは、バケットの保持ポリシー（retention policy）で実現します。両者は独立して併用でき、ライフサイクルの Delete は保持ポリシー未充足のオブジェクトには適用されず、実際の有効期限はライフサイクルの Age 条件と保持期間充足時刻の遅い方になります。したがって「どちらか一方しか設定できない」とする選択肢1は誤りです。保持ポリシーは削除・上書きを禁止する機能であって自動削除を行うものではないため選択肢2は誤りです。ライフサイクルの Delete は削除を実行する機能で、削除・上書きの禁止（保持）は提供しないため選択肢3も誤りです。",
+    "reference": "https://cloud.google.com/storage/docs/lifecycle",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-028",
+    "category": "operate",
+    "subTopic": "オブジェクトのストレージクラス変更(自動/手動)とコスト最適化",
+    "difficulty": "medium",
+    "tags": ["cloud-storage", "storage-class", "cost-optimization", "lifecycle"],
+    "question": "Cloud Storage に保存したログデータのうち、アクセス頻度が下がった古いオブジェクトをより安価なストレージクラス（Coldline など）へ移してコストを下げたいです。ストレージクラスの変更について正しい説明はどれですか。",
+    "options": [
+      "アクセス頻度の低下に応じて自動でクラスを下げるにはライフサイクルの SetStorageClass アクションを使い、個別オブジェクトを手動で変えるには gcloud storage objects update --storage-class（rewrite）を使う。rewrite は Class A 操作で課金されうる",
+      "ストレージクラスはバケット作成時に決めたら一切変更できない",
+      "個別オブジェクトのストレージクラスは Google Cloud コンソールの画面から 1 つずつ変更するのが唯一の方法である",
+      "ストレージクラスを下げるとデータが削除されるため、コスト最適化には使えない"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "正解は選択肢1です。アクセス頻度の低下（経過日数など）に応じて自動的にストレージクラスを下げるには、オブジェクトライフサイクル管理の SetStorageClass アクションを使います。個別オブジェクトを手動で変更する場合は gcloud storage objects update --storage-class などの rewrite 操作を使い、これは Class A 操作としてデータの状況に応じて課金が発生しうる点に注意します。ストレージクラスは作成後も変更可能なので選択肢2は誤りです。個別オブジェクトのクラス変更はコンソールの画面からは設定できず、コマンドや API（rewrite）で行うため「コンソールで 1 つずつが唯一」とする選択肢3は誤りです。クラスを下げてもデータは削除されず（保存料金が下がるだけ）、コスト最適化に有効なので選択肢4も誤りです。",
+    "reference": "https://cloud.google.com/storage/docs/changing-storage-classes",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-029",
+    "category": "operate",
+    "subTopic": "BigQuery のクエリ実行・dry run・maximum bytes billed によるコスト管理",
+    "difficulty": "hard",
+    "tags": ["bigquery", "dry-run", "maximum-bytes-billed", "cost-control"],
+    "question": "オンデマンド料金の BigQuery で、アナリストが誤って巨大なテーブルをフルスキャンして高額課金が発生するのを防ぎたいです。要件は次の通りです。(1) クエリ実行前にスキャン量（課金バイト数の見積もり）を確認する (2) しきい値を超えるクエリは課金される前に失敗させる。適切な機能を 2 つ選んでください。",
+    "options": [
+      "ドライラン（dry run / --dry_run）でクエリを実際には実行せずに処理予定バイト数を見積もる",
+      "クエリ結果を必ず CSV にエクスポートしてから件数で課金を推定する",
+      "maximum bytes billed（最大課金バイト数）を設定し、見積もりがしきい値を超えるクエリを課金前に失敗させる",
+      "稼働時間チェックを BigQuery ジョブに向けて設定し、超過時にジョブを止める"
+    ],
+    "isMultiple": true,
+    "correct": [0, 2],
+    "explanation": "正解は選択肢1と3です。ドライラン（dry run / bq の --dry_run、API の dryRun=true、コンソールのクエリ検証ツール）はクエリを実際には実行せずに読み取り予定のバイト数を見積もり、実行前のコスト確認に使えます（選択肢1）。maximum bytes billed（最大課金バイト数）を設定すると、見積もりがそのしきい値を超えるクエリは課金されずに失敗するため、巨大スキャンによる高額課金を未然に防げます（選択肢3）。結果を CSV にエクスポートして件数で推定する方法は、スキャン量（課金バイト数）の見積もりにはならず、実行してしまう時点でコスト防止にもならないため選択肢2は誤りです。稼働時間チェックは外部エンドポイントの可用性監視機能であり、BigQuery のクエリコスト制御とは無関係なため選択肢4も誤りです。",
+    "reference": "https://cloud.google.com/bigquery/docs/best-practices-costs",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-030",
+    "category": "operate",
+    "subTopic": "Cloud SQL のバックアップ/ポイントインタイムリカバリ(PITR)運用",
+    "difficulty": "hard",
+    "tags": ["cloud-sql", "pitr", "backup", "binary-logging"],
+    "question": "Cloud SQL for MySQL で、アプリの不具合により数時間前に誤ったデータ更新が行われました。要件は次の通りです。(1) 障害が起きる直前の特定時刻の状態にデータベースを戻したい (2) その時刻は日次の自動バックアップの取得時刻とは一致していない。これを実現する機能と前提条件として正しいものはどれですか。",
+    "options": [
+      "オンデマンドバックアップを今すぐ取得すれば、過去の任意時点に遡って復元できる",
+      "ポイントインタイムリカバリ（PITR）を使う。PITR には自動バックアップとバイナリログ（binary logging）が有効で、対象時刻までの連続したバイナリログが必要である",
+      "日次の自動バックアップからのリストアだけで、任意の秒単位の時刻に正確に復元できる",
+      "リードレプリカを昇格させれば、過去の任意時点のデータに自動的に戻る"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "正解は選択肢2です。バックアップ取得時刻と一致しない「特定時刻」へ戻すにはポイントインタイムリカバリ（PITR）を使います。PITR は自動バックアップに加えてバイナリログ（binary logging）が有効であることが前提で、復元したい事象の直前のバックアップ以降、対象時刻まで連続したバイナリログが必要です（RFC 3339 形式のタイムスタンプを指定）。オンデマンドバックアップを今取得しても、それは現在時点のコピーであり過去時点へ遡れないため選択肢1は誤りです。日次自動バックアップのリストアはバックアップ取得時点に戻すもので、任意の秒単位の時刻に正確に戻すには PITR（バイナリログ）が必要なので選択肢3も誤りです。リードレプリカの昇格は可用性・読み取り負荷分散のための機能で、過去時点への巻き戻しではないため選択肢4も誤りです。",
+    "reference": "https://cloud.google.com/sql/docs/mysql/backup-recovery/pitr",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-031",
+    "category": "operate",
+    "subTopic": "永続ディスクのスナップショットのリージョン間コピーと管理",
+    "difficulty": "medium",
+    "tags": ["compute-engine", "snapshot", "cross-region", "disaster-recovery"],
+    "question": "DR（災害対策）のため、あるリージョンの VM の永続ディスクのスナップショットを使って、別リージョンに同じデータのディスクを用意できるようにしておきたいです。永続ディスクの標準スナップショットに関する説明として正しいものはどれですか。",
+    "options": [
+      "スナップショットは取得したゾーン内でしか使えず、別リージョンでディスクを作成することはできない",
+      "別リージョンで使うには、必ず手動でスナップショットを VM 内でコピーしてアップロードし直す必要がある",
+      "標準スナップショットは既定でグローバルに利用でき、スナップショットから新しいディスクを作成する際は元の保管場所に関係なく任意のリージョンにディスクを作成できる（保管場所はマルチ/リージョンを選択可能）",
+      "スナップショットからディスクを作成できるのは、スナップショット保管場所と同一の単一ゾーンに限られる"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "正解は選択肢3です。標準スナップショットは既定でグローバルなリソースとして利用でき、スナップショットから新しいディスクを作成する際は、スナップショットの保管場所に関係なく任意のリージョンにディスクを作成できます。スナップショットの保管場所自体も、Cloud Storage のマルチリージョン（例: us）またはリージョン（例: us-central1）から選択できます（DR ではターゲットリージョン近くに保管するとコスト/可用性に有利）。したがって「取得ゾーン内でしか使えない」「同一単一ゾーンに限られる」とする選択肢1・4は誤りです。別リージョンで使うために VM 内で手動コピー＆再アップロードする必要はなく、スナップショットを元にそのまま別リージョンでディスクを作成できるため選択肢2も誤りです。",
+    "reference": "https://cloud.google.com/compute/docs/disks/snapshots",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-032",
+    "category": "operate",
+    "subTopic": "Cloud Storage のオブジェクトバージョニングと誤削除からの復旧",
+    "difficulty": "medium",
+    "tags": ["cloud-storage", "object-versioning", "recovery", "noncurrent-version"],
+    "question": "Cloud Storage バケットで、オブジェクトが誤って上書き・削除されても以前の内容に戻せるようにしたいです。オブジェクトバージョニング（Object Versioning）について正しい説明はどれですか。",
+    "options": [
+      "オブジェクトバージョニングを有効にすると、ライブ版を置き換え・削除するたびに以前の版が非現行（noncurrent）バージョンとして保持され、必要時に非現行版をライブに復元できる",
+      "オブジェクトバージョニングはバケット作成後には有効化できない",
+      "バージョニングを有効にしても、削除したオブジェクトは即座に完全消去され復旧できない",
+      "非現行バージョンを保持しても追加のストレージ料金は一切かからない"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "正解は選択肢1です。オブジェクトバージョニングを有効にすると、ライブ版のオブジェクトを置き換え・削除するたびに、その前の版が非現行（noncurrent）バージョンとして保持されます。各版には固有の世代番号（generation number）が付き、非現行版をライブにコピーして復元することで、誤った上書き・削除から復旧できます。バージョニングはバケット作成後でも有効化できるため選択肢2は誤りです。バージョニング有効時は削除しても非現行版として残り即時完全消去はされないため選択肢3も誤りです。非現行バージョンも保存している分のストレージ料金が発生し（増え続けるためライフサイクルでの管理が推奨）、「一切かからない」とする選択肢4も誤りです。",
+    "reference": "https://cloud.google.com/storage/docs/object-versioning",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-033",
+    "category": "operate",
+    "subTopic": "GKE のログ/イベント確認とトラブルシュート(kubectl describe/logs)",
+    "difficulty": "medium",
+    "tags": ["gke", "kubectl", "troubleshooting", "crashloopbackoff"],
+    "question": "GKE Standard クラスタで、ある Deployment の Pod が CrashLoopBackOff になり起動に失敗しています。要件は次の通りです。(1) Pod がなぜ起動できないのか（イベントや終了理由）を確認する (2) コンテナがクラッシュする直前に出力したアプリのログを確認する。最も適切なコマンドの組み合わせはどれですか。",
+    "options": [
+      "kubectl get nodes でノード一覧を見て、kubectl cordon でノードを隔離する",
+      "kubectl describe pod POD_NAME でイベントや状態（終了理由）を確認し、kubectl logs POD_NAME（必要なら --previous）でコンテナのアプリログを確認する",
+      "gcloud compute instances reset でノードを再起動し、再起動ログを確認する",
+      "kubectl scale deployment でレプリカ数を 0 にしてから 1 に戻すことだけで原因が判明する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "正解は選択肢2です。kubectl describe pod POD_NAME は Pod の状態・コンテナの終了理由（例: OOMKilled）・Events 欄のスケジューリングやイメージ取得などのエラーを表示し、起動失敗の原因調査に有用です。kubectl logs POD_NAME はコンテナの標準出力ログを表示し、クラッシュ前のログを見るには --previous（前回終了したコンテナのログ）を付けます。これらで CrashLoopBackOff 等の原因を特定できます。kubectl get nodes／cordon はノード運用のコマンドで、特定 Pod のクラッシュ原因の特定には直接役立ちません（選択肢1）。gcloud compute instances reset はノード VM の再起動であり、アプリ Pod のクラッシュ調査の第一手ではありません（選択肢3）。レプリカ数の増減だけでは原因のログ・イベントは得られないため選択肢4も誤りです。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/troubleshooting/deployed-workloads",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-034",
+    "category": "operate",
+    "subTopic": "アラートポリシーの条件タイプ(threshold/absence/forecast)の選定",
+    "difficulty": "medium",
+    "tags": ["monitoring", "alerting", "alert-conditions", "forecast"],
+    "question": "Cloud Monitoring のアラートポリシーを設計します。要件は次の通りです。(1) バッチ処理 VM は定期的にハートビート指標を送るが、その指標がしばらく一切届かなくなったら障害として検知したい (2) 別途、ディスク使用率が現状の増加傾向のままなら数時間後にしきい値へ到達すると予測される段階で、満杯になる前に通知したい。それぞれに最も適した条件タイプの組み合わせはどれですか。",
+    "options": [
+      "(1)(2) ともに metric-threshold(指標のしきい値）条件にする",
+      "(1) metric-absence(指標の欠落）条件、(2) forecast(予測）条件にする",
+      "(1) forecast(予測）条件、(2) metric-absence(指標の欠落）条件にする",
+      "(1) 稼働時間チェック条件、(2) metric-threshold(指標のしきい値）条件にする"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "正解は (1) metric-absence、(2) forecast の組み合わせです。metric-absence(指標の欠落）条件は、指定した時間枠の間に指標データが届かない（欠落した）ことを検知するもので、定期送信されるはずのハートビート指標が途絶えた障害の検知に最適です。forecast(予測）条件は、現在のトレンドから将来の値を予測し、予測値が一定時間内にしきい値へ到達しそうな場合に発火するもので、ディスクが満杯になる前の予防的通知に向いています。(1)(2) ともに metric-threshold にすると、欠落（データが無い状態）は単純なしきい値比較では検知しづらく、また満杯到達の事前予測もできないため不適切です。選択肢3は (1) と (2) の対応が逆で誤りです。稼働時間チェック条件は外部エンドポイントの到達性監視用で、自前指標の欠落検知には適しません。",
+    "reference": "https://cloud.google.com/monitoring/alerts/types-of-conditions",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-035",
+    "category": "operate",
+    "subTopic": "SLO モニタリングとバーンレートアラート(エラーバジェット)",
+    "difficulty": "hard",
+    "tags": ["monitoring", "slo", "error-budget", "burn-rate"],
+    "question": "あるサービスで可用性 SLO を 99.9%(30 日間）に設定しています。要件は次の通りです。(1) 短時間でエラーバジェットを急速に消費する重大インシデントを素早く検知してオンコールを呼びたい (2) 一方で、わずかな違反でアラートが鳴り続ける通知過多は避けたい。SLO に基づく監視として最も適切なのはどれですか。",
+    "options": [
+      "エラー率が 0% を少しでも超えたら必ず即時に通知するアラートポリシーを 1 つだけ作る",
+      "稼働時間チェックの失敗回数だけを唯一の SLO の指標として使う",
+      "SLO を定義したうえでバーンレート(エラーバジェットの消費速度）に基づくアラートを構成し、消費が速いほど短いルックバックで早く、緩やかな消費は長いルックバックで検知するよう複数の閾値を設ける",
+      "30 日間のエラーバジェットを使い切ったあとに初めて 1 度だけ通知する"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "正解は選択肢3です。SLO に基づく監視では、エラーバジェット（=（1−SLO 目標）×対象イベント数）の消費速度であるバーンレートを使ってアラートを設計します。バーンレートが大きい（速い）ほど短いルックバック期間（例: 1〜2 時間で基準の約 10 倍）で素早く検知してオンコールを呼び、緩やかな消費は長いルックバック期間（例: 24 時間で基準の約 2 倍）で検知することで、重大インシデントの即応と通知過多の抑制を両立できます。エラー率が少しでも超えたら必ず即時通知する案（選択肢1）は通知過多を招き要件に反します。稼働時間チェックの失敗回数だけ（選択肢2）では SLO のエラーバジェットに基づく消費速度を表現できません。バジェットを使い切ってから 1 度だけ通知する案（選択肢4）では、急速消費の重大インシデントを早期に捉えられず手遅れになります。",
+    "reference": "https://cloud.google.com/stackdriver/docs/solutions/slo-monitoring/alerting-on-budget-burn-rate",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-036",
+    "category": "operate",
+    "subTopic": "Error Reporting によるエラー集約・通知",
+    "difficulty": "medium",
+    "tags": ["error-reporting", "exceptions", "notifications", "observability"],
+    "question": "本番アプリが出力する大量の例外スタックトレースを、内容の似たものごとに自動的にグループ化して件数や発生傾向を把握し、これまで一度も発生していなかった新種のエラーが初めて起きたときに通知を受け取りたいです。最も適切なサービスはどれですか。",
+    "options": [
+      "Cloud Trace で例外をスパンとして集約し、レイテンシ増加で新種エラーを推定する",
+      "Cloud Monitoring の稼働時間チェックを例外ログに向けて設定する",
+      "Logs Explorer で毎回手動クエリを実行し、目視で似た例外をグルーピングする",
+      "Error Reporting を使い、類似の例外を自動グループ化して集計し、新しいエラーグループの発生時に通知チャネルへ通知させる"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "正解は選択肢4です。Error Reporting はアプリのエラー（例外・スタックトレース）を自動的に収集し、内容が類似するものを 1 つのエラーグループに集約して、件数・発生頻度・傾向を可視化します。さらに、過去のどのグループにも当てはまらない新しいエラーグループが初めて発生したとき（および解決済みのグループが再発したとき）に、メール・モバイルアプリ・Slack・Webhook の通知チャネルへ通知できます。Cloud Trace は分散トレースによるレイテンシ分析が目的で、例外の自動グループ化や新種エラー通知の機能ではありません（選択肢1）。稼働時間チェックは外部エンドポイントの可用性監視であり、例外の集約とは無関係です（選択肢2）。Logs Explorer での手動クエリ・目視グルーピングは自動集約や新種エラーの自動通知にはならず、要件を満たしません（選択肢3）。",
+    "reference": "https://cloud.google.com/error-reporting/docs/notifications",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-037",
+    "category": "operate",
+    "subTopic": "ログのフィルタ/検索(Logging クエリ言語)",
+    "difficulty": "medium",
+    "tags": ["logging", "logging-query-language", "logs-explorer", "filtering"],
+    "question": "Logs Explorer で、特定の Compute Engine VM(resource.type が gce_instance）かつ重大度が ERROR 以上のログエントリだけを、Logging クエリ言語を使って絞り込みたいです。クエリ言語の使い方として正しいものはどれですか。",
+    "options": [
+      "resource.type=\"gce_instance\" AND severity>=ERROR のように、フィールドへの比較式を論理演算子(AND など）で組み合わせて記述する",
+      "クエリ言語では等価比較(=）しか使えず、severity の大小比較や AND/OR による条件結合はできない",
+      "Logging クエリ言語は SQL であり、SELECT ... FROM logs WHERE ... の構文でログを検索する",
+      "ログの絞り込みは画面のプルダウン選択のみで行い、クエリ言語のテキスト式は使えない"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "正解は選択肢1です。Logging クエリ言語は LogEntry のフィールド（resource.type、severity、logName、timestamp など）に対する比較式を、論理演算子（AND / OR / NOT）で組み合わせて記述するブール式です。等価比較（=）だけでなく、!=、<、>、>=、<=、部分一致の : 、正規表現の =~ なども使え、severity>=ERROR のような重大度の大小比較も可能です。したがって「等価比較しか使えず大小比較や条件結合ができない」とする選択肢2は誤りです。Logging クエリ言語は SQL とは別物で、SELECT ... FROM ... WHERE ... の構文ではないため選択肢3も誤りです（SEARCH 関数などはあるが SQL ではない）。Logs Explorer ではプルダウン選択に加えてクエリ言語のテキスト式での絞り込みが可能なので、「テキスト式は使えない」とする選択肢4も誤りです。",
+    "reference": "https://cloud.google.com/logging/docs/view/logging-query-language",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-038",
+    "category": "operate",
+    "subTopic": "ログシンクの宛先別使い分けと集約シンク",
+    "difficulty": "hard",
+    "tags": ["logging", "sink", "aggregated-sink", "routing"],
+    "question": "組織全体のログ運用を設計します。要件は次の通りです。(1) 組織配下の全プロジェクトのログを、各プロジェクトで個別に設定せず一括で 1 か所へ集約してルーティングしたい (2) 集約したログのうち、長期アーカイブ用は安価な保管先へ、ストリーミングで外部システムへリアルタイム連携する分はメッセージング基盤へ、それぞれ振り分けたい。最も適切な構成を 2 つ選んでください。",
+    "options": [
+      "組織レベルで集約シンク(aggregated sink）を作成し、配下プロジェクトのログを各プロジェクトで個別設定せずまとめてルーティングする",
+      "長期アーカイブ用は Cloud Storage バケットを宛先とするシンク、外部へのリアルタイム連携用は Pub/Sub トピックを宛先とするシンクに振り分ける",
+      "全プロジェクトの担当者に依頼して、各自が手動で _Default バケットのログを毎日 CSV としてダウンロードし共有する",
+      "ログのルーティングは 1 プロジェクトにつき 1 宛先しか指定できないため、Cloud Storage と Pub/Sub の両方へは送れない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "正解は選択肢1と2です。集約シンク（aggregated sink）は、組織やフォルダのレベルで作成すると、その配下にあるプロジェクト等のリソースが生成するログをまとめて中央の宛先へルーティングでき、各プロジェクトで個別にシンクを設定する必要がありません（選択肢1）。シンクの宛先は用途で使い分けでき、長期アーカイブには安価な Cloud Storage バケット、外部システムへのストリーミング連携には Pub/Sub トピックを宛先とするシンクを使うのが適切です（選択肢2）。BigQuery データセットや別プロジェクトのログバケットも宛先に選べます。各担当者が手動で CSV ダウンロードする運用（選択肢3）は自動的・継続的なルーティングにならず要件を満たしません。シンク（宛先）は複数作成でき、同じログを Cloud Storage と Pub/Sub の両方へ送れるため、「1 プロジェクトにつき 1 宛先しか指定できない」とする選択肢4は誤りです。",
+    "reference": "https://cloud.google.com/logging/docs/export/aggregated_sinks",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-039",
+    "category": "operate",
+    "subTopic": "ログバケットと保持期間(_Default/_Required・カスタム保持)",
+    "difficulty": "medium",
+    "tags": ["logging", "log-buckets", "retention", "default-bucket"],
+    "question": "Cloud Logging のログ保持を見直します。要件は次の通りです。(1) 通常のアプリ・プラットフォームログは標準で _Default バケットに入るが、その保持期間を既定の 30 日から 180 日へ延ばしたい (2) 管理アクティビティ監査ログのように _Required バケットに入る一部のログの保持期間も自由に短く変更したい。ログバケットと保持期間に関する説明として正しいものはどれですか。",
+    "options": [
+      "_Default も _Required も保持期間は一切変更できず、すべて 30 日固定である",
+      "_Default バケットの保持期間は 1〜3650 日の範囲で変更でき(既定 30 日）180 日に延長できる。一方 _Required バケットの保持期間は変更できない(固定）",
+      "_Required バケットの保持期間は自由に短縮できるが、_Default バケットの保持期間は変更できない",
+      "保持期間を延ばすにはバケットを削除して同名で作り直すしかなく、作成後の変更は不可である"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "正解は選択肢2です。_Default バケットの保持期間はユーザーが変更でき、1〜3650 日の範囲で設定可能（既定は 30 日）なので、180 日へ延長できます。一方 _Required バケットは管理アクティビティ監査ログなど必須のログを保持する特別なバケットで、保持期間は固定（変更不可）であり、ログの除外・無効化もできません。したがって「すべて 30 日固定」とする選択肢1、「_Required を自由に短縮でき _Default は変更不可」とする選択肢3はいずれも逆・誤りです。保持期間はバケットを削除・再作成しなくても作成後に変更（更新）できるため、選択肢4も誤りです。なお保持期間を延ばすと既定の保持期間を超えた分に保管料金が発生する点に注意します。",
+    "reference": "https://cloud.google.com/logging/docs/buckets",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-040",
+    "category": "operate",
+    "subTopic": "メトリックスコープによる複数プロジェクト集約モニタリング",
+    "difficulty": "medium",
+    "tags": ["monitoring", "metrics-scope", "multi-project", "observability"],
+    "question": "本番・検証・共通基盤がそれぞれ別の Google Cloud プロジェクトに分かれています。運用チームは、これら複数プロジェクトの指標を 1 つの場所からまとめてチャート化・アラート設定したいです。Cloud Monitoring で複数プロジェクトを横断して監視するための構成として正しいものはどれですか。",
+    "options": [
+      "プロジェクトごとに別々の Monitoring を開いて手動で見比べるしか方法はなく、横断監視はできない",
+      "スコーピングプロジェクトのメトリックスコープ(metrics scope）に他のプロジェクトを追加し、1 つのスコーピングプロジェクトから複数プロジェクトの時系列データをチャート化・アラート設定できるようにする",
+      "すべてのプロジェクトのリソースを 1 つのプロジェクトに移動しないと、まとめて監視することはできない",
+      "稼働時間チェックを各プロジェクトに 1 つずつ作れば、自動的に全プロジェクトの指標が 1 画面に集約される"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "正解は選択肢2です。Cloud Monitoring のメトリックスコープ（metrics scope）は、あるスコーピングプロジェクト（中心となる監視用プロジェクト）が、どのプロジェクトの時系列データをチャート化・アラート設定できるかを決める仕組みです。スコーピングプロジェクトのメトリックスコープに他のプロジェクトを追加すると、その 1 つのプロジェクトから複数プロジェクトの指標を横断して可視化・監視できます。したがって「横断監視はできない」とする選択肢1は誤りです。リソースを 1 つのプロジェクトに物理的に移動する必要はなく、メトリックスコープに追加するだけで横断監視できるため選択肢3も誤りです。稼働時間チェックは外部到達性の監視機能であり、複数プロジェクトの指標を 1 画面に集約する仕組みではないため選択肢4も誤りです。",
+    "reference": "https://cloud.google.com/monitoring/settings/multiple-projects",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-041",
+    "category": "operate",
+    "subTopic": "PromQL/MQL によるカスタムチャート",
+    "difficulty": "hard",
+    "tags": ["monitoring", "promql", "mql", "custom-charts"],
+    "question": "Cloud Monitoring で、メニュー選択だけでは表現しづらい高度なカスタムチャート（複数指標の比率や任意のパーセンタイル算出など）を、クエリ言語で記述して作成したいです。現在の Cloud Monitoring におけるクエリ言語の選択として最も適切なのはどれですか。",
+    "options": [
+      "クエリ言語は使えず、すべてのチャートはメニュー(Metrics Explorer のプルダウン）でしか作成できない",
+      "BigQuery の SQL を Cloud Monitoring のチャートに直接貼り付けて時系列を描画する",
+      "Logs Explorer のログクエリをそのままチャートのクエリ言語として使う",
+      "Metrics Explorer のコードエディタやダッシュボードのチャート追加で PromQL を記述してカスタムチャートを作成する(MQL も既存資産では利用可能だが、新規のチャート/ダッシュボード/アラートでは PromQL を用いる）"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "正解は選択肢4です。Cloud Monitoring では、Metrics Explorer の「コード」タブやダッシュボードのチャート追加から PromQL（Prometheus Query Language）を記述して、メニュー操作では表現しづらい高度なカスタムチャート（指標どうしの比率、任意パーセンタイル、ラベルの加工など）を作成できます。従来は MQL（Monitoring Query Language）も同等のクエリ言語として使えましたが、MQL は新規のチャート・ダッシュボード・アラートポリシー作成の用途では提供が終了し（既存の MQL 資産は引き続き利用可能・API では作成可）、現在の新規作成では PromQL を用いるのが適切です。クエリ言語が使えずメニューのみとする選択肢1は誤りです。Cloud Monitoring のチャートに BigQuery の SQL を直接貼って時系列描画するものではないため選択肢2も誤りです。Logs Explorer のログクエリは指標チャートのクエリ言語ではないため選択肢3も誤りです。",
+    "reference": "https://cloud.google.com/monitoring/promql",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-042",
+    "category": "operate",
+    "subTopic": "VPC サブネットのIP範囲拡張(expand-ip-range)とセカンダリ範囲",
+    "difficulty": "hard",
+    "tags": ["vpc", "subnet", "expand-ip-range", "secondary-range"],
+    "question": "既存の VPC サブネットで IP アドレスが枯渇しそうです。要件は次の通りです。(1) 稼働中のリソースを止めずにサブネットのプライマリ IPv4 範囲を広げて、より多くの内部 IP を使えるようにしたい (2) GKE の Pod/Service 用に、このサブネットへセカンダリ IP 範囲を追加したい。サブネットの IP 範囲運用に関する説明として正しいものはどれですか。",
+    "options": [
+      "プライマリ範囲はプレフィックス長を小さくして拡張でき(expand-ip-range：トラフィックを止めずに実施可、ただし縮小や取り消しは不可）、別途サブネットにセカンダリ IP 範囲を追加できる",
+      "プライマリ IPv4 範囲はいつでも自由に拡張・縮小でき、拡張はあとから取り消して元に戻せる",
+      "サブネットの IP 範囲を広げるには、サブネットを削除して大きい範囲で作り直すしか方法がない",
+      "セカンダリ IP 範囲はサブネット作成時にしか定義できず、運用開始後に追加することはできない"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "正解は選択肢1です。サブネットのプライマリ IPv4 範囲は、プレフィックス長をより小さく（例: /24→/20）することで拡張でき（expand-ip-range）、この操作は稼働中のトラフィックを中断せずに実施できます。ただしプライマリ範囲の拡張は取り消せず、縮小もできない点に注意が必要です。また、GKE の Pod/Service 用などにサブネットへセカンダリ IP 範囲を追加することもできます（使用中の IP が無ければ削除も可能）。プライマリ範囲は縮小や拡張の取り消しができないため選択肢2は誤りです。サブネットを削除・再作成しなくても範囲拡張できるため選択肢3も誤りです。セカンダリ範囲は作成後でも追加・削除でき、「作成時にしか定義できない」とする選択肢4も誤りです。",
+    "reference": "https://cloud.google.com/vpc/docs/create-modify-vpc-networks",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-043",
+    "category": "operate",
+    "subTopic": "静的IPの予約・解放とVMへの付け替え",
+    "difficulty": "medium",
+    "tags": ["compute-engine", "static-ip", "external-ip", "cost"],
+    "question": "あるサービスの外部公開 IP を固定したいです。要件は次の通りです。(1) 現在エフェメラル(自動割り当て）の外部 IP を使っている VM の IP を、再起動や再作成で変わらない固定 IP にしたい (2) 将来 VM を入れ替える際は、その固定 IP を新しい VM に付け替えたい。また不要になった固定 IP の扱いも理解しておきたいです。静的外部 IP の運用として正しいものはどれですか。",
+    "options": [
+      "外部 IP を固定する方法はなく、VM の再作成のたびに必ず IP が変わるのを受け入れるしかない",
+      "静的外部 IP は一度 VM に割り当てたら別の VM へ付け替えることはできず、付け替えには再予約が必要である",
+      "静的外部 IP アドレスを予約して VM に割り当てれば再起動・再作成でも変わらず、不要になったら別の VM に再割り当てできる。どのリソースにも割り当てていない予約済み静的 IP は使っていなくても課金されるため、不要なら解放(release）する",
+      "予約した静的外部 IP は、どのリソースにも割り当てていなければ一切課金されないので、解放せず放置してよい"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "正解は選択肢3です。静的外部 IP アドレスを予約して VM に割り当てると、VM の再起動・停止・再作成を経ても同じ IP を保持できます。既存のエフェメラル IP を静的 IP に昇格（プロモート）して固定することもできます。割り当てを解除すれば、その静的 IP を別の VM へ付け替え（再割り当て）できます。重要な運用上の注意として、どのリソースにも割り当てられていない予約済みの静的外部 IP は、使用していなくても課金対象になるため、不要になったら解放（release）するのが適切です。したがって「IP を固定できない」とする選択肢1、「付け替えできない」とする選択肢2は誤りです。未割り当ての予約済み静的 IP は課金されるため、「割り当てていなければ課金されないので放置してよい」とする選択肢4も誤りです。",
+    "reference": "https://cloud.google.com/compute/docs/ip-addresses/reserve-static-external-ip-address",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-044",
+    "category": "operate",
+    "subTopic": "ファイアウォールルールの優先度と Firewall Rules Logging",
+    "difficulty": "hard",
+    "tags": ["vpc", "firewall", "priority", "firewall-logging"],
+    "question": "VPC ファイアウォールのトラブルシュートをしています。あるトラフィックが意図せず拒否されている疑いがあり、原因調査と挙動の検証を行いたいです。要件は次の通りです。(1) 複数のルールが競合したときにどれが優先されるかを正しく理解して整理したい (2) どのルールが実際に接続を許可/拒否しているのかを記録して監査・分析したい。適切な対応を 2 つ選んでください。",
+    "options": [
+      "ファイアウォールルールには優先度(priority）があり、数値が小さいほど優先される(0 が最優先・既定 1000）。同じトラフィックに複数ルールが一致する場合は優先度の高い(数値の小さい）ルールが適用されることを踏まえて整理する",
+      "VPC ファイアウォールルールロギング(Firewall Rules Logging）を該当ルールで有効にし、接続が許可/拒否された記録(どのルールが適用されたか）をログとして確認・分析する",
+      "ファイアウォールルールは作成順に評価され、優先度の数値は無関係なので、ルールを作り直して順番を入れ替えるしかない",
+      "稼働時間チェックを VPC に向けて設定すれば、どのファイアウォールルールが適用されたかが自動的にログに残る"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "正解は選択肢1と2です。VPC ファイアウォールルールには優先度（priority）があり、0〜65535 の整数で指定し、数値が小さいほど優先度が高く（0 が最優先、既定値は 1000）、同じトラフィックに複数のルールが一致する場合は優先度の最も高い（数値の最も小さい）ルールが適用されます。これを理解すればルール競合を整理できます（選択肢1）。また、VPC ファイアウォールルールロギング（Firewall Rules Logging）を対象ルールごとに有効化すると、接続が許可/拒否された際の記録（適用されたルールや送信元・宛先などのメタデータ）がログに残り、ルールが意図どおり機能しているかを監査・分析できます（選択肢2）。ファイアウォールルールの評価は作成順ではなく優先度に基づくため選択肢3は誤りです。稼働時間チェックは外部到達性の監視機能であり、適用ファイアウォールルールのログを残す仕組みではないため選択肢4も誤りです。",
+    "reference": "https://cloud.google.com/vpc/docs/firewall-rules-logging",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-045",
+    "category": "operate",
+    "subTopic": "VPC のカスタム静的ルートと優先度の管理",
+    "difficulty": "medium",
+    "tags": ["vpc", "static-route", "route-priority", "networking"],
+    "question": "VPC で、特定の宛先 CIDR 向けのトラフィックをネットワーク仮想アプライアンス（次ホップ）経由にするカスタム静的ルートを運用しています。同じ宛先 CIDR に対して複数の候補ルートが存在する場合の選択を制御したいです。カスタム静的ルートと優先度に関する説明として正しいものはどれですか。",
+    "options": [
+      "静的ルートには優先度の概念がなく、同じ宛先のルートが複数あると常にランダムに 1 つが選ばれる",
+      "宛先の異なるルートどうしを比べるとき、優先度の数値が大きいルートが必ず最長一致より優先される",
+      "ルートの優先度を変更するには VPC ネットワークごと作り直すしかない",
+      "ルートはまず宛先プレフィックスの最長一致で選ばれ、宛先（プレフィックス長）が同じルートが複数ある場合に優先度（priority、数値が小さいほど高優先）で選択され、必要に応じて優先度を設定して経路を制御できる"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "正解は選択肢4です。VPC のルート選択では、まず宛先 IP に最も具体的に一致するルート（最長プレフィックス一致）が優先されます。そのうえで、宛先（プレフィックス長）が同じルートが複数ある場合に、ルートの優先度（priority、0〜65535 の整数で数値が小さいほど高優先）で選択されます。したがってカスタム静的ルートに優先度を設定することで、同一宛先の複数ルート間の選択を制御できます。優先度の概念がなくランダムに選ばれるとする選択肢1は誤りです。ルート選択はまず最長一致が支配的で、宛先が異なるルートを優先度だけで逆転できるわけではないため選択肢2は誤りです。優先度はルート単位で設定・管理でき、VPC ネットワークを作り直す必要はないため選択肢3も誤りです。",
+    "reference": "https://cloud.google.com/vpc/docs/routes",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-046",
+    "category": "operate",
+    "subTopic": "Cloud CDN のキャッシュ無効化(invalidation)と運用",
+    "difficulty": "medium",
+    "tags": ["cloud-cdn", "cache-invalidation", "caching", "operations"],
+    "question": "Cloud CDN を使って静的コンテンツを配信しています。誤ったファイルを公開してしまい、TTL の自然失効を待たずに、エッジにキャッシュされた特定パスのコンテンツを即座に配信対象から外したいです。Cloud CDN のキャッシュ無効化（invalidation）に関する説明として正しいものはどれですか。",
+    "options": [
+      "キャッシュ無効化はできないため、TTL が自然に切れるまで誤ったコンテンツが配信され続けるのを待つしかない",
+      "キャッシュ無効化では、特定のパス（例: /images/file.jpg）やワイルドカード（例: /images/*）、/* による全件などを指定してキャッシュ済みコンテンツを無効化できる。ただし通常の更新は無効化の多用ではなく TTL 設定やバージョン付き URL での運用が推奨される",
+      "キャッシュ無効化を実行すると、その背後のオリジン（バックエンド）のファイルそのものが削除される",
+      "キャッシュ無効化は 1 回につき 1 ファイルしか指定できず、ディレクトリ単位や全件の無効化はできない"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "正解は選択肢2です。Cloud CDN のキャッシュ無効化（invalidation）では、特定のパス（例: /images/file.jpg）、ワイルドカードによるディレクトリ単位（例: /images/*）、/* による全件、さらにキャッシュタグなどを指定して、エッジにキャッシュ済みのコンテンツを無効化できます。緊急時・例外時の手段であり、日常的なコンテンツ更新は無効化の多用に頼るのではなく、適切な TTL 設定やバージョン付き URL（キャッシュキーの工夫）で運用するのが推奨されます。無効化ができないとする選択肢1は誤りです。無効化はキャッシュ（コピー）を対象とする操作であり、オリジン側の実ファイルが削除されるわけではないため選択肢3も誤りです。パス・ワイルドカード・全件など複数の指定方法があり「1 ファイルしか指定できない」とする選択肢4も誤りです。",
+    "reference": "https://cloud.google.com/cdn/docs/invalidating-cached-content",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-047",
+    "category": "operate",
+    "subTopic": "VM Manager による OS パッチ管理(patch deployment)",
+    "difficulty": "hard",
+    "tags": ["vm-manager", "os-patch-management", "patch-deployment", "compute-engine"],
+    "question": "多数の Compute Engine VM（Linux/Windows 混在）に対して、OS のセキュリティパッチを手作業ではなく一元管理し、(1) 現在のパッチ適用状況（コンプライアンス）を可視化し、(2) 定期スケジュールでのパッチ適用を自動化したいです。最も適切な方法はどれですか。",
+    "options": [
+      "VM Manager の OS パッチ管理を使う。OS Config API を有効化し各 VM に OS Config エージェントを導入したうえで、パッチコンプライアンスの確認とスケジュール設定によるパッチデプロイ（定期/一回限り）を行う",
+      "各 VM に SSH/RDP で個別にログインし、担当者が毎回手動で apt/yum や Windows Update を実行して回る",
+      "スナップショットスケジュールを設定すれば、OS のパッチが自動的に適用される",
+      "稼働時間チェックを各 VM に設定すれば、未適用パッチが自動的に検出され適用される"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "正解は選択肢1です。VM Manager の OS パッチ管理（OS patch management）は、Compute Engine の VM 群に対してパッチ適用を一元管理する機能で、(1) パッチコンプライアンスレポートで Windows/Linux の適用状況を可視化し、(2) パッチデプロイ（patch deployment）でスケジュール設定による定期/一回限りのパッチジョブを自動実行できます。利用には OS Config API の有効化と各 VM への OS Config エージェントの導入が前提です。各 VM に個別ログインして手動でパッチを当てる運用（選択肢2）は一元管理・自動化の要件に反します。スナップショットスケジュールはディスクの定期バックアップ機能であり、OS パッチを適用するものではないため選択肢3は誤りです。稼働時間チェックは外部到達性の監視機能であって、パッチの検出・適用は行わないため選択肢4も誤りです。",
+    "reference": "https://cloud.google.com/compute/docs/os-patch-management",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-ops-048",
+    "category": "operate",
+    "subTopic": "Recommender によるアイドル/未接続リソースの削減適用",
+    "difficulty": "medium",
+    "tags": ["recommender", "idle-resources", "cost-optimization", "cleanup"],
+    "question": "コスト削減のため、長期間どこにも使われていない（アイドル/未接続の）リソースを洗い出して整理したいです。具体的には、停止したまま放置された VM、どの VM にもアタッチされていない永続ディスク、どのリソースにも割り当てられていない予約済み外部 IP アドレスが対象です。これらを根拠ある提案として把握し削減するために最も適切なものはどれですか（2 つ選択）。",
+    "options": [
+      "アイドル VM レコメンダー（idle VM recommender）の提案を確認し、長期間アイドルの VM を停止・削除して費用を削減する",
+      "アイドル永続ディスク／アイドル IP アドレスのレコメンダー（idle resource recommender）の提案を確認し、未接続のディスクや未使用の予約済み IP を整理（削除/解放）する",
+      "稼働時間チェックを全リソースに設定すれば、アイドルなリソースが自動的に削除される",
+      "アイドルかどうかは判断材料がないため、運用者の勘で適当に VM やディスクを削除していくしかない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "正解は選択肢1と2です。Recommender には、使用率や接続状況の分析に基づいてアイドル/未接続リソースの整理を提案する一連のレコメンダーがあります。アイドル VM レコメンダー（idle VM recommender）は長期間アイドルな VM の停止・削除を提案し（選択肢1）、アイドルリソース系のレコメンダー（永続ディスクや外部 IP アドレス向け）は、どの VM にもアタッチされていない永続ディスクや、どのリソースにも割り当てられていない予約済み外部 IP の削除/解放を提案します（選択肢2）。これらは実際の使用・接続状況に基づく根拠ある提案です。稼働時間チェックは外部到達性の監視機能であり、アイドルリソースを自動削除する仕組みではないため選択肢3は誤りです。Recommender が客観的な判断材料を提供するため、勘で削除するしかないとする選択肢4も誤りです（rightsizing とは異なり、ここでは未使用リソースそのものの削減が論点）。",
+    "reference": "https://cloud.google.com/recommender/docs/recommenders",
+    "relatedMaterials": []
   }
 ]

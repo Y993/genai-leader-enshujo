@@ -473,5 +473,328 @@
     "explanation": "選択肢2は正しく、同一リージョン内の複数ゾーンにリソースを分散すると、単一ゾーン障害が全リソースに同時に波及するリスクを下げられます。選択肢3も正しく、複数リージョンへの配置はゾーン分散よりさらに高い障害分離(独立性)をもたらし、より高い可用性設計が可能です。選択肢1は誤りで、単一ゾーンへの集約はそのゾーンが落ちると全断となり、可用性はむしろ下がります。選択肢4も誤りで、Compute Engine の可用性 SLA は通常、複数ゾーンにまたがる構成(例: 複数ゾーンへのインスタンス配置)を前提としており、単一ゾーンに1台だけ置いた構成では高い可用性 SLA の対象になりません。",
     "reference": "https://cloud.google.com/compute/docs/regions-zones",
     "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-026",
+    "category": "plan-configure",
+    "subTopic": "Cloud Functions(イベント駆動サーバーレス)の選定基準",
+    "difficulty": "medium",
+    "tags": ["cloud-functions", "serverless", "event-driven", "cloud-storage-trigger"],
+    "question": "ある業務で次の処理を実装します。要件は、(1) Cloud Storage バケットに画像がアップロードされるたびに自動でサムネイルを生成する、(2) アップロード頻度は不定期でアイドル時間が長いため、待機中はコストを発生させたくない、(3) サーバーやコンテナのプロビジョニング・パッチ適用などのインフラ運用を一切したくない、というものです。最も適したコンピュートの選択肢はどれですか？",
+    "options": [
+      "Compute Engine の MIG を最小1台で常時起動し、起動中の VM がバケットをポーリングして画像を検知する",
+      "Cloud Functions(イベント駆動関数)で、Cloud Storage のオブジェクト確定(finalize)イベントをトリガーに関数を実行する",
+      "GKE Standard クラスタに常駐 Pod をデプロイし、その Pod でバケットを監視する",
+      "App Engine フレキシブル環境にウェブアプリを常時稼働させ、定期的にバケットを走査する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Cloud Functions(イベント駆動関数)は、Cloud Storage のオブジェクト確定イベントなどを直接トリガーにコードを実行できるサーバーレスサービスで、リクエスト(イベント)がないアイドル時はゼロにスケールして課金が発生せず、インフラ運用も不要です。不定期なアップロードに応じた軽量処理という3要件すべてに合致するため正解です。選択肢1の MIG 常時1台はアイドル中も VM 課金が発生し、ポーリングも非効率で要件2に反します。選択肢3の GKE 常駐 Pod もノードが常時稼働しコストとノード運用が発生し要件2・3に反します。選択肢4の App Engine フレキシブルは常時インスタンスを起動するためアイドルコストが生じ、走査方式もイベント駆動より非効率で本要件には最適ではありません。",
+    "reference": "https://cloud.google.com/functions",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-027",
+    "category": "plan-configure",
+    "subTopic": "コンピュートの総合選定(App Engine / Cloud Run / Cloud Functions / Compute Engine / GKE)",
+    "difficulty": "hard",
+    "tags": ["cloud-run", "compute-selection", "containers", "serverless", "scale-to-zero"],
+    "question": "新しい HTTP API バックエンドをデプロイします。要件は、(1) 既存のコンテナイメージ(Dockerfile でビルド済み)をそのまま動かしたい、(2) トラフィックの増減に応じて自動スケールし、リクエストが無いときはゼロまで縮退して課金を抑えたい、(3) Kubernetes のノードやクラスタの運用はしたくない、というものです。最も適したサービスはどれですか？",
+    "options": [
+      "Cloud Run(フルマネージドのコンテナ実行環境)",
+      "Compute Engine の単一 VM に Docker をインストールしてコンテナを起動する",
+      "GKE Standard クラスタにコンテナを Deployment としてデプロイする",
+      "App Engine スタンダード環境に、サポート対象ランタイムのコードとしてデプロイする"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Cloud Run はコンテナイメージをそのままデプロイして実行できるフルマネージドのサーバーレスプラットフォームで、リクエスト数に応じて自動スケールし、トラフィックが無いときはゼロにスケールして課金を抑えられ、ノードやクラスタの運用も不要です。3要件すべてに合致するため正解です。選択肢2の Compute Engine 単一 VM はゼロスケールできず、OS やランタイムの運用も自分で行う必要があり要件2・3に反します。選択肢3の GKE Standard はコンテナを動かせますが、ノードプールの容量管理など Kubernetes 運用が必要で要件3に反します。選択肢4の App Engine スタンダードはコードベースのデプロイが基本で、任意のコンテナイメージをそのまま動かす要件1には Cloud Run の方が直接的に適します。",
+    "reference": "https://cloud.google.com/hosting-options",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-028",
+    "category": "plan-configure",
+    "subTopic": "Cloud DNS の計画(パブリック/プライベートゾーン・DNSSEC)",
+    "difficulty": "medium",
+    "tags": ["cloud-dns", "private-zone", "public-zone", "dnssec"],
+    "question": "Cloud DNS を計画しています。要件は、(1) 社内の VPC ネットワーク内からのみ解決できる内部用ドメイン(例: db.internal.example.com)のレコードを管理する、(2) 同時に、インターネットに公開するウェブサイトのドメイン(example.com)も Cloud DNS で管理する、(3) 公開ドメインについては DNS 応答の改ざん(キャッシュポイズニング/スプーフィング)を防ぐ仕組みを有効化したい、というものです。最も適した構成はどれですか？",
+    "options": [
+      "公開ドメインも内部ドメインもすべて1つのパブリックゾーンにまとめ、DNSSEC を有効化する",
+      "内部ドメインをパブリックゾーンで公開し、ファイアウォールで外部からの DNS クエリだけ遮断する",
+      "内部ドメインは特定の VPC に紐づくプライベートゾーンで管理し、公開ドメインはパブリックゾーンで管理して、そのパブリックゾーンに DNSSEC を有効化する",
+      "公開ドメインをプライベートゾーンで管理し、DNSSEC を有効化して外部からの解決を許可する"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "Cloud DNS のプライベートゾーンは指定した VPC ネットワーク内からのみ解決可能で、内部用ドメインの管理に適します。一方インターネット公開ドメインはパブリックゾーンで管理し、DNSSEC を有効化することで応答の正当性を検証し、スプーフィングやキャッシュポイズニングを防げます。要件1・2・3すべてを満たすため選択肢3が正解です。選択肢1は内部専用ドメインまでパブリックに公開してしまい要件1(内部限定)に反します。選択肢2もパブリックゾーンで公開する前提で内部限定の要件を満たさず、外部遮断をファイアウォール頼みにするのは適切な設計ではありません。選択肢4はプライベートゾーンが外部解決を提供しないため、公開ドメインの管理手段として成立せず誤りです。",
+    "reference": "https://cloud.google.com/dns/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-029",
+    "category": "plan-configure",
+    "subTopic": "Cloud Spanner の選定(グローバル強整合・水平スケール)",
+    "difficulty": "hard",
+    "tags": ["cloud-spanner", "multi-region", "strong-consistency", "horizontal-scale", "availability"],
+    "question": "複数大陸のユーザーが利用する在庫管理システムを計画しています。要件は、(1) 在庫の二重販売を防ぐため、地理的に分散していても外部整合性(強整合)のあるトランザクションが必要、(2) ピーク時の書き込みスループットに合わせて水平方向にスケールできる、(3) マルチリージョン構成で 99.999% の可用性を満たす、というものです。最も適したサービスと構成はどれですか？",
+    "options": [
+      "Cloud SQL for PostgreSQL を1つのリージョンに置き、複数大陸にリードレプリカを配置する",
+      "Firestore を Native モードで使い、各リージョンに独立データベースを置いてアプリ側で整合性を取る",
+      "Cloud Spanner をマルチリージョン構成(instance configuration)で構成する",
+      "Bigtable をマルチクラスタレプリケーションで構成し、整合性はアプリ側のロックで担保する"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "Cloud Spanner はリレーショナル(SQL/ACID)でありながら水平スケールと外部整合性(強整合)を両立し、マルチリージョンのインスタンス構成では 99.999% の可用性を提供します。地理分散下でも在庫の二重販売を防ぐ強整合トランザクション、書き込みの水平スケール、最高水準の可用性という3要件すべてを単一サービスで満たすため正解です。選択肢1の Cloud SQL はスケールアップ型でリードレプリカは読み取り用、書き込みの水平スケールやグローバル強整合の単一論理DBにはなりません。選択肢2の Firestore は強整合のトランザクションを提供しますが、各リージョンに独立DBを置いてアプリ側で整合を取る構成では二重販売防止の単一整合トランザクションを担保できません。選択肢3の Bigtable は強整合のクロスリージョン・トランザクションを備えず、アプリ側ロック頼みは要件1を確実に満たせません。",
+    "reference": "https://cloud.google.com/spanner/docs/instance-configurations",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-030",
+    "category": "plan-configure",
+    "subTopic": "Cloud Storage のロケーションタイプの選定(region/dual-region/multi-region)",
+    "difficulty": "medium",
+    "tags": ["cloud-storage", "location-type", "dual-region", "data-residency", "availability"],
+    "question": "Cloud Storage バケットのロケーションタイプを選定します。要件は、(1) データは法令上、特定の1か国(例: 日本国内)の境界を越えてはならない、(2) 単一リージョン障害時にもデータにアクセスできる地理冗長(リージョン間の冗長)が欲しい、(3) アクセスする主要なコンピュート(Compute Engine など)はその国内の特定リージョンに置く、というものです。最も適したロケーションタイプはどれですか？",
+    "options": [
+      "single region(単一リージョン)のバケット",
+      "multi-region(US/EU/Asia などの広域マルチリージョン)のバケット",
+      "Anywhere Cache を有効にした単一リージョンのバケット",
+      "dual-region(同一国内の2リージョンを指定したデュアルリージョン)のバケット"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "dual-region は同一国/地域内の2つのリージョンにまたがってデータを冗長化でき、単一リージョン障害時にもアクセス可能な地理冗長を、データ所在地(国境)を保ったまま実現できます。国内の特定リージョンにコンピュートを置いて近接アクセスする運用とも整合し、3要件すべてを満たすため選択肢4が正解です。選択肢1の単一リージョンはリージョン障害に対する地理冗長(リージョン間冗長)が無く要件2を満たしません。選択肢2の広域マルチリージョン(US/EU/Asia など)はデータが複数の国にまたがり得るため、特定1か国に限定する要件1(データ所在地)に違反します。選択肢3はキャッシュによる読み取り高速化機能であり、リージョン間の地理冗長そのものを提供しないため要件2を満たしません。",
+    "reference": "https://cloud.google.com/storage/docs/locations",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-031",
+    "category": "plan-configure",
+    "subTopic": "オブジェクトライフサイクル管理/自動クラス移行の計画",
+    "difficulty": "medium",
+    "tags": ["cloud-storage", "lifecycle", "set-storage-class", "nearline", "coldline", "archive"],
+    "question": "ログを保管する Cloud Storage バケットに、運用負荷をかけずコストを最適化するライフサイクルルールを設定します。要件は、(1) 作成から30日経過したオブジェクトは Nearline へ移行、(2) 90日経過で Coldline、365日経過で Archive へ自動的に格下げ、(3) 1095日(3年)を過ぎたオブジェクトは自動削除、というものです。最も適した実装はどれですか？",
+    "options": [
+      "Object Lifecycle Management のルールを設定し、age 条件に応じた SetStorageClass(Nearline→Coldline→Archive)と Delete を構成する",
+      "Cloud Scheduler と Cloud Functions を毎日実行し、各オブジェクトの作成日を調べて手動でクラス変更・削除する",
+      "バケットの既定ストレージクラスを Archive に変更すれば、既存・新規オブジェクトが日数に応じて自動で各クラスに移行する",
+      "Object Versioning を有効化すれば、古いバージョンが日数経過で自動的に下位クラスへ移行し削除される"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Object Lifecycle Management は、age(作成からの経過日数)などの条件に基づいて SetStorageClass(Nearline→Coldline→Archive の段階的移行)や Delete アクションを自動実行できるマネージド機能で、運用負荷なくコスト最適化の3要件をそのまま表現できるため正解です。選択肢2の Scheduler+Functions による自作は、ライフサイクル機能で標準的に実現できる処理を不必要に自前運用するもので適切ではありません。選択肢3は誤りで、既定ストレージクラスは新規オブジェクトの初期クラスを決めるだけで、日数経過に応じた段階移行や削除は行いません(それを行うのがライフサイクルルール)。選択肢4の Object Versioning はオブジェクトの版管理機能であり、クラスの段階移行や経過日数での削除を自動で行う仕組みではありません。",
+    "reference": "https://cloud.google.com/storage/docs/lifecycle",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-032",
+    "category": "plan-configure",
+    "subTopic": "Cloud Interconnect と HA VPN の選定(帯域・SLA)",
+    "difficulty": "hard",
+    "tags": ["partner-interconnect", "ha-vpn", "dedicated-interconnect", "bandwidth", "hybrid-connectivity"],
+    "question": "オンプレミスと Google Cloud を接続します。要件は、(1) 必要帯域はおおむね 1〜5 Gbps 程度で、10 Gbps 専用回線まではいらない、(2) インターネットを経由しないプライベート接続が必要、(3) 自社設備を Google のコロケーション施設に物理的に接続する余力はなく、既存のサービスプロバイダ経由で接続したい、というものです。最も適した接続方式はどれですか？",
+    "options": [
+      "Dedicated Interconnect(10 Gbps または 100 Gbps の専用回線)を構成する",
+      "HA VPN(IPsec トンネル)をインターネット経由で構成する",
+      "Direct Peering でオンプレと VPC を内部IP接続する",
+      "Partner Interconnect(サービスプロバイダ経由、50 Mbps〜50 Gbps)を構成する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "Partner Interconnect はサービスプロバイダ経由で Google Cloud にプライベート接続する方式で、50 Mbps〜50 Gbps の柔軟な帯域から選べます。10 Gbps の専用回線までは不要(1〜5 Gbps 程度)で、かつ自社設備を Google のコロケーション施設に物理接続できない本シナリオに最も適し、必要な分だけ支払えるため選択肢4が正解です。選択肢1の Dedicated Interconnect は最小 10 Gbps の専用回線で、コロケーション施設への自社物理接続が前提となるため要件1・3に合いません。選択肢2の HA VPN はインターネット経由の IPsec で、要件2(インターネットを経由しないプライベート接続)に反します。選択肢3の Direct Peering は Google のパブリックサービス向けの接続で、VPC への内部IPプライベート接続は提供しないため不適切です。",
+    "reference": "https://cloud.google.com/network-connectivity/docs/how-to/choose-product",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-033",
+    "category": "plan-configure",
+    "subTopic": "Cloud Armor / WAF / DDoS 保護の計画",
+    "difficulty": "medium",
+    "tags": ["cloud-armor", "waf", "ddos", "load-balancing", "owasp"],
+    "question": "外部アプリケーション ロードバランサ(L7)の背後で公開しているウェブアプリを保護します。要件は、(1) SQL インジェクションやクロスサイトスクリプティング(XSS)などの L7 アプリケーション攻撃を、既製のルールセットで防ぎたい、(2) 特定の悪意ある送信元 IP 範囲をエッジでブロックしたい、(3) ボリューム型(L3/L4)の DDoS 攻撃からも保護したい、というものです。最も適した構成はどれですか？",
+    "options": [
+      "VPC ファイアウォールルールで送信元 IP を許可/拒否し、アプリ側コードで SQLi/XSS を都度フィルタする",
+      "Cloud CDN を有効化し、キャッシュ層で攻撃トラフィックを吸収させる",
+      "外部アプリケーション ロードバランサのバックエンドサービスに Cloud Armor セキュリティポリシーを適用し、プリコンフィグ WAF ルール(OWASP)と IP 許可/拒否ルールを設定する",
+      "Cloud NAT を構成して、外部からの受信トラフィックをすべて NAT 経由に限定する"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "Cloud Armor は外部アプリケーション ロードバランサのバックエンドサービスに適用するセキュリティポリシーで、OWASP 由来のプリコンフィグ WAF ルールにより SQLi/XSS を防ぎ、送信元 IP に基づく許可/拒否ルールでエッジブロックでき、L3/L4 のボリューム型 DDoS 保護も提供します。3要件すべてを満たすため選択肢3が正解です。選択肢1の VPC ファイアウォールは IP/ポート単位の制御に留まり、L7 の SQLi/XSS を既製ルールで防げず、アプリ任せのフィルタは網羅性に欠けます。選択肢2の Cloud CDN はキャッシュ配信機能であり WAF や IP ブロックの仕組みではありません。選択肢4の Cloud NAT は外部IPを持たない VM の下り通信用で、受信側の攻撃防御を担うものではありません。",
+    "reference": "https://cloud.google.com/armor/docs/cloud-armor-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-034",
+    "category": "plan-configure",
+    "subTopic": "Pub/Sub による非同期メッセージング/デカップリングの計画",
+    "difficulty": "medium",
+    "tags": ["pubsub", "decoupling", "asynchronous", "messaging", "fan-out"],
+    "question": "注文受付サービスから複数の下流サービス(在庫更新・通知送信・分析基盤への取り込み)へイベントを配信するアーキテクチャを計画します。要件は、(1) 受付サービスと各下流サービスを疎結合にし、下流が一時的にダウンしてもメッセージを失わない、(2) 1つの注文イベントを複数の下流サービスへ同時に配信(ファンアウト)できる、(3) フルマネージドで自動スケールするメッセージング基盤にしたい、というものです。最も適したサービスはどれですか？",
+    "options": [
+      "各下流サービスを受付サービスから同期 HTTP で直接呼び出し、失敗時はその場でリトライする",
+      "Pub/Sub のトピックにイベントを publish し、下流サービスごとにサブスクリプションを作成して非同期に配信する",
+      "Cloud SQL のテーブルにイベントを書き込み、各下流サービスがポーリングして取り出す",
+      "Memorystore for Redis のリストにイベントを積み、各下流サービスが取り出して処理する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Pub/Sub は publisher と subscriber を疎結合にする非同期メッセージングサービスで、1つのトピックに対し下流サービスごとに別々のサブスクリプションを作ればファンアウト配信ができ、各サブスクリプションは未確認(ack 前)のメッセージを保持するため下流が一時ダウンしても消失しません。フルマネージドで自動スケールもするため3要件すべてに合致し正解です。選択肢1の同期 HTTP 直接呼び出しは受付と下流が密結合になり、下流ダウン時にメッセージ保全が難しく要件1・2に反します。選択肢3の Cloud SQL ポーリングは本来リレーショナルDBであり、スケールやファンアウトに最適化されたメッセージング基盤ではありません。選択肢4の Memorystore はインメモリで永続性・配信保証の観点からメッセージ消失リスクがあり、要件1の確実なデカップリング基盤には不適切です。",
+    "reference": "https://cloud.google.com/pubsub/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-035",
+    "category": "plan-configure",
+    "subTopic": "Dataflow と Dataproc の選定(データ処理基盤)",
+    "difficulty": "hard",
+    "tags": ["dataflow", "dataproc", "apache-beam", "streaming", "hadoop-spark"],
+    "question": "データ処理基盤を計画しています。次の2つの記述について、適切なものを2つ選んでください。",
+    "options": [
+      "ストリーミングとバッチを単一のプログラミングモデル(Apache Beam)で記述し、ワーカーの自動スケールやリソース管理をフルマネージドに任せたい新規パイプラインには Dataflow が適している",
+      "既存の Apache Spark / Hadoop のジョブやエコシステム(Hive/Pig など)を、できるだけ手を加えずにマネージド環境へ移行・実行したい場合には Dataproc が適している",
+      "Dataflow は Hadoop クラスタを手動で構築・運用するためのサービスで、Spark ジョブの移行先として第一に検討すべきである",
+      "Dataproc は Apache Beam 専用のサーバーレスサービスであり、既存の Spark ジョブを実行することはできない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "選択肢1は正しく、Dataflow は Apache Beam ベースでストリーミングとバッチを統一モデルで記述でき、ワーカーの自動スケールやリソース管理をフルマネージドに任せられるため、新規パイプライン構築に適します。選択肢2も正しく、Dataproc は Spark/Hadoop/Hive/Pig などの OSS エコシステムをマネージドで実行でき、既存の Spark/Hadoop 資産をほぼそのまま移行したいケースに適します。選択肢3は誤りで、Hadoop/Spark のマネージド実行や既存ジョブ移行先は Dataflow ではなく Dataproc です。選択肢4も誤りで、Dataproc はまさに Spark/Hadoop を実行するサービスであり、Beam 専用ではありません(Beam 中心のフルマネージドは Dataflow)。",
+    "reference": "https://cloud.google.com/dataflow/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-036",
+    "category": "plan-configure",
+    "subTopic": "GKE のネットワーク計画(VPCネイティブ・Alias IP・セカンダリレンジ)",
+    "difficulty": "hard",
+    "tags": ["gke", "vpc-native", "alias-ip", "secondary-range", "pod-service-range"],
+    "question": "GKE クラスタのネットワークを計画します。要件は、(1) Pod IP を VPC ネイティブ(エイリアス IP)で割り当て、Pod へオンプレや他 VPC から直接ルーティングできるようにする、(2) ノード・Pod・Service のそれぞれに必要な IP 空間を事前に確保し、規模拡大に耐える、というものです。VPC ネイティブ GKE クラスタの IP 設計として正しいものを2つ選んでください。",
+    "options": [
+      "VPC ネイティブクラスタでは、ノードはサブネットのプライマリ範囲から、Pod と Service はそれぞれ専用のセカンダリ範囲(エイリアス IP)から割り当てる",
+      "Pod 用セカンダリ範囲は、想定する最大ノード数と1ノードあたりの最大 Pod 数を見込んで、十分大きな CIDR を確保しておく必要がある",
+      "VPC ネイティブクラスタでは Pod もノードと同じプライマリ範囲から払い出されるため、セカンダリ範囲は不要である",
+      "Pod の IP はクラスタ作成後に動的に確保され、事前のアドレス計画(範囲サイズの見積もり)は不要である"
+    ],
+    "isMultiple": true,
+    "correct": [0, 1],
+    "explanation": "選択肢1は正しく、VPC ネイティブ(エイリアス IP)クラスタでは、ノードはサブネットのプライマリ範囲、Pod と Service はそれぞれ別個のセカンダリ範囲から IP を割り当てます。これにより Pod IP が VPC 上で本物の IP として扱われ、ピアリング先やオンプレからも直接ルーティングできます。選択肢2も正しく、Pod 用セカンダリ範囲は最大ノード数×1ノードあたり最大 Pod 数を見込んだ十分大きな CIDR を事前に確保しておく必要があります(後からの拡張は制約があるため)。選択肢3は誤りで、VPC ネイティブでは Pod/Service は専用セカンダリ範囲を使うのが前提でセカンダリ範囲は不可欠です。選択肢4も誤りで、Pod IP はセカンダリ範囲からあらかじめ予約され、範囲サイズの事前見積もり(アドレス計画)は必須です。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/concepts/alias-ips",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-037",
+    "category": "plan-configure",
+    "subTopic": "ソールテナントノード/専有ホストの計画(BYOL・コンプライアンス)",
+    "difficulty": "medium",
+    "tags": ["sole-tenant-nodes", "byol", "compliance", "dedicated-hardware", "licensing"],
+    "question": "ある業務 VM を Compute Engine に移行します。要件は、(1) ライセンス契約上、物理コア/プロセッサ単位で課金される既存ソフトウェアを持ち込み(BYOL)で使い、コア数を把握できる必要がある、(2) 規制対応として、他テナントと物理サーバーを共有しない専有ハードウェア上で稼働させたい、というものです。最も適した構成はどれですか？",
+    "options": [
+      "通常の共有テナント VM を使い、ラベルでライセンス管理用のメタデータを付与する",
+      "プリエンプティブル(Spot)VM を使い、コストを抑えつつライセンスを持ち込む",
+      "メモリ最適化マシンタイプの共有テナント VM を使えば、自動的に物理サーバーが専有される",
+      "ソールテナントノード(専有ノード)上に VM を配置し、物理サーバーを専有してコア/プロセッサ単位の BYOL とコンプライアンス要件を満たす"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "ソールテナントノードは、自分のプロジェクトの VM だけをホストする専有の物理 Compute Engine サーバーへのアクセスを提供します。物理サーバーを他テナントと共有しないため規制・コンプライアンス要件を満たし、基盤のコア/プロセッサを可視化できるため per-core/per-processor の BYOL ライセンス追跡にも適します。要件1・2の両方を満たすため選択肢4が正解です。選択肢1の共有テナント VM はラベルを付けても物理サーバーは他テナントと共有され、専有要件を満たしません。選択肢2の Spot VM は中断され得る低コスト VM で専有性を提供せず要件2に反します。選択肢3は誤りで、マシンタイプ(メモリ最適化など)の選択は物理サーバーの専有とは無関係で、専有には明示的にソールテナントノードを使う必要があります。",
+    "reference": "https://cloud.google.com/compute/docs/nodes/sole-tenant-nodes",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-038",
+    "category": "plan-configure",
+    "subTopic": "プレースメントポリシー(コンパクト/分散)の計画",
+    "difficulty": "medium",
+    "tags": ["placement-policy", "compact", "spread", "hpc", "fault-isolation"],
+    "question": "Compute Engine のプレースメントポリシーを計画します。要件は、(1) ノード間で頻繁に通信する密結合な HPC ジョブのために、インスタンス同士をできるだけ物理的に近接させてネットワークレイテンシを下げたい、というものです。さらに別のワークロードでは、(2) 少数の重要インスタンスを互いに別々の物理ハードウェアに配置して、単一ハードウェア障害の同時影響を避けたい、というものもあります。それぞれに適したポリシーの組み合わせはどれですか？",
+    "options": [
+      "(1)にはコンパクト プレースメントポリシー、(2)には分散(スプレッド)プレースメントポリシー",
+      "(1)には分散(スプレッド)プレースメントポリシー、(2)にはコンパクト プレースメントポリシー",
+      "(1)(2)ともにコンパクト プレースメントポリシー",
+      "(1)(2)ともに分散(スプレッド)プレースメントポリシー"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "コンパクト プレースメントポリシーはインスタンスを可能な限り物理的に近接配置し、ノード間通信のレイテンシを下げるため、密結合な HPC/ML やデータベースのクラスタなど(1)に適します。分散(スプレッド)プレースメントポリシーはインスタンスを別々の物理ハードウェア(障害ドメイン)に配置し、単一ハードウェア障害の同時影響を減らして信頼性を高めるため(2)に適します。したがって(1)=コンパクト、(2)=分散の組み合わせである選択肢1が正解です。選択肢2は対応が逆です。選択肢3・4はどちらか一方の目的(近接 または 障害分離)しか満たせず、二つの相反する要件を同時に満たせないため誤りです。",
+    "reference": "https://cloud.google.com/compute/docs/instances/placement-policies-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-039",
+    "category": "plan-configure",
+    "subTopic": "データ所在地・コンプライアンス要件に基づくロケーション選定",
+    "difficulty": "medium",
+    "tags": ["data-residency", "compliance", "regions", "location-selection", "sovereignty"],
+    "question": "金融規制により、顧客データは EU 域内に保存・処理しなければならないという要件があります。Compute Engine と Cloud Storage を用いた構成のロケーション選定として最も適切なものはどれですか？",
+    "options": [
+      "Compute Engine を任意の最安リージョンに置き、Cloud Storage だけ EU の multi-region にする",
+      "Compute Engine を EU 内のリージョン/ゾーンに作成し、Cloud Storage バケットを EU の region または EU multi-region で作成して、データの保存・処理を EU 域内に閉じる",
+      "リソースはどこに作っても、Cloud Armor のポリシーで EU 以外からのアクセスを拒否すれば所在地要件は満たされる",
+      "グローバルな US multi-region バケットを使い、CDN で EU ユーザーに近いエッジから配信すればデータ所在地要件を満たせる"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "データ所在地(レジデンシー)要件は、データの保存場所と処理場所の双方を所定の地理境界内に収めることで満たします。したがって Compute Engine(処理)を EU のリージョン/ゾーンに作成し、Cloud Storage(保存)を EU の region または EU multi-region で作成して、保存・処理ともに EU 域内に閉じる選択肢2が正解です。選択肢1は処理を担う Compute Engine が EU 外にあると処理データが域外に出るため要件を満たしません。選択肢3はアクセス制御(誰がアクセスできるか)の話であり、データが物理的にどこに保存・処理されるかというレジデンシーとは別問題で、所在地要件は満たせません。選択肢4は US にデータを保存する時点で EU 域内保存の要件に反し、CDN のエッジ配信は保存場所を EU にする手段ではありません。",
+    "reference": "https://cloud.google.com/storage/docs/locations",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-040",
+    "category": "plan-configure",
+    "subTopic": "オートスケーリング方針の選定(ターゲット使用率/スケジュール/予測)",
+    "difficulty": "hard",
+    "tags": ["autoscaling", "predictive-autoscaling", "scheduled-autoscaling", "target-utilization", "managed-instance-group"],
+    "question": "あるサービスは、(1) 平日の朝にトラフィックが急増するが、インスタンスの初期化(起動からウォームアップまで)に数分かかるため、負荷がピークに達してからスケールアウトすると間に合わない、という課題があります。過去の利用には明確な日次・週次の周期性があります。立ち上がり遅れを避けつつ自動でスケールするのに最も適した MIG オートスケーリングの方針はどれですか？",
+    "options": [
+      "CPU ターゲット使用率のみのオートスケーリングにして、しきい値を低めに設定する",
+      "オートスケーリングを無効化し、ピーク帯に合わせた固定台数を常時起動しておく",
+      "予測オートスケーリング(predictive autoscaling)を有効にし、過去データから将来の負荷を予測して事前にスケールアウトさせる",
+      "スケールイン制御(scale-in controls)だけを設定し、縮退を遅らせることで急増に備える"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "予測オートスケーリングは、過去のメトリクス履歴から将来の負荷を予測し、負荷がピークに達する前に先回りしてインスタンスを増やしておく方針です。初期化に時間がかかり、かつ日次・週次の周期性がある本シナリオでは、新インスタンスが負荷到来時に既に処理可能となるため立ち上がり遅れを避けられ、選択肢3が正解です。選択肢1の CPU ターゲット使用率のみ(しきい値を下げる)は、負荷を観測してから反応するリアクティブ方式のため、初期化に数分かかると急増に間に合わず、しきい値低下は過剰プロビジョニングも招きます。選択肢2の固定台数常時起動は自動スケールではなく、ピークに合わせるため非ピーク時のコストが無駄になります。選択肢4のスケールイン制御は縮退の急変を抑える機能で、スケールアウトの先読みには寄与しないため要件を満たしません。",
+    "reference": "https://cloud.google.com/compute/docs/autoscaler",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-041",
+    "category": "plan-configure",
+    "subTopic": "プロジェクト分割戦略とリソース階層・請求の設計",
+    "difficulty": "medium",
+    "tags": ["resource-hierarchy", "projects", "folders", "billing", "iam-inheritance"],
+    "question": "企業が Google Cloud を本格導入するにあたり、リソース階層と請求を設計します。要件は、(1) 本番・ステージング・開発の環境ごとに分離し、各環境にまとめてポリシー(IAM/組織ポリシー)を適用したい、(2) 環境やチーム単位でコストを明確に区分して把握したい、(3) 共通の IAM ポリシーは上位でまとめて設定し、配下に継承させたい、というものです。最も適した設計はどれですか？",
+    "options": [
+      "組織(Organization)の下に環境やチームを表すフォルダを作り、その配下に用途別のプロジェクトを配置して、IAM/組織ポリシーを上位で設定し継承させる",
+      "すべてのリソースを1つの巨大プロジェクトにまとめ、ラベルだけで環境・チームを区別する",
+      "プロジェクトもフォルダも使わず、各チームに個別の Google アカウントを配って各自で課金契約させる",
+      "環境ごとに別々の組織(Organization)を作成し、それぞれ独立した請求アカウントと管理者を持たせる"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Google Cloud のリソース階層は 組織 > フォルダ > プロジェクト > リソース で構成され、上位に設定した IAM/組織ポリシーは配下へ継承されます。環境(本番/ステージング/開発)やチームをフォルダで表し、その配下に用途別プロジェクトを置けば、環境単位でまとめたポリシー適用と継承(要件1・3)ができ、プロジェクト単位でコストを区分して把握(要件2)できます。よって選択肢1が正解です。選択肢2の単一巨大プロジェクトは IAM/ポリシーの環境別適用やプロジェクト単位の課金分離ができず要件に反します。選択肢3はリソース階層・組織管理を放棄するもので、ガバナンスも一元的な課金管理もできません。選択肢4の組織を環境ごとに分割する案は過剰で、ポリシーの一元継承や横断的なガバナンスがかえって難しくなり、環境分離はフォルダで足ります。",
+    "reference": "https://cloud.google.com/resource-manager/docs/cloud-platform-resource-hierarchy",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-042",
+    "category": "plan-configure",
+    "subTopic": "バックアップ/DR 戦略(RPO/RTO とリージョン間レプリケーション)の計画",
+    "difficulty": "hard",
+    "tags": ["disaster-recovery", "rpo", "rto", "cross-region-replication", "backup"],
+    "question": "基幹システムの DR(災害復旧)戦略を策定します。要件は、(1) RPO(目標復旧時点)は数秒〜数分以内で、リージョン障害時のデータ損失をほぼゼロにしたい、(2) RTO(目標復旧時間)も短く、別リージョンで迅速に処理を再開したい、(3) これらを満たすためのコスト増は許容する、というものです。最も適した方針はどれですか？",
+    "options": [
+      "1日1回のスナップショットを同一リージョン内に保存し、障害時にそこから復元する(コールド DR)",
+      "バックアップは取らず、障害が起きてから新しいリージョンに環境を一から構築する",
+      "同一リージョン内の別ゾーンにのみ複製しておけば、リージョン全体の障害でも RPO ほぼゼロで復旧できる",
+      "別リージョンへ継続的にデータをレプリケーション(または同期/準同期レプリカ)し、待機系を温めておくことで RPO/RTO を最小化する(ウォーム〜ホット DR)"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "RPO(許容できるデータ損失時間)と RTO(許容できる停止時間)を厳しく(数秒〜数分)設定するほど、より積極的な DR パターン(ウォーム〜ホット)が必要になり、コストも上がります。別リージョンへ継続的にデータをレプリケーションし、待機系を温めておく構成は、リージョン障害時のデータ損失をほぼゼロにし(小さい RPO)、別リージョンで迅速に再開できる(小さい RTO)ため、要件1・2・3を満たし選択肢4が正解です。選択肢1の1日1回スナップショットはコールド DR で RPO が最大1日になり要件1を満たせません。選択肢2のバックアップ無しは RPO/RTO ともに最悪で論外です。選択肢3は同一リージョン内のゾーン冗長に過ぎず、リージョン全体の障害には対応できないため要件1(リージョン障害時のデータ損失ほぼゼロ)を満たせません。",
+    "reference": "https://cloud.google.com/architecture/dr-scenarios-planning-guide",
+    "relatedMaterials": []
   }
 ]
