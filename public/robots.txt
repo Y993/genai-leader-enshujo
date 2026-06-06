@@ -1,4 +1,2 @@
 User-agent: *
-Allow: /
-
-Sitemap: https://Y993.github.io/genai-leader-enshujo/sitemap-index.xml
+Disallow: /
