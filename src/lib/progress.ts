@@ -44,3 +44,12 @@ export function deserialize(raw: string): Progress {
   }
   return emptyProgress();
 }
+
+export function cellState(p: Progress, id: string): 'correct' | 'wrong' | 'unanswered' {
+  if (!(id in p.answers)) return 'unanswered';
+  return p.answers[id] ? 'correct' : 'wrong';
+}
+
+export function wrongIds(p: Progress, ids: string[]): string[] {
+  return ids.filter((id) => p.answers[id] === false);
+}
