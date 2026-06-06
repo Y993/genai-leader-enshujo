@@ -1,0 +1,42 @@
+---
+import SecretLayout from '../../layouts/SecretLayout.astro';
+import { getExam } from '../../data/exams';
+import { questionsFor } from '../../data/questions';
+import { withBase } from '../../lib/url';
+
+// ★ ディレクトリ名と完全一致させること
+const SECRET = 'gl-7f3a9c2e8b6d';
+
+const exam = getExam('genai-leader')!;
+const total = exam.categories.reduce(
+  (s, c) => s + questionsFor('genai-leader', c.slug).length,
+  0,
+);
+---
+<SecretLayout
+  title="GenAI Leader 全80問 演習"
+  description="購入者向けの GenAI Leader 練習問題（全80問・分野別・即時採点）。"
+>
+  <div class="page-hero">
+    <h1 class="page-title">GenAI Leader<br />全{total}問 演習</h1>
+    <p class="page-description">
+      分野を選んで演習できます。各問は即時に正誤と解説を表示します（全{total}問）。
+    </p>
+  </div>
+
+  <section>
+    <ul class="category-list">
+      {exam.categories.map((c) => (
+        <li>
+          <a href={withBase(`/${SECRET}/${c.slug}/`)} style="text-decoration:none;display:block;">
+            <div class="card card--hover">
+              <p class="cat-title">{c.titleJa}</p>
+              <p class="cat-meta">全{questionsFor('genai-leader', c.slug).length}問・出題比率{c.weightPercent}%</p>
+              <p class="cat-desc">{c.intro}</p>
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</SecretLayout>

@@ -1,0 +1,36 @@
+---
+import SecretLayout from '../../layouts/SecretLayout.astro';
+import Quiz from '../../components/Quiz.astro';
+import { getExam } from '../../data/exams';
+import { questionsFor } from '../../data/questions';
+import { withBase } from '../../lib/url';
+
+// ★ ディレクトリ名と完全一致させること
+const SECRET = 'gl-7f3a9c2e8b6d';
+
+export function getStaticPaths() {
+  const exam = getExam('genai-leader')!;
+  return exam.categories.map((cat) => ({
+    params: { slug: cat.slug },
+    props: { cat },
+  }));
+}
+
+const { cat } = Astro.props;
+const questions = questionsFor('genai-leader', cat.slug);
+---
+<SecretLayout
+  title={`${cat.titleJa}の演習`}
+  description={`${cat.titleJa}（GenAI Leader）の練習問題${questions.length}問。`}
+>
+  <div class="quiz-page-head">
+    <h1 class="quiz-page-title">{cat.titleJa}の演習</h1>
+    <span class="badge">出題比率 約{cat.weightPercent}%・{questions.length}問</span>
+  </div>
+
+  {questions.length > 0
+    ? <Quiz questions={questions} />
+    : <p class="quiz-empty">この分野の問題は準備中です。</p>}
+
+  <p class="quiz-page-foot"><a href={withBase(`/${SECRET}/`)}>← 分野選択にもどる</a></p>
+</SecretLayout>
