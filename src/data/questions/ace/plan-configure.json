@@ -302,5 +302,176 @@
     "explanation": "選択肢2は正しく、リージョン マネージドインスタンスグループは VM を同一リージョン内の複数ゾーンに自動分散して配置でき、単一ゾーン障害時も他ゾーンのインスタンスでサービスを継続できます。選択肢4も正しく、複数ゾーンのインスタンスをバックエンドに束ねたロードバランサはヘルスチェックで障害ゾーンを検知し自動的にトラフィックを迂回させ可用性を高めます。選択肢1は全 VM を単一ゾーンに集約するため、そのゾーンが落ちると全断となり高可用性に反します。選択肢3のスナップショットはバックアップ・復旧の手段であり、取得しただけでゾーン障害時に無停止で継続できるわけではないため誤りです。",
     "reference": "https://cloud.google.com/compute/docs/instance-groups/distributing-instances-with-regional-instance-groups",
     "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-017",
+    "category": "plan-configure",
+    "subTopic": "BigQuery の課金モデル(オンデマンド/容量)とデータセット設計",
+    "difficulty": "medium",
+    "tags": ["bigquery", "slots", "on-demand", "capacity-pricing", "cost-optimization"],
+    "question": "あるチームが BigQuery を使い始めます。要件は、(1) 当初はクエリ量が読みづらく変動が大きいため、使った分だけ支払う方式から始めたい、(2) 将来クエリが大量かつ安定し、月額の費用を予測可能にしたくなったら、専用の計算容量を確保する方式へ移行できる余地を残したい、というものです。BigQuery の計算課金に関する説明として最も適切なものはどれですか？",
+    "options": [
+      "オンデマンド課金ではクエリの実行時間(秒数)に対して課金され、スロットを購入すると無料でクエリが実行できる",
+      "オンデマンド課金ではクエリが処理したデータ量(スキャンしたバイト数)に対して課金され、安定した大量利用には容量(スロット)ベースの料金へ移行することで費用を予測可能にできる",
+      "オンデマンドと容量(スロット)のどちらを選んでも、課金額はストレージに保存しているデータ量だけで決まり、クエリの内容には影響されない",
+      "BigQuery の計算課金は容量(スロット)予約のみで、使った分だけ支払うオンデマンド方式は提供されていない"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "BigQuery のオンデマンド課金はクエリが処理(スキャン)したデータ量に対して課金され、利用が安定して大量になった場合は容量(スロット)ベースの予約へ移行することで月額の計算費用を予測可能にできます。これが要件1・2の両方に合致するため選択肢2が正解です。選択肢1は誤りで、オンデマンドは実行時間ではなくスキャンしたデータ量に対する課金であり、スロットを購入してもクエリが無料になるわけではなく容量に対する料金が発生します。選択肢3も誤りで、計算課金は処理データ量やスロット使用に基づき、ストレージ料金とは別建てで、クエリ内容によって変動します。選択肢4も誤りで、BigQuery にはオンデマンド方式が存在します。",
+    "reference": "https://cloud.google.com/bigquery/docs/slots",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-018",
+    "category": "plan-configure",
+    "subTopic": "Cloud SQL の高可用性とリードレプリカの計画",
+    "difficulty": "medium",
+    "tags": ["cloud-sql", "high-availability", "read-replica", "failover"],
+    "question": "Cloud SQL for MySQL を本番で運用する計画を立てています。Cloud SQL の高可用性(HA)とリードレプリカに関する説明として、正しいものを2つ選んでください。",
+    "options": [
+      "高可用性(HA)構成はリージョン内の別ゾーンにスタンバイインスタンスを置き、プライマリの障害時に自動でフェイルオーバーして可用性を高める",
+      "リードレプリカはプライマリ障害時に自動でフェイルオーバーして昇格し、HA 構成の代わりとして可用性を担保する仕組みである",
+      "リードレプリカは読み取り専用で、プライマリへの読み取り負荷をオフロードして読み取りスループットをスケールさせる目的に使う",
+      "高可用性(HA)構成は読み取りクエリの負荷分散(リードスケール)を主目的とした機能であり、フェイルオーバーは行わない"
+    ],
+    "isMultiple": true,
+    "correct": [0, 2],
+    "explanation": "選択肢1は正しく、Cloud SQL の HA 構成はリージョン内の別ゾーンにスタンバイインスタンスを配置し、プライマリ障害を検知すると自動でフェイルオーバーして可用性を確保します。選択肢3も正しく、リードレプリカは読み取り専用のコピーで、読み取りクエリをオフロードして読み取りスループットをスケールさせるために使います。選択肢2は誤りで、リードレプリカ自体は自動フェイルオーバー機能を持たず HA の代替にはなりません(可用性は HA 構成で担保します)。選択肢4も誤りで、HA 構成の主目的は読み取り負荷分散ではなく可用性確保であり、障害時には自動フェイルオーバーを行います。",
+    "reference": "https://cloud.google.com/sql/docs/mysql/high-availability",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-019",
+    "category": "plan-configure",
+    "subTopic": "インメモリキャッシュの選定(Memorystore for Redis)",
+    "difficulty": "easy",
+    "tags": ["memorystore", "redis", "cache", "low-latency", "session-store"],
+    "question": "アプリケーションのデータベースへの読み取り負荷を下げるため、サブミリ秒のレイテンシでアクセスできるフルマネージドのインメモリキャッシュ(セッションストアや頻繁に参照されるデータのキャッシュ)を追加したいと考えています。最も適した Google Cloud サービスはどれですか？",
+    "options": [
+      "Cloud Storage(Standard ストレージクラス)",
+      "BigQuery",
+      "Memorystore for Redis",
+      "Cloud SQL のリードレプリカ"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "Memorystore for Redis は Redis を基盤とするフルマネージドのインメモリデータストアで、サブミリ秒のレイテンシでアクセスでき、アプリケーションキャッシュやセッションストアの用途に最適なため正解です。選択肢1の Cloud Storage はオブジェクトストレージで、インメモリの超低レイテンシキャッシュ用途には向きません。選択肢2の BigQuery は分析用データウェアハウスでキャッシュ層ではありません。選択肢4の Cloud SQL リードレプリカは読み取り負荷分散には役立ちますが、ディスクベースのリレーショナルDBであり、インメモリのサブミリ秒キャッシュを提供する専用サービスではありません。",
+    "reference": "https://cloud.google.com/memorystore/docs/redis/redis-overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-020",
+    "category": "plan-configure",
+    "subTopic": "NoSQL データベースの選定(Firestore と Bigtable の使い分け)",
+    "difficulty": "hard",
+    "tags": ["bigtable", "firestore", "nosql", "time-series", "high-throughput"],
+    "question": "IoT プラットフォームのために NoSQL データベースを選定します。要件は、(1) 数百万台のデバイスから送られる時系列データを継続的に取り込む、(2) 1秒あたり非常に高い読み書きスループットを、低レイテンシで安定して処理する必要がある、(3) データは数百テラバイト〜ペタバイト規模まで拡大する見込み、というものです。最も適したサービスはどれですか？",
+    "options": [
+      "Cloud SQL(PostgreSQL)",
+      "BigQuery",
+      "Firestore",
+      "Cloud Bigtable"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "Cloud Bigtable はワイドカラム型の NoSQL データベースで、ペタバイト級まで線形にスケールし、1秒あたり非常に高い読み書きスループットを低レイテンシで処理できます。時系列やIoTのような大量データの高スループット取り込みに最適なため選択肢4が正解です。選択肢1の Cloud SQL はリレーショナルDBで、この規模・スループットの水平スケールには向きません。選択肢2の BigQuery は分析(OLAP)用データウェアハウスで、デバイスからの高頻度な単一行の書き込み/低レイテンシ参照という用途には最適ではありません。選択肢3の Firestore はモバイル/ウェブ向けのドキュメントDBで使いやすい反面、ペタバイト規模かつ極めて高い書き込みスループットを要する本シナリオでは Bigtable が適します。",
+    "reference": "https://cloud.google.com/bigtable/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-021",
+    "category": "plan-configure",
+    "subTopic": "ネットワークサービス階層(Premium/Standard Tier)の選定",
+    "difficulty": "medium",
+    "tags": ["network-tiers", "premium-tier", "standard-tier", "global-backbone", "cost-optimization"],
+    "question": "世界中のエンドユーザーに対し、できる限り高いネットワークパフォーマンスと信頼性で配信したいグローバルなウェブサービスがあります。トラフィックを可能な限り Google のグローバルバックボーンネットワーク内で運び、グローバル外部IPやグローバルロードバランシングといった全機能を使いたい場合、選ぶべきネットワークサービス階層はどれですか？",
+    "options": [
+      "Premium Tier(プレミアム ティア)",
+      "Standard Tier(スタンダード ティア)",
+      "どちらの階層を選んでもネットワーク経路や使える機能は同一で、料金だけが異なる",
+      "ネットワークサービス階層は Cloud Interconnect 専用の設定で、インターネット向けトラフィックには適用されない"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "Premium Tier はトラフィックを可能な限り Google のグローバルバックボーンネットワーク内で運び、最寄りのエッジ(Google Front End)から出入りさせることで高いパフォーマンスと信頼性を提供し、グローバル外部IPやグローバルロードバランシングといった全機能を利用できるため、本要件に最適で選択肢1が正解です。選択肢2の Standard Tier はトラフィックの多くをパブリックインターネット/リージョナル経路で運びコストを抑える代わりに、グローバル機能は使えずリージョン単位に限定されるため、最高性能・全機能の要件には合致しません。選択肢3は誤りで、両階層は経路も使える機能も異なります。選択肢4も誤りで、ネットワークサービス階層はインターネット向けの下り(外部)トラフィックの経路品質を選ぶ仕組みです。",
+    "reference": "https://cloud.google.com/network-tiers/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-022",
+    "category": "plan-configure",
+    "subTopic": "Cloud CDN のキャッシュ計画",
+    "difficulty": "medium",
+    "tags": ["cloud-cdn", "caching", "load-balancing", "latency", "edge"],
+    "question": "外部アプリケーション ロードバランサ(L7)の背後で配信している静的コンテンツ(画像・CSS・JS)を、世界中のユーザーにより低レイテンシで届け、同時にバックエンド(オリジン)への負荷を減らしたいと考えています。最も適した構成はどれですか？",
+    "options": [
+      "バックエンドの Compute Engine をより大きなマシンタイプにスケールアップし、配信能力を上げる",
+      "外部アプリケーション ロードバランサで Cloud CDN を有効化し、Google のエッジでコンテンツをキャッシュする",
+      "Cloud NAT を構成して、ユーザーからの受信トラフィックをエッジで終端させる",
+      "各リージョンに同じ静的ファイルを置いた Cloud Storage バケットを手動で複製し、ユーザーに最寄りのバケットURLを案内する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Cloud CDN は外部アプリケーション ロードバランサをフロントエンド(オリジン)として、Google のグローバルなエッジネットワークでコンテンツをキャッシュし、ユーザーに最も近い場所から配信します。これにより低レイテンシ化とオリジンへの負荷軽減を同時に実現できるため選択肢2が正解です。選択肢1のスケールアップはオリジン能力を上げるだけでエッジキャッシュによる低レイテンシ配信や負荷軽減の効果はありません。選択肢3の Cloud NAT は外部IPを持たない VM の下り通信用であり、受信トラフィックのエッジ終端やキャッシュ配信の仕組みではありません。選択肢4の手動複製は運用が煩雑でユーザーに最寄りを自動振り分けする仕組みもなく、Cloud CDN によるマネージドなエッジキャッシュが適切です。",
+    "reference": "https://cloud.google.com/cdn/docs/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-023",
+    "category": "plan-configure",
+    "subTopic": "GKE クラスタのモード選定(Autopilot / Standard)",
+    "difficulty": "hard",
+    "tags": ["gke", "autopilot", "standard", "node-management", "operations"],
+    "question": "あるチームが新規アプリを GKE で運用する計画です。要件は、(1) ノード(VM)のプロビジョニング・サイジング・パッチ適用といったインフラ運用の手間を極力 Google に任せたい、(2) Pod 単位のリソースに対して支払い、ノード群の容量管理に煩わされたくない、(3) 標準的なコンテナワークロードであり、ノードOSやマシンタイプを細かく自前で作り込む特別な要件はない、というものです。最も適した GKE のクラスタモードはどれですか？",
+    "options": [
+      "GKE Autopilot モード",
+      "GKE Standard モードで、ノードプールのマシンタイプとサイズを自分で細かく構成する",
+      "GKE Standard モードで、ノードの自動アップグレードと自動修復を無効化して手動運用する",
+      "Compute Engine 上に自前で Kubernetes を構築(セルフマネージド)して運用する"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "GKE Autopilot モードは Google がノードのプロビジョニング・サイジング・パッチ適用などインフラ運用を管理し、利用者は Pod が要求するリソースに対して支払い、ノード群の容量管理を意識せずに済みます。運用の手間を最小化したい本要件に最適なため選択肢1が正解です。選択肢2の Standard でノードを細かく構成する方法は、ノード管理の責任を利用者が負うため要件1・2に反します。選択肢3はさらに自動アップグレード/自動修復まで無効化して手動運用を増やすもので要件に逆行します。選択肢4のセルフマネージド Kubernetes は最も運用負荷が高く、マネージドに任せたい要件と正反対です。",
+    "reference": "https://cloud.google.com/kubernetes-engine/docs/concepts/types-of-clusters",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-024",
+    "category": "plan-configure",
+    "subTopic": "大規模データ移行の計画(Storage Transfer / Transfer Appliance)",
+    "difficulty": "easy",
+    "tags": ["transfer-appliance", "data-migration", "offline-transfer", "cloud-storage", "bandwidth"],
+    "question": "オンプレミスのデータセンターにある 500 TB のデータを Cloud Storage へ移行します。利用可能なインターネット回線の帯域は限られており、オンラインで転送すると数か月かかってしまうことが判明しました。現実的な期間で移行を完了させるのに最も適した方法はどれですか？",
+    "options": [
+      "gsutil の並列アップロードで、既存のインターネット回線越しにそのまま転送する",
+      "Storage Transfer Service を使い、同じインターネット回線越しにオンラインで転送する",
+      "回線契約を一時的に増速し、それでも足りなければ転送をあきらめる",
+      "Transfer Appliance(物理転送アプライアンス)にデータを書き込み、Google の施設へ郵送してオフラインで取り込む"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "Transfer Appliance は大容量の物理ストレージ装置にデータを書き込んで Google のアップロード施設へ郵送し、オフラインで Cloud Storage に取り込むサービスです。回線帯域が不足しオンライン転送に数か月かかるような大規模移行を、現実的な期間で完了できるため選択肢4が正解です。選択肢1の gsutil 並列アップロードや選択肢2の Storage Transfer Service によるオンライン転送は、いずれも同じ帯域制約に縛られ数か月を要するため要件を満たしません。選択肢3の増速は限定的かつコスト増で、根本的に大容量・低帯域の移行を解決する標準的な手段ではありません。",
+    "reference": "https://cloud.google.com/transfer-appliance/docs/4.0/overview",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-plan-025",
+    "category": "plan-configure",
+    "subTopic": "SLA とリージョン/ゾーン配置の計画",
+    "difficulty": "medium",
+    "tags": ["sla", "high-availability", "regions-zones", "fault-tolerance", "disaster-recovery"],
+    "question": "高可用性を重視するシステムの配置を計画しています。Google Cloud のリージョン/ゾーンと SLA に関する説明として、正しいものを2つ選んでください。",
+    "options": [
+      "リソースを単一ゾーンに集約するほど、そのゾーンの障害に対する耐性(可用性)が自動的に高まる",
+      "同一リージョン内の複数ゾーンにリソースを分散して配置すると、1つのゾーンの障害が全リソースへ同時に波及するリスクを下げられる",
+      "リージョンをまたいでリソースを配置すると、単一リージョンに閉じる場合よりも高い独立性(障害分離)が得られ、より高い可用性を狙える",
+      "ゾーンやリージョンの配置に関わらず、Compute Engine の SLA は単一インスタンスを1台だけ稼働させた構成に対しても最高水準で保証される"
+    ],
+    "isMultiple": true,
+    "correct": [1, 2],
+    "explanation": "選択肢2は正しく、同一リージョン内の複数ゾーンにリソースを分散すると、単一ゾーン障害が全リソースに同時に波及するリスクを下げられます。選択肢3も正しく、複数リージョンへの配置はゾーン分散よりさらに高い障害分離(独立性)をもたらし、より高い可用性設計が可能です。選択肢1は誤りで、単一ゾーンへの集約はそのゾーンが落ちると全断となり、可用性はむしろ下がります。選択肢4も誤りで、Compute Engine の可用性 SLA は通常、複数ゾーンにまたがる構成(例: 複数ゾーンへのインスタンス配置)を前提としており、単一ゾーンに1台だけ置いた構成では高い可用性 SLA の対象になりません。",
+    "reference": "https://cloud.google.com/compute/docs/regions-zones",
+    "relatedMaterials": []
   }
 ]

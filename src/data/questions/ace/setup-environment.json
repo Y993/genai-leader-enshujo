@@ -302,5 +302,176 @@
     "explanation": "gcloud auth application-default login は、ユーザー認証情報をアプリケーションのデフォルト認証情報(ADC)として既定の場所に保存し、クライアントライブラリが自動的に認証情報を発見できるようにするコマンドで、ローカル開発に適しています(選択肢1が正解)。gcloud auth login は gcloud CLI 自体のユーザー認証を設定しますが、ADC(アプリのコードが使う認証情報)を設定するわけではありません(選択肢2は誤り)。gcloud auth activate-service-account はサービスアカウントのキーファイルで認証する非対話的なコマンドで、ここで求められている「自分のユーザー認証情報を使う」用途とは異なります(選択肢3は誤り)。gcloud config set project は既定のプロジェクトを設定するだけで、認証情報の取得とは無関係です(選択肢4は誤り)。",
     "reference": "https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login",
     "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-017",
+    "category": "setup-environment",
+    "subTopic": "請求権限ロール(roles/billing.*)",
+    "difficulty": "easy",
+    "tags": ["billing", "iam", "billing-user", "roles", "least-privilege"],
+    "question": "財務チームのメンバーには課金アカウント自体の作成・支払い設定の変更はさせず、「新しいプロジェクトをこの既存の課金アカウントに紐付ける(リンクする)」操作だけを許可したいと考えています。最小権限の原則に最も沿った課金関連 IAM ロールはどれですか？",
+    "options": [
+      "Billing Account Administrator(roles/billing.admin)を課金アカウントに付与する",
+      "Billing Account User(roles/billing.user)を課金アカウントに付与する",
+      "Billing Account Viewer(roles/billing.viewer)を課金アカウントに付与する",
+      "Billing Account Creator(roles/billing.creator)を組織に付与する"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "Billing Account User(roles/billing.user)は、プロジェクトをその課金アカウントにリンクする権限を与えるロールで、課金アカウントそのものの管理権限は含みません。プロジェクト側の課金変更権限と組み合わせて使うことで「既存課金アカウントへの紐付けだけ」を許可でき、最小権限に沿います(選択肢2が正解)。Billing Account Administrator は支払い情報の変更や IAM 管理まで含む広範な管理者ロールで、要件に対して過剰です(選択肢1は誤り)。Billing Account Viewer は費用や支払い情報の閲覧のみで、プロジェクトのリンク操作はできません(選択肢3は誤り)。Billing Account Creator は新しい自己解決型(オンライン)課金アカウントを作成するためのロールで、既存アカウントへのリンク許可という目的とは異なります(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/billing/docs/how-to/billing-access",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-018",
+    "category": "setup-environment",
+    "subTopic": "支払いプロファイルとサブアカウント",
+    "difficulty": "medium",
+    "tags": ["billing", "payments-profile", "subaccount", "reseller", "billing-account"],
+    "question": "Cloud Billing の「支払いプロファイル(payments profile)」と「課金サブアカウント(subaccount)」に関する説明として正しいものを2つ選んでください。",
+    "options": [
+      "支払いプロファイルは Google レベルのリソースで、支払い手段(クレジットカード等)や名前・住所などの支払い情報を保持し、課金アカウントに紐付く",
+      "サブアカウントを使うと、1 つのプロジェクトを同時に複数の課金アカウントへ二重にリンクして費用を案分できる",
+      "課金サブアカウントは主にリセラーが顧客ごとの費用を別々の請求セクションに分けて管理するための仕組みである",
+      "支払いプロファイルはプロジェクトごとに 1 つ必須で、プロジェクトを作成するたびに新しい支払いプロファイルを作る必要がある"
+    ],
+    "isMultiple": true,
+    "correct": [0, 2],
+    "explanation": "支払いプロファイル(payments profile)は Google レベルのリソースで、支払い手段や名前・住所などの支払い情報を保持し、課金アカウントに関連付けられます(選択肢1は正しい)。課金サブアカウントは主にリセラーが、顧客ごとの費用を 1 つの請求書内の別セクション(または別請求)に分けて管理するための仕組みです(選択肢3は正しい)。1 つのプロジェクトはある時点で 1 つの課金アカウントにのみリンクでき、複数の課金アカウントへ同時に二重リンクして案分する仕組みではありません(選択肢2は誤り)。支払いプロファイルはプロジェクトごとに必須なのではなく、複数のプロジェクトや課金アカウントで共有でき、プロジェクト作成のたびに新規作成する必要はありません(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/billing/docs/concepts",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-019",
+    "category": "setup-environment",
+    "subTopic": "gcloud config の構成プロパティ(project/region/zone)",
+    "difficulty": "medium",
+    "tags": ["gcloud", "config", "properties", "compute-region", "section"],
+    "question": "アクティブな構成に、既定の Compute Engine リージョンを asia-northeast1 として設定したいと考えています。gcloud config のプロパティ設定に関する説明として正しいものはどれですか？",
+    "options": [
+      "`gcloud config set region asia-northeast1` のように、core セクションに region プロパティを設定すれば既定リージョンになる",
+      "既定リージョンは構成では設定できず、すべての gcloud コマンドで毎回 --region フラグを明示する必要がある",
+      "`gcloud config set compute/zone asia-northeast1` のようにゾーンプロパティを設定すれば、自動的に既定リージョンも同じ値になる",
+      "`gcloud config set compute/region asia-northeast1` のように、compute セクションの region プロパティを「セクション/プロパティ」形式で指定して設定する"
+    ],
+    "isMultiple": false,
+    "correct": 3,
+    "explanation": "既定の Compute Engine リージョンは compute セクションの region プロパティであり、`gcloud config set compute/region asia-northeast1` のように「セクション/プロパティ」形式で指定して設定します(選択肢4が正解)。region は core セクションのプロパティではないため、セクションを省略した `gcloud config set region ...` では正しく設定されません(core セクションのプロパティだけがセクション名を省略できます)(選択肢1は誤り)。既定リージョンは構成プロパティとして保持でき、毎回 --region を明示する必要はありません(選択肢2は誤り)。compute/zone はゾーンを設定するプロパティで、ゾーンを設定してもリージョンプロパティが自動的に同じ値になるわけではありません(選択肢3は誤り)。",
+    "reference": "https://cloud.google.com/sdk/gcloud/reference/config/set",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-020",
+    "category": "setup-environment",
+    "subTopic": "API の有効化(gcloud services enable)",
+    "difficulty": "medium",
+    "tags": ["gcloud", "services", "api-enablement", "compute-api", "automation"],
+    "question": "新しいプロジェクトで Compute Engine を使い始める前に、CLI から Compute Engine API を有効化したいと考えています。最も適切なコマンドはどれですか？",
+    "options": [
+      "gcloud services enable compute.googleapis.com",
+      "gcloud services list --enabled",
+      "gcloud config set compute/api enabled",
+      "gcloud components install compute"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "gcloud services enable はプロジェクトでサービス(API)を有効化するコマンドで、`gcloud services enable compute.googleapis.com` のようにサービス名を指定して Compute Engine API を有効にできます(選択肢1が正解)。gcloud services list --enabled は現在有効なサービスを一覧表示するだけで、新たに有効化はしません(選択肢2は誤り)。gcloud config set は CLI の構成プロパティを設定するコマンドであり、`compute/api` のようなプロパティで API を有効化することはできません(選択肢3は誤り)。gcloud components install は CLI のコンポーネント(ツール)を導入するコマンドで、プロジェクトの API を有効化するものではありません(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/sdk/gcloud/reference/services/enable",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-021",
+    "category": "setup-environment",
+    "subTopic": "Cloud SDK のコンポーネント管理(gcloud components)",
+    "difficulty": "hard",
+    "tags": ["gcloud", "components", "cloud-sdk", "kubectl", "update"],
+    "question": "Debian パッケージマネージャー(apt)ではなく、対話形式のインストーラ(アーカイブ版)で Cloud SDK を導入した端末で、kubectl コンポーネントを追加し、その後すべての導入済みコンポーネントを最新化したいと考えています。コンポーネント管理に関する説明として正しいものはどれですか？",
+    "options": [
+      "コンポーネントの追加や更新はできず、追加ツールが必要になるたびに Cloud SDK 全体を手動で再インストールする必要がある",
+      "`gcloud config set components/kubectl true` のように構成プロパティを設定するとコンポーネントが導入される",
+      "`gcloud components install kubectl` で kubectl を追加し、`gcloud components update` で導入済みの全コンポーネントを最新バージョンに更新できる",
+      "`gcloud components update` は新しいコンポーネントの追加専用で、既存コンポーネントのバージョンは更新しない"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "アーカイブ版(対話インストーラ)の Cloud SDK では、`gcloud components install kubectl` で kubectl などのコンポーネントを追加でき、`gcloud components update` で導入済みの全コンポーネントを最新バージョンに更新できます(選択肢3が正解)。コンポーネントは個別に追加・更新できるため、ツールが必要になるたびに SDK 全体を再インストールする必要はありません(選択肢1は誤り)。コンポーネントの導入は components install コマンドで行うものであり、`gcloud config set` の構成プロパティで導入するものではありません(選択肢2は誤り)。`gcloud components update` は導入済みコンポーネントを最新化するコマンドであり、追加専用ではありません(新規追加は install を使います)(選択肢4は誤り)。なお apt や yum でインストールした場合は、コンポーネント管理を OS のパッケージマネージャー側で行う点に注意が必要です。",
+    "reference": "https://cloud.google.com/sdk/gcloud/reference/components",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-022",
+    "category": "setup-environment",
+    "subTopic": "プロジェクト作成の自動化・命名・フォルダ整理",
+    "difficulty": "easy",
+    "tags": ["gcloud", "projects-create", "folder", "automation", "project-id"],
+    "question": "スクリプトから新しいプロジェクトを作成し、その際に作成先の親フォルダと、人間が読む表示名(プロジェクト名)を同時に指定したいと考えています。最も適切なコマンドはどれですか？",
+    "options": [
+      "gcloud projects create my-app-prod-01 --name=\"My App Prod\" --organization=ORG_ID で、組織直下にしか作成できない",
+      "gcloud projects create my-app-prod-01 --name=\"My App Prod\" --folder=FOLDER_ID で、指定フォルダ配下に表示名付きで作成する",
+      "gcloud projects create だけではフォルダや名前は指定できず、作成後に Console から手動で移動・改名するしかない",
+      "gcloud config set project my-app-prod-01 を実行すると、その ID のプロジェクトが新規作成される"
+    ],
+    "isMultiple": false,
+    "correct": 1,
+    "explanation": "gcloud projects create では、第 1 引数にプロジェクト ID を指定し、--name で表示名(プロジェクト名)、--folder で親フォルダを同時に指定できます。`gcloud projects create my-app-prod-01 --name=\"My App Prod\" --folder=FOLDER_ID` のように、指定フォルダ配下に表示名付きでプロジェクトを作成できます(選択肢2が正解)。--folder と --organization のいずれかで親を選べるため、組織直下にしか作成できないというのは誤りです(選択肢1は誤り)。作成時に --folder や --name を指定できるため、作成後に手動で移動・改名するしかないというのは誤りです(選択肢3は誤り)。gcloud config set project は CLI の既定プロジェクトを設定するだけで、新しいプロジェクトを作成するものではありません(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/sdk/gcloud/reference/projects/create",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-023",
+    "category": "setup-environment",
+    "subTopic": "割り当て(Quotas)の確認と引き上げ申請",
+    "difficulty": "medium",
+    "tags": ["quotas", "limits", "quota-increase", "iam-admin", "capacity"],
+    "question": "あるリージョンで多数の VM を起動しようとしたところ、CPU の割り当て(quota)上限に達して作成が失敗しました。現在の使用状況を確認し、必要に応じて上限の引き上げを申請したいと考えています。割り当て(Quotas)の確認・引き上げに関する説明として正しいものはどれですか？",
+    "options": [
+      "Console の「IAM と管理 > 割り当てとシステムの上限(Quotas)」ページで使用状況を確認し、対象の割り当てを選んで引き上げをリクエストできる",
+      "割り当ては変更不可の固定値であり、上限に達した場合は別リージョンへリソースを移すしか方法がない",
+      "割り当ての引き上げには必ず有料サポートプラン(Premium サポート)の契約が前提で、サポート契約なしには申請自体ができない",
+      "割り当てを増やすには、プロジェクトの課金アカウントを Billing Account Administrator 権限で削除して作り直す必要がある"
+    ],
+    "isMultiple": false,
+    "correct": 0,
+    "explanation": "割り当て(Quotas)は Console の「IAM と管理 > 割り当てとシステムの上限(Quotas)」ページで使用率を含めて確認でき、対象の割り当てを選択して引き上げをリクエストできます(承認には審査が入ります)(選択肢1が正解)。多くの割り当てはリクエストにより引き上げ可能で、固定値で別リージョンへ移すしかないわけではありません(選択肢2は誤り)。割り当ての引き上げ申請に有料サポートプランの契約が必須というのは誤りです(無料トライアルアカウントなど一部に制限はありますが、サポート契約が前提ではありません)(選択肢3は誤り)。割り当ての引き上げと課金アカウントの削除・再作成は無関係で、課金アカウントを作り直す必要はありません(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/docs/quotas/view-manage",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-024",
+    "category": "setup-environment",
+    "subTopic": "リソース階層の移行(プロジェクトのフォルダ間移動)",
+    "difficulty": "hard",
+    "tags": ["resource-hierarchy", "move-project", "folder", "iam-inheritance", "project-mover"],
+    "question": "既存のプロジェクトを、ある部門フォルダから別の部門フォルダへ移動しようとしています。移動に必要な権限と、移動後の IAM ポリシー継承の挙動に関する説明として正しいものを2つ選んでください。",
+    "options": [
+      "プロジェクトを別フォルダへ移動するには、対象プロジェクトに対する閲覧者(Viewer)ロールだけがあれば十分である",
+      "プロジェクトを移動するには、移動元と移動先の両方に対する Project Mover(roles/resourcemanager.projectMover)などの move 権限が必要である",
+      "プロジェクトに直接付与された IAM ポリシーは移動後もプロジェクトに残るが、親から継承される IAM ポリシーは移動先フォルダのものに切り替わる",
+      "プロジェクトをフォルダ間で移動すると、そのプロジェクト ID が自動的に変更され、再作成扱いになる"
+    ],
+    "isMultiple": true,
+    "correct": [1, 2],
+    "explanation": "プロジェクトをフォルダ間で移動するには、移動元と移動先の両方に対して Project Mover(roles/resourcemanager.projectMover)などの move 権限(resourcemanager.projects.move)が必要です(選択肢2は正しい)。プロジェクトに直接付与された IAM ポリシーは移動後もそのプロジェクトに残りますが、親から継承される IAM ポリシーは新しい親フォルダのものに切り替わるため、移動先で必要な継承権限が失われないよう注意が必要です(選択肢3は正しい)。閲覧者(Viewer)ロールだけでは移動操作はできません(選択肢1は誤り)。プロジェクト ID は作成後に変更できない不変の値で、フォルダ間移動で ID が変わったり再作成扱いになることはありません(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/resource-manager/docs/moving-projects-folders",
+    "relatedMaterials": []
+  },
+  {
+    "id": "ace-setup-025",
+    "category": "setup-environment",
+    "subTopic": "課金アカウントの作成権限(roles/billing.creator)",
+    "difficulty": "medium",
+    "tags": ["billing", "iam", "billing-creator", "organization", "self-serve"],
+    "question": "ある組織で、特定のチームリーダーに「新しい自己解決型(オンライン)の課金アカウントを自分で作成できる」権限だけを与えたいと考えています。組織内で既存の課金アカウントを管理する全社的な権限までは渡したくありません。最も適切な IAM ロールと付与先はどれですか？",
+    "options": [
+      "組織レベルで Billing Account Administrator(roles/billing.admin)を付与する",
+      "プロジェクトレベルで Project Billing Manager(roles/billing.projectManager)を付与する",
+      "組織レベルで Billing Account Creator(roles/billing.creator)を付与する",
+      "組織レベルで Billing Account Viewer(roles/billing.viewer)を付与する"
+    ],
+    "isMultiple": false,
+    "correct": 2,
+    "explanation": "新しい自己解決型(オンライン)の課金アカウントを作成する権限は Billing Account Creator(roles/billing.creator)で与えられ、これは組織レベルで付与します。このロールは既存の課金アカウントを管理する権限は含まないため、要件(作成だけを許可)に最も合致します(選択肢3が正解)。Billing Account Administrator は既存の課金アカウントの全社的な管理権限まで含むため、渡したくない権限まで与えてしまい過剰です(選択肢1は誤り)。Project Billing Manager はプロジェクトと課金アカウントのリンク変更を行うロールで、課金アカウントの新規作成権限ではありません(選択肢2は誤り)。Billing Account Viewer は閲覧のみで、新しい課金アカウントを作成できません(選択肢4は誤り)。",
+    "reference": "https://cloud.google.com/billing/docs/how-to/billing-access",
+    "relatedMaterials": []
   }
 ]
