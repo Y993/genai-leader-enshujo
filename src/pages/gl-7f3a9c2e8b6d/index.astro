@@ -4,39 +4,113 @@ import { getExam } from '../../data/exams';
 import { questionsFor } from '../../data/questions';
 import { withBase } from '../../lib/url';
 
-// ★ ディレクトリ名と完全一致させること
 const SECRET = 'gl-7f3a9c2e8b6d';
-
 const exam = getExam('genai-leader')!;
-const total = exam.categories.reduce(
-  (s, c) => s + questionsFor('genai-leader', c.slug).length,
-  0,
-);
+const cats = exam.categories.map((c) => ({
+  slug: c.slug,
+  titleJa: c.titleJa,
+  weightPercent: c.weightPercent,
+  questions: questionsFor('genai-leader', c.slug),
+}));
+const total = cats.reduce((s, c) => s + c.questions.length, 0);
 ---
-<SecretLayout
-  title="GenAI Leader 全80問 演習"
-  description="購入者向けの GenAI Leader 練習問題（全80問・分野別・即時採点）。"
->
-  <div class="page-hero">
-    <h1 class="page-title">GenAI Leader<br />全{total}問 演習</h1>
-    <p class="page-description">
-      分野を選んで演習できます。各問は即時に正誤と解説を表示します（全{total}問）。
+<SecretLayout title="GenAI Leader 演習 一覧" description="全80問の正誤を一覧し、特定の問題や間違えた問題を演習できます。">
+  <div class="hub-head">
+    <h1 class="page-title">GenAI Leader 演習 一覧</h1>
+    <p class="hub-stats" data-stats>読み込み中…</p>
+    <p class="hub-legend">
+      <span class="dot ok"></span>正解
+      <span class="dot ng"></span>不正解
+      <span class="dot na"></span>未回答（全{total}問）
     </p>
   </div>
 
-  <section>
-    <ul class="category-list">
-      {exam.categories.map((c) => (
-        <li>
-          <a href={withBase(`/${SECRET}/${c.slug}/`)} style="text-decoration:none;display:block;">
-            <div class="card card--hover">
-              <p class="cat-title">{c.titleJa}</p>
-              <p class="cat-meta">全{questionsFor('genai-leader', c.slug).length}問・出題比率{c.weightPercent}%</p>
-              <p class="cat-desc">{c.intro}</p>
-            </div>
-          </a>
-        </li>
-      ))}
-    </ul>
-  </section>
+  <div class="hub-toolbar">
+    <div class="hub-filters" data-filters>
+      <button type="button" class="hub-filter is-active" data-filter="all">全部</button>
+      <button type="button" class="hub-filter" data-filter="wrong">不正解</button>
+      <button type="button" class="hub-filter" data-filter="unanswered">未回答</button>
+    </div>
+    <a class="btn btn-primary hub-review" href={withBase(`/${SECRET}/review/`)}>間違いだけ通しで解く →</a>
+  </div>
+
+  {cats.map((c) => (
+    <section class="hub-cat">
+      <h2 class="hub-cat__title">
+        <a href={withBase(`/${SECRET}/${c.slug}/`)}>{c.titleJa}</a>
+        <span class="hub-cat__meta">全{c.questions.length}問・出題比率{c.weightPercent}%</span>
+      </h2>
+      <ul class="hub-grid">
+        {c.questions.map((q, i) => (
+          <li class="hub-grid__item">
+            <a class="hub-cell" data-qid={q.id} href={withBase(`/${SECRET}/${c.slug}/#${q.id}`)}>{i + 1}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+
+  <p class="quiz-page-foot">解き終わったらこの一覧で復習しましょう。色は最後の解答結果です。</p>
 </SecretLayout>
+
+<style>
+  .hub-head { margin-block-end: 1rem; }
+  .hub-stats { font-weight: 700; font-size: 1.1rem; margin-block: .5rem 0; }
+  .hub-legend { color: #667; font-size: .9rem; display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+  .hub-legend .dot { display: inline-block; width: .8rem; height: .8rem; border-radius: 3px; vertical-align: middle; }
+  .hub-legend .ok { background: #2e9e5b; }
+  .hub-legend .ng { background: #d64545; }
+  .hub-legend .na { background: #fff; border: 1.5px solid #cfcfcf; }
+  .hub-toolbar { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; margin-block: 1rem 1.5rem; }
+  .hub-filters { display: flex; gap: .5rem; }
+  .hub-filter { font-weight: 700; border: 1.5px solid #cfd6dc; background: #fff; color: #33414d; border-radius: 999px; padding: .4rem 1rem; cursor: pointer; }
+  .hub-filter.is-active { background: #0c2236; color: #fff; border-color: #0c2236; }
+  .hub-review { white-space: nowrap; }
+  .hub-cat { margin-block-end: 1.75rem; }
+  .hub-cat__title { font-size: 1.05rem; display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin-block-end: .6rem; }
+  .hub-cat__title a { text-decoration: none; color: #0c2236; font-weight: 800; }
+  .hub-cat__meta { font-size: .8rem; color: #778; font-weight: 500; }
+  .hub-grid { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; padding: 0; margin: 0; }
+  .hub-grid__item.is-dimmed { opacity: .18; }
+  .hub-cell { display: flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: .5rem; font-weight: 700; text-decoration: none; border: 2px solid #d8d8d8; color: #777; background: #fff; }
+  .hub-cell:hover { transform: translateY(-1px); }
+  .hub-cell.is-correct { background: #e6f6ea; border-color: #2e9e5b; color: #1c7a42; }
+  .hub-cell.is-wrong { background: #fdeaea; border-color: #d64545; color: #b32d2d; }
+  .hub-cell.is-unanswered { background: #fff; border-color: #d8d8d8; color: #888; }
+</style>
+
+<script>
+  import { loadProgress } from '../../lib/storage';
+  import { cellState } from '../../lib/progress';
+
+  const p = loadProgress();
+  const cells = Array.from(document.querySelectorAll('.hub-cell')) as HTMLElement[];
+  let correct = 0;
+  let answered = 0;
+  cells.forEach((cell) => {
+    const id = cell.dataset.qid as string;
+    const st = cellState(p, id);
+    cell.classList.add(`is-${st}`);
+    if (st === 'correct') { correct++; answered++; }
+    else if (st === 'wrong') { answered++; }
+  });
+  const total = cells.length;
+  const rate = answered ? Math.round((correct / answered) * 100) : 0;
+  const stats = document.querySelector('[data-stats]');
+  if (stats) stats.textContent = `正答 ${correct}/${total}（回答済 ${answered}問・正答率 ${rate}%）`;
+
+  const filterBtns = Array.from(document.querySelectorAll('[data-filter]')) as HTMLElement[];
+  function applyFilter(f: string) {
+    cells.forEach((cell) => {
+      const li = cell.parentElement as HTMLElement;
+      const show =
+        f === 'all' ||
+        (f === 'wrong' && cell.classList.contains('is-wrong')) ||
+        (f === 'unanswered' && cell.classList.contains('is-unanswered'));
+      li.classList.toggle('is-dimmed', !show);
+    });
+    filterBtns.forEach((b) => b.classList.toggle('is-active', b.dataset.filter === f));
+  }
+  filterBtns.forEach((b) => b.addEventListener('click', () => applyFilter(b.dataset.filter as string)));
+  applyFilter('all');
+</script>

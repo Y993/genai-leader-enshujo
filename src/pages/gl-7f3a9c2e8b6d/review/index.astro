@@ -1,0 +1,21 @@
+---
+import SecretLayout from '../../../layouts/SecretLayout.astro';
+import Quiz from '../../../components/Quiz.astro';
+import { getExam } from '../../../data/exams';
+import { questionsFor } from '../../../data/questions';
+import { withBase } from '../../../lib/url';
+
+const SECRET = 'gl-7f3a9c2e8b6d';
+const exam = getExam('genai-leader')!;
+const questions = exam.categories.flatMap((c) => questionsFor('genai-leader', c.slug));
+---
+<SecretLayout title="間違いだけ復習" description="不正解の問題だけをまとめて復習します。">
+  <div class="quiz-page-head">
+    <h1 class="quiz-page-title">間違いだけ復習</h1>
+    <span class="badge">不正解の問題だけを出題</span>
+  </div>
+
+  <Quiz questions={questions} initialFilter="wrong" />
+
+  <p class="quiz-page-foot"><a href={withBase(`/${SECRET}/`)}>← 一覧へもどる</a></p>
+</SecretLayout>
